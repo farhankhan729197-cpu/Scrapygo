@@ -1,0 +1,6 @@
+{
+  "name": "ScrapyGo",
+  "description": "ScrapyGo is a clean, professional online portal to sell old home appliances like ACs, refrigerators, and washing machines, featuring instant price valuation, OTP verification, and direct WhatsApp checkout.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
