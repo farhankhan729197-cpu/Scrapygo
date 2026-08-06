@@ -90,11 +90,11 @@ async function safeFetchJson(url: string, options?: RequestInit) {
 
 export const ALL_SCRAPYGO_IMAGES = [
   // Logos & Branding
-  { id: 'img-scrapygo-main', name: 'ScrapyGo Official Mascot Logo', file: '/logo.jpeg', category: 'Brand & Logos', description: 'Primary ScrapyGo mascot logo mark.' },
-  { id: 'img-1', name: 'ScrapyGo Official Logo', file: '/logo.jpeg', category: 'Brand & Logos', description: 'Official ScrapyGo platform vector branding & seal logo.' },
-  { id: 'img-1b', name: 'ScrapyGo Vector Logo Variant', file: '/logo.jpeg', category: 'Brand & Logos', description: 'Alternate ScrapyGo vector logo mark.' },
-  { id: 'img-1c', name: 'ScrapyGo Brand Mark', file: '/logo.jpeg', category: 'Brand & Logos', description: 'Primary ScrapyGo high-resolution JPEG branding seal.' },
-  { id: 'img-1d', name: 'ScrapyGo Transparent Logo', file: '/logo.jpeg', category: 'Brand & Logos', description: 'Transparent PNG ScrapyGo logo mark.' },
+  { id: 'img-scrapygo-main', name: 'ScrapyGo Official Mascot Logo', file: 'https://i.pinimg.com/1200x/af/44/c7/af44c7eb52433526439c20ff794b31fd.jpg', category: 'Brand & Logos', description: 'Primary ScrapyGo mascot logo mark.' },
+  { id: 'img-1', name: 'ScrapyGo Official Logo', file: 'https://i.pinimg.com/1200x/af/44/c7/af44c7eb52433526439c20ff794b31fd.jpg', category: 'Brand & Logos', description: 'Official ScrapyGo platform vector branding & seal logo.' },
+  { id: 'img-1b', name: 'ScrapyGo Vector Logo Variant', file: 'https://i.pinimg.com/1200x/af/44/c7/af44c7eb52433526439c20ff794b31fd.jpg', category: 'Brand & Logos', description: 'Alternate ScrapyGo vector logo mark.' },
+  { id: 'img-1c', name: 'ScrapyGo Brand Mark', file: 'https://i.pinimg.com/1200x/af/44/c7/af44c7eb52433526439c20ff794b31fd.jpg', category: 'Brand & Logos', description: 'Primary ScrapyGo high-resolution JPEG branding seal.' },
+  { id: 'img-1d', name: 'ScrapyGo Transparent Logo', file: 'https://i.pinimg.com/1200x/af/44/c7/af44c7eb52433526439c20ff794b31fd.jpg', category: 'Brand & Logos', description: 'Transparent PNG ScrapyGo logo mark.' },
 
   // Hero Banners
   { id: 'img-banner-ac', name: 'AC Scrap Hero Banner', file: 'https://i.pinimg.com/1200x/44/7f/84/447f84d557a05888931325a7cc2c9ec4.jpg', category: 'AC & Cooling', description: 'Hero banner for Air Conditioner scrap evaluation.' },
@@ -201,7 +201,7 @@ export const ALL_SCRAPYGO_IMAGES = [
   { id: 'img-33b', name: 'USB Power Adapter & Fast Charger', file: '/Data Cables.JPG', category: 'Cables & Wiring', description: 'Type-C fast wall charger and power adapter unit.' },
 
   // Regenerated & Platform Visuals
-  { id: 'img-regen-1', name: 'ScrapyGo Platform Feature Banner', file: '/logo.jpeg', category: 'Brand & Logos', description: 'ScrapyGo official regenerated platform artwork.' }
+  { id: 'img-regen-1', name: 'ScrapyGo Platform Feature Banner', file: 'https://i.pinimg.com/1200x/af/44/c7/af44c7eb52433526439c20ff794b31fd.jpg', category: 'Brand & Logos', description: 'ScrapyGo official regenerated platform artwork.' }
 ];
 
 export default function App() {
@@ -1088,7 +1088,7 @@ export default function App() {
                 className="flex items-center space-x-2.5 cursor-pointer group"
               >
                 <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-105 overflow-hidden p-0.5">
-                  <img src="/logo.jpeg" alt="ScrapyGo" className="w-full h-full object-contain rounded-lg" referrerPolicy="no-referrer" />
+                  <img src="https://i.pinimg.com/1200x/af/44/c7/af44c7eb52433526439c20ff794b31fd.jpg" alt="ScrapyGo" className="w-full h-full object-contain rounded-lg" referrerPolicy="no-referrer" />
                 </div>
                 <div>
                   <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-emerald-700 to-slate-900 bg-clip-text text-transparent font-display">
@@ -4070,7 +4070,7 @@ export default function App() {
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-white overflow-hidden p-0.5">
-                  <img src="/logo.jpeg" alt="ScrapyGo" className="w-full h-full object-contain rounded-md" referrerPolicy="no-referrer" />
+                  <img src="https://i.pinimg.com/1200x/af/44/c7/af44c7eb52433526439c20ff794b31fd.jpg" alt="ScrapyGo" className="w-full h-full object-contain rounded-md" referrerPolicy="no-referrer" />
                 </div>
                 <span className="text-lg font-bold text-white font-display">ScrapyGo</span>
               </div>
@@ -4439,7 +4439,7 @@ export default function App() {
               <div className="p-6 border-b border-slate-800 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-white shadow-md overflow-hidden p-0.5">
-                    <img src="/logo.jpeg" alt="ScrapyGo" className="w-full h-full object-contain rounded-md" referrerPolicy="no-referrer" />
+                    <img src="https://i.pinimg.com/1200x/af/44/c7/af44c7eb52433526439c20ff794b31fd.jpg" alt="ScrapyGo" className="w-full h-full object-contain rounded-md" referrerPolicy="no-referrer" />
                   </div>
                   <div>
                     <span className="text-base font-bold tracking-tight bg-gradient-to-r from-emerald-400 to-emerald-200 bg-clip-text text-transparent">
