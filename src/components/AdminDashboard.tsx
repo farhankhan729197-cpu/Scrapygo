@@ -27,7 +27,8 @@ import {
   EyeOff,
   Sparkles,
   MapPin,
-  Tag
+  Tag,
+  Trash2
 } from 'lucide-react';
 import { EvaluationRequest, OrderStatus } from '../types';
 
@@ -77,7 +78,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
   const [manualPrice, setManualPrice] = useState('5500');
   const [manualAddress, setManualAddress] = useState('');
 
-  // Fetch all inquiries from backend
+  // Fetch all inquiries from backend and merge with local history
   const fetchAllInquiries = async () => {
     setIsLoading(true);
     try {
@@ -85,7 +86,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
       if (response.ok) {
         const data = await response.json();
         if (data.success && Array.isArray(data.evaluations)) {
-          setEvaluations(data.evaluations);
+          let merged = [...data.evaluations];
+          const localHistoryStr = localStorage.getItem('scrapygo_history');
+          if (localHistoryStr) {
+            try {
+              const localHistory: EvaluationRequest[] = JSON.parse(localHistoryStr);
+              localHistory.forEach(localItem => {
+                if (!merged.some(m => m.id === localItem.id)) {
+                  merged.push(localItem);
+                  // Sync to central database
+                  fetch('/api/evaluations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(localItem)
+                  }).catch(() => {});
+                }
+              });
+            } catch (e) {}
+          }
+          merged.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+          setEvaluations(merged);
         }
       }
     } catch (err) {
@@ -273,6 +293,45 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
       }
     } catch (e) {
       showToast('Failed to add manual inquiry.');
+    }
+  };
+
+  // Delete Inquiry from Server & Local State
+  const handleDeleteInquiry = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+
+    if (!window.confirm(`Are you sure you want to permanently delete inquiry #${id}?`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/admin/evaluations/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`Inquiry #${id} deleted successfully.`);
+        setEvaluations(prev => prev.filter(item => item.id !== id));
+        // Remove from local storage history if present
+        const localHistoryStr = localStorage.getItem('scrapygo_history');
+        if (localHistoryStr) {
+          try {
+            const localHistory: EvaluationRequest[] = JSON.parse(localHistoryStr);
+            const filtered = localHistory.filter(item => item.id !== id);
+            localStorage.setItem('scrapygo_history', JSON.stringify(filtered));
+          } catch (err) {}
+        }
+        if (selectedEvaluation?.id === id) {
+          setSelectedEvaluation(null);
+          setShowScheduleModal(false);
+        }
+      } else {
+        showToast(data.error || 'Failed to delete inquiry.');
+      }
+    } catch (err) {
+      showToast('Error deleting inquiry from server.');
     }
   };
 
@@ -676,6 +735,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
                       <option value="Rejected">Set Rejected</option>
                       <option value="Cancelled">Set Cancelled</option>
                     </select>
+
+                    <button
+                      onClick={(e) => handleDeleteInquiry(item.id, e)}
+                      className="p-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-rose-200 rounded-xl transition-all"
+                      title="Delete / Remove Inquiry"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
 
@@ -772,13 +839,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
                       )}
                     </div>
 
-                    <button
-                      onClick={() => openScheduleModal(item)}
-                      className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-sm"
-                    >
-                      <Calendar className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Schedule Pickup / Edit Order</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => openScheduleModal(item)}
+                        className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-sm"
+                      >
+                        <Calendar className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Schedule Pickup / Edit Order</span>
+                      </button>
+
+                      <button
+                        onClick={(e) => handleDeleteInquiry(item.id, e)}
+                        className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs px-3 py-2 rounded-lg transition-all flex items-center justify-center gap-1 shadow-sm"
+                        title="Delete Inquiry"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Remove</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -910,22 +988,33 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
               </div>
             </div>
 
-            <div className="flex items-center gap-3 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
               <button
                 type="button"
-                onClick={() => setShowScheduleModal(false)}
-                className="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs py-3 rounded-xl transition-all"
+                onClick={(e) => selectedEvaluation && handleDeleteInquiry(selectedEvaluation.id, e)}
+                className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs px-3.5 py-3 rounded-xl transition-all flex items-center gap-1.5"
               >
-                Cancel
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete</span>
               </button>
-              <button
-                type="button"
-                onClick={handleSaveStatusAndSchedule}
-                disabled={isUpdatingStatus}
-                className="w-1/2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
-              >
-                {isUpdatingStatus ? 'Saving...' : 'Save & Update'}
-              </button>
+
+              <div className="flex items-center gap-2 flex-1 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowScheduleModal(false)}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs px-4 py-3 rounded-xl transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveStatusAndSchedule}
+                  disabled={isUpdatingStatus}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-5 py-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  {isUpdatingStatus ? 'Saving...' : 'Save & Update'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

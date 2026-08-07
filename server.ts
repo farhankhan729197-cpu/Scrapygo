@@ -29,70 +29,6 @@ const usersStore = new Map<string, RegisteredUser>();
 // In-memory Evaluations/Inquiries Storage: id -> evaluation object
 const evaluationsStore = new Map<string, any>();
 
-// Preseed initial sample inquiries for admin evaluation dashboard
-const initialSampleEvaluations = [
-  {
-    id: "EV-98241",
-    category: "AC",
-    brand: "Daikin",
-    model: "Daikin 1.5 Ton Split AC",
-    condition: "good",
-    capacity: "1.5 Ton",
-    energyRating: "5 Star",
-    issues: ["Cooling issue / Gas leak"],
-    estimatedPrice: 5500,
-    phone: "+919876543210",
-    customerName: "Rahul Sharma",
-    customerAddress: "Flat 402, Green Valley Apartments, Sector 62, Noida, UP - 201301",
-    status: "Pending Pickup",
-    pickupDate: "2026-07-30",
-    pickupSlot: "Morning (09:00 AM - 12:00 PM)",
-    pickupAgent: "Amit Kumar (+91 9123456789)",
-    adminNotes: "Customer requested driver call 30 minutes before arrival.",
-    createdAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString()
-  },
-  {
-    id: "EV-87120",
-    category: "Refrigerator",
-    brand: "Samsung",
-    model: "Samsung 253L Double Door Refrigerator",
-    condition: "average",
-    capacity: "253L",
-    energyRating: "3 Star",
-    issues: ["Compressor noise", "Rusting on body"],
-    estimatedPrice: 1700,
-    phone: "+919811223344",
-    customerName: "Priya Verma",
-    customerAddress: "House No. 12B, Block C, Vasant Kunj, New Delhi - 110070",
-    status: "Confirmed",
-    pickupDate: "2026-07-31",
-    pickupSlot: "Afternoon (12:00 PM - 04:00 PM)",
-    pickupAgent: "Vikram Singh (+91 9899887766)",
-    adminNotes: "Lift is available in building.",
-    createdAt: new Date(Date.now() - 14 * 3600 * 1000).toISOString()
-  },
-  {
-    id: "EV-65412",
-    category: "Mobile",
-    brand: "Apple",
-    model: "iPhone 13 Mini",
-    condition: "excellent",
-    issues: ["Minor scratch on back glass"],
-    estimatedPrice: 22000,
-    phone: "+919955443322",
-    customerName: "Anand Gupta",
-    customerAddress: "Tower 3, Apt 1104, Cyber City, Gurugram, HR - 122002",
-    status: "Hold",
-    pickupDate: "",
-    pickupSlot: "",
-    pickupAgent: "",
-    adminNotes: "Customer requested hold until weekend.",
-    createdAt: new Date(Date.now() - 28 * 3600 * 1000).toISOString()
-  }
-];
-
-initialSampleEvaluations.forEach(ev => evaluationsStore.set(ev.id, ev));
-
 // Preseed testing user
 usersStore.set("9876543210", {
   name: "ScrapyGo Tester",
@@ -108,7 +44,59 @@ async function startServer() {
   // Body parser middleware
   app.use(express.json());
 
-  // Helper for strict 10-digit active mobile number validation
+  // Helper to lookup registered user by phone or email
+  function findRegisteredUser(identifier: string): RegisteredUser | null {
+    if (!identifier || typeof identifier !== "string") return null;
+    const cleanId = identifier.trim().toLowerCase();
+    const digitsOnly = cleanId.replace(/[^\d]/g, "");
+
+    for (const [key, user] of usersStore.entries()) {
+      // Check phone match if digits exist
+      if (digitsOnly && digitsOnly.length >= 7) {
+        const keyDigits = key.replace(/[^\d]/g, "");
+        const userPhoneDigits = (user.phone || "").replace(/[^\d]/g, "");
+        if (
+          (keyDigits && keyDigits.length >= 7 && keyDigits.endsWith(digitsOnly.slice(-10))) ||
+          (userPhoneDigits && userPhoneDigits.length >= 7 && userPhoneDigits.endsWith(digitsOnly.slice(-10)))
+        ) {
+          return user;
+        }
+      }
+      // Check email match
+      if (user.email && user.email.toLowerCase() === cleanId) {
+        return user;
+      }
+    }
+    return null;
+  }
+
+  // API Route: Check User Registration Status
+  app.post("/api/check-user", async (req: express.Request, res: express.Response) => {
+    try {
+      const { phone, email, identifier } = req.body;
+      const target = identifier || phone || email || "";
+      const user = findRegisteredUser(target);
+
+      if (user) {
+        return res.json({
+          success: true,
+          exists: true,
+          user: { name: user.name, phone: user.phone, email: user.email }
+        });
+      } else {
+        return res.json({
+          success: true,
+          exists: false,
+          error: "Account not found. Please sign up first"
+        });
+      }
+    } catch (err: any) {
+      return res.status(200).json({
+        success: false,
+        error: "An error occurred checking user registration."
+      });
+    }
+  });
   function validateStrictMobileNumber(phoneStr: string): { valid: boolean; error?: string; subscriberDigits: string; fullPhone: string } {
     if (!phoneStr || typeof phoneStr !== "string") {
       return { valid: false, error: "Mobile number is required.", subscriberDigits: "", fullPhone: "" };
@@ -170,8 +158,8 @@ async function startServer() {
     return { valid: true, subscriberDigits, fullPhone: `${countryCode}${subscriberDigits}` };
   }
 
-  // API Route: Sign Up
-  app.post("/api/signup", async (req: express.Request, res: express.Response) => {
+  // Helper: Perform Sign Up
+  const performSignup = async (req: express.Request, res: express.Response) => {
     try {
       const { name, phone, email } = req.body;
 
@@ -204,7 +192,7 @@ async function startServer() {
         phone: cleaned,
         email: email.trim().toLowerCase()
       };
-usersStore.set(cleaned, newUser);
+      usersStore.set(cleaned, newUser);
 
       console.log(`[ScrapyGo Auth] New user signed up: Name: ${newUser.name}, Phone: ${newUser.phone}, Email: ${newUser.email}`);
       return res.json({
@@ -219,37 +207,17 @@ usersStore.set(cleaned, newUser);
         error: "An error occurred during sign up. Please try again."
       });
     }
-  });
+  };
 
-  // API Route: Log In
-  app.post("/api/login", async (req: express.Request, res: express.Response) => {
+  // Helper: Perform Log In
+  const performLogin = async (req: express.Request, res: express.Response) => {
     try {
-      const { phone } = req.body;
+      const { phone, email, identifier } = req.body;
+      const target = identifier || phone || email || "";
 
-      const phoneValidation = validateStrictMobileNumber(phone);
-      if (!phoneValidation.valid) {
-        return res.status(200).json({
-          success: false,
-          error: phoneValidation.error
-        });
-      }
+      const user = findRegisteredUser(target);
 
-      const cleaned = phoneValidation.fullPhone;
-
-      let user: RegisteredUser | null = null;
-      let userExists = false;
-
-      
-
-      if (!userExists) {
-        const localUser = usersStore.get(cleaned);
-        if (localUser) {
-          userExists = true;
-          user = localUser;
-        }
-      }
-
-      if (userExists && user) {
+      if (user) {
         console.log(`[ScrapyGo Auth] User logged in: ${user.name} (${user.phone})`);
         return res.json({
           success: true,
@@ -257,17 +225,9 @@ usersStore.set(cleaned, newUser);
           message: `Welcome back, ${user.name}!`
         });
       } else {
-        // Log in user and create default profile
-        const newUser: RegisteredUser = {
-          name: "ScrapyGo Customer",
-          phone: cleaned
-        };
-usersStore.set(cleaned, newUser);
-
-        return res.json({
-          success: true,
-          user: { name: newUser.name, phone: newUser.phone },
-          message: "Logged in successfully!"
+        return res.status(200).json({
+          success: false,
+          error: "Account not found. Please sign up first"
         });
       }
     } catch (err: any) {
@@ -277,28 +237,42 @@ usersStore.set(cleaned, newUser);
         error: "An error occurred during log in. Please try again."
       });
     }
-  });
+  };
+
+  // API Route: Sign Up
+  app.post("/api/signup", performSignup);
+
+  // API Route: Log In
+  app.post("/api/login", performLogin);
 
   // API Route: Unified Auth fallback
   app.post("/api/auth", async (req: express.Request, res: express.Response) => {
-    const { name, phone, email } = req.body;
+    const { name, email } = req.body;
     if (name && email) {
-      // Treat as signup
-      req.url = "/api/signup";
-      return app._router.handle(req, res);
+      return performSignup(req, res);
     } else {
-      // Treat as login
-      req.url = "/api/login";
-      return app._router.handle(req, res);
+      return performLogin(req, res);
     }
   });
 
   // API Route: Send OTP
   app.post("/api/send-otp", async (req, res) => {
     try {
-      const { phone } = req.body;
+      const { phone, email, identifier, authMode, purpose } = req.body;
+      const isLogin = authMode === 'login' || purpose === 'login';
+      const target = identifier || phone || email || "";
 
-      const phoneValidation = validateStrictMobileNumber(phone);
+      if (isLogin) {
+        const user = findRegisteredUser(target);
+        if (!user) {
+          return res.status(200).json({
+            success: false,
+            error: "Account not found. Please sign up first"
+          });
+        }
+      }
+
+      const phoneValidation = validateStrictMobileNumber(phone || target);
       if (!phoneValidation.valid) {
         return res.status(200).json({
           success: false,
@@ -578,6 +552,34 @@ usersStore.set(cleaned, newUser);
       return res.status(200).json({
         success: false,
         error: "An error occurred updating evaluation."
+      });
+    }
+  });
+
+  // Admin Route: Delete Evaluation/Inquiry
+  app.post("/api/admin/evaluations/delete", async (req, res) => {
+    try {
+      const { id } = req.body;
+      if (!id) {
+        return res.status(200).json({
+          success: false,
+          error: "Evaluation ID is required for deletion."
+        });
+      }
+
+      evaluationsStore.delete(id);
+
+      console.log(`[Admin API] Deleted evaluation inquiry #${id}`);
+
+      return res.json({
+        success: true,
+        message: `Inquiry #${id} deleted successfully.`
+      });
+    } catch (err: any) {
+      console.error("[Admin API] Delete inquiry error:", err);
+      return res.status(200).json({
+        success: false,
+        error: "An error occurred deleting evaluation."
       });
     }
   });

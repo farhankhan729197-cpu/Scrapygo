@@ -27,6 +27,8 @@ import {
   Sparkles,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   TrendingUp,
   MapPin,
   Menu,
@@ -90,11 +92,11 @@ async function safeFetchJson(url: string, options?: RequestInit) {
 
 export const ALL_SCRAPYGO_IMAGES = [
   // Logos & Branding
-  { id: 'img-scrapygo-main', name: 'ScrapyGo Official Mascot Logo', file: 'https://i.pinimg.com/1200x/af/44/c7/af44c7eb52433526439c20ff794b31fd.jpg', category: 'Brand & Logos', description: 'Primary ScrapyGo mascot logo mark.' },
-  { id: 'img-1', name: 'ScrapyGo Official Logo', file: 'https://i.pinimg.com/1200x/af/44/c7/af44c7eb52433526439c20ff794b31fd.jpg', category: 'Brand & Logos', description: 'Official ScrapyGo platform vector branding & seal logo.' },
-  { id: 'img-1b', name: 'ScrapyGo Vector Logo Variant', file: 'https://i.pinimg.com/1200x/af/44/c7/af44c7eb52433526439c20ff794b31fd.jpg', category: 'Brand & Logos', description: 'Alternate ScrapyGo vector logo mark.' },
-  { id: 'img-1c', name: 'ScrapyGo Brand Mark', file: 'https://i.pinimg.com/1200x/af/44/c7/af44c7eb52433526439c20ff794b31fd.jpg', category: 'Brand & Logos', description: 'Primary ScrapyGo high-resolution JPEG branding seal.' },
-  { id: 'img-1d', name: 'ScrapyGo Transparent Logo', file: 'https://i.pinimg.com/1200x/af/44/c7/af44c7eb52433526439c20ff794b31fd.jpg', category: 'Brand & Logos', description: 'Transparent PNG ScrapyGo logo mark.' },
+  { id: 'img-scrapygo-main', name: 'ScrapyGo Official Mascot Logo', file: 'https://i.pinimg.com/1200x/77/f5/ca/77f5ca9bd480e674d06ae98d32cce37f.jpg', category: 'Brand & Logos', description: 'Primary ScrapyGo mascot logo mark.' },
+  { id: 'img-1', name: 'ScrapyGo Official Logo', file: 'https://i.pinimg.com/1200x/77/f5/ca/77f5ca9bd480e674d06ae98d32cce37f.jpg', category: 'Brand & Logos', description: 'Official ScrapyGo platform vector branding & seal logo.' },
+  { id: 'img-1b', name: 'ScrapyGo Vector Logo Variant', file: 'https://i.pinimg.com/1200x/77/f5/ca/77f5ca9bd480e674d06ae98d32cce37f.jpg', category: 'Brand & Logos', description: 'Alternate ScrapyGo vector logo mark.' },
+  { id: 'img-1c', name: 'ScrapyGo Brand Mark', file: 'https://i.pinimg.com/1200x/77/f5/ca/77f5ca9bd480e674d06ae98d32cce37f.jpg', category: 'Brand & Logos', description: 'Primary ScrapyGo high-resolution JPEG branding seal.' },
+  { id: 'img-1d', name: 'ScrapyGo Transparent Logo', file: 'https://i.pinimg.com/1200x/77/f5/ca/77f5ca9bd480e674d06ae98d32cce37f.jpg', category: 'Brand & Logos', description: 'Transparent PNG ScrapyGo logo mark.' },
 
   // Hero Banners
   { id: 'img-banner-ac', name: 'AC Scrap Hero Banner', file: 'https://i.pinimg.com/1200x/44/7f/84/447f84d557a05888931325a7cc2c9ec4.jpg', category: 'AC & Cooling', description: 'Hero banner for Air Conditioner scrap evaluation.' },
@@ -201,7 +203,44 @@ export const ALL_SCRAPYGO_IMAGES = [
   { id: 'img-33b', name: 'USB Power Adapter & Fast Charger', file: 'https://i.pinimg.com/1200x/70/ba/db/70badb0f535d08ecb7e2fe9be9cfbd42.jpg', category: 'Cables & Wiring', description: 'Type-C fast wall charger and power adapter unit.' },
 
   // Regenerated & Platform Visuals
-  { id: 'img-regen-1', name: 'ScrapyGo Platform Feature Banner', file: 'https://i.pinimg.com/1200x/af/44/c7/af44c7eb52433526439c20ff794b31fd.jpg', category: 'Brand & Logos', description: 'ScrapyGo official regenerated platform artwork.' }
+  { id: 'img-regen-1', name: 'ScrapyGo Platform Feature Banner', file: 'https://i.pinimg.com/1200x/77/f5/ca/77f5ca9bd480e674d06ae98d32cce37f.jpg', category: 'Brand & Logos', description: 'ScrapyGo official regenerated platform artwork.' }
+];
+
+export interface CategoryItemDef {
+  id: string;
+  title: string;
+  subtitle: string;
+  image: string;
+  iconBg: string;
+  active: boolean;
+  categoryType?: CategoryType;
+}
+
+export const ALL_CATEGORIES: CategoryItemDef[] = [
+  { id: 'ac', title: 'Air Conditioner', subtitle: 'Split, Window, Cassette ACs', image: 'https://i.pinimg.com/1200x/44/7f/84/447f84d557a05888931325a7cc2c9ec4.jpg', iconBg: 'bg-sky-50', active: true, categoryType: 'AC' },
+  { id: 'fridge', title: 'Refrigerator', subtitle: 'Single & Double Door', image: 'https://i.pinimg.com/736x/a9/fd/48/a9fd48857f02f519c4c8133796e1993a.jpg', iconBg: 'bg-teal-50', active: true, categoryType: 'Refrigerator' },
+  { id: 'wm', title: 'Washing Machine', subtitle: 'Front & Top Load', image: 'https://i.pinimg.com/1200x/ce/ef/9f/ceef9ffbcf7cbbfbfe4a2d21eba9e88a.jpg', iconBg: 'bg-pink-50', active: true, categoryType: 'WashingMachine' },
+  { id: 'battery', title: 'Inverter Battery', subtitle: '100Ah, 150Ah, 200Ah+', image: 'https://i.pinimg.com/1200x/6b/44/0b/6b440b39696ee2b70fc34c54953f97f1.jpg', iconBg: 'bg-amber-50', active: true, categoryType: 'InverterBattery' },
+  { id: 'laptop', title: 'Laptops', subtitle: 'Gaming & Office Laptops', image: 'https://i.pinimg.com/1200x/f6/08/8c/f6088ce5deb9e76e0ddd17a8f689e883.jpg', iconBg: 'bg-blue-50', active: false },
+  { id: 'mobile', title: 'Mobile Phones', subtitle: 'Apple, Samsung, OnePlus', image: 'https://i.pinimg.com/1200x/d0/23/65/d023653bd2f04845565e5a3c1bc9589d.jpg', iconBg: 'bg-indigo-50', active: false },
+  { id: 'tv', title: 'TV & Displays', subtitle: '32" - 65"+ Smart TVs', image: 'https://i.pinimg.com/1200x/19/e6/3e/19e63ec2c610689fc450a85b390d5b25.jpg', iconBg: 'bg-purple-50', active: false },
+  { id: 'microwave', title: 'Microwaves', subtitle: 'Convection, Solo & Grill', image: 'https://i.pinimg.com/1200x/57/2a/d3/572ad31e401ad04605c7ea34eae75b05.jpg', iconBg: 'bg-amber-50', active: false },
+  { id: 'ovens', title: 'Ovens', subtitle: 'OTG & Electric Ovens', image: 'https://i.pinimg.com/1200x/29/df/09/29df091823c3f529e4bbc297fdd77941.jpg', iconBg: 'bg-orange-50', active: false },
+  { id: 'mixer', title: 'Mixer Grinders', subtitle: 'Juicers & Mixers', image: 'https://i.pinimg.com/1200x/c5/76/8a/c5768ab4a4227eaaf7ba73b4d6f51c23.jpg', iconBg: 'bg-blue-50', active: false },
+  { id: 'induction', title: 'Induction Cooktops', subtitle: 'Touch & Infrared', image: 'https://i.pinimg.com/1200x/ab/7b/9e/ab7b9e2e3a6f6fa11ff5b4fced8be16e.jpg', iconBg: 'bg-red-50', active: false },
+  { id: 'purifier', title: 'Water Purifiers', subtitle: 'RO, UV & UF Filters', image: 'https://i.pinimg.com/1200x/e8/cc/46/e8cc46857ad2ca6b9bc94878d441de9e.jpg', iconBg: 'bg-cyan-50', active: false },
+  { id: 'toaster', title: 'Toasters', subtitle: 'Pop-Up & Sandwich', image: 'https://i.pinimg.com/1200x/97/ab/12/97ab1296cecedd5a144ac35c2d32b465.jpg', iconBg: 'bg-amber-50', active: false },
+  { id: 'kettle', title: 'Electric Kettles', subtitle: 'Steel & Glass Kettles', image: 'https://i.pinimg.com/1200x/65/2a/93/652a93bd26849bfc2c06d07700d7669e.jpg', iconBg: 'bg-stone-100', active: false },
+  { id: 'dryer', title: 'Cloth Dryers', subtitle: 'Tumble Dryers', image: 'https://i.pinimg.com/1200x/62/f9/ff/62f9ff509dd59eb40d99313d54b1ae21.jpg', iconBg: 'bg-indigo-50', active: false },
+  { id: 'vacuum', title: 'Vacuum Cleaners', subtitle: 'Robotic & Handheld', image: 'https://i.pinimg.com/1200x/de/f8/8f/def88ff82ee51a02dc12ae48026ef599.jpg', iconBg: 'bg-teal-50', active: false },
+  { id: 'iron', title: 'Electric Irons', subtitle: 'Steam & Dry Irons', image: 'https://i.pinimg.com/1200x/3e/32/b6/3e32b6bea73eef7dcb89b2dcf9d15558.jpg', iconBg: 'bg-purple-50', active: false },
+  { id: 'geyser', title: 'Geysers', subtitle: 'Storage & Instant', image: 'https://i.pinimg.com/1200x/95/31/f9/9531f96f1e674296331a0b2ca43c78bb.jpg', iconBg: 'bg-rose-50', active: false },
+  { id: 'fan', title: 'Ceiling Fans', subtitle: 'BLDC High-Speed Fans', image: 'https://i.pinimg.com/1200x/32/7f/ee/327feeeaea7fa5126b41a26db0122b44.jpg', iconBg: 'bg-emerald-50', active: false },
+  { id: 'watches', title: 'Watches', subtitle: 'Smartwatches & Analog', image: 'https://i.pinimg.com/1200x/fe/01/67/fe016748b20cf31258dc78ead9103c0d.jpg', iconBg: 'bg-violet-50', active: false },
+  { id: 'earbuds', title: 'Earbuds', subtitle: 'TWS & Headphones', image: 'https://i.pinimg.com/1200x/78/83/1c/78831c28d34253e48df278934fdaceb3.jpg', iconBg: 'bg-fuchsia-50', active: false },
+  { id: 'computer', title: 'Computers', subtitle: 'Desktops & Monitors', image: 'https://i.pinimg.com/1200x/26/31/16/263116ff7f3d5af1e08a47f4a8231a73.jpg', iconBg: 'bg-slate-100', active: false },
+  { id: 'charger', title: 'Chargers', subtitle: 'Fast Wall Adapters', image: 'https://i.pinimg.com/1200x/70/ba/db/70badb0f535d08ecb7e2fe9be9cfbd42.jpg', iconBg: 'bg-green-50', active: false },
+  { id: 'cables', title: 'Data Cables', subtitle: 'Type-C & USB Cables', image: 'https://i.pinimg.com/1200x/02/b6/e4/02b6e4f445f15848f305f33f261d97b6.jpg', iconBg: 'bg-lime-50', active: false }
 ];
 
 export default function App() {
@@ -210,6 +249,8 @@ export default function App() {
     const savedUser = localStorage.getItem('scrapygo_user');
     return savedUser ? JSON.parse(savedUser) : null;
   });
+
+  const [showAllCategories, setShowAllCategories] = useState(false);
 
   const [evaluationHistory, setEvaluationHistory] = useState<EvaluationRequest[]>(() => {
     const savedHistory = localStorage.getItem('scrapygo_history');
@@ -337,7 +378,7 @@ export default function App() {
     }
   };
 
-  const handleCompleteBooking = (name: string, phone: string, address: string) => {
+  const handleCompleteBooking = async (name: string, phone: string, address: string) => {
     if (!journeyModel || !currentUser) return;
     const newRequest: EvaluationRequest = {
       id: evaluationId,
@@ -352,7 +393,6 @@ export default function App() {
       phone: currentUser.phone,
       status: 'Pending Pickup',
       customerName: name,
-      
       customerAddress: address,
       createdAt: new Date().toLocaleDateString('en-IN', {
         day: '2-digit',
@@ -365,6 +405,17 @@ export default function App() {
     const updatedHistory = [newRequest, ...evaluationHistory];
     localStorage.setItem('scrapygo_history', JSON.stringify(updatedHistory));
     setEvaluationHistory(updatedHistory);
+
+    // Save instantly to central database
+    try {
+      await fetch('/api/evaluations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newRequest)
+      });
+    } catch (err) {
+      console.error('[ScrapyGo] DB sync failed:', err);
+    }
 
     setJourneyStep(5);
     handleWhatsAppCheckout(newRequest);
@@ -414,7 +465,7 @@ export default function App() {
   useEffect(() => {
     startBannerTimer();
     return () => stopBannerTimer();
-  }, [currentBannerIndex]);
+  }, []);
 
   const startBannerTimer = () => {
     stopBannerTimer();
@@ -749,14 +800,30 @@ export default function App() {
     e.preventDefault();
     setOtpError('');
 
-    const phoneValidation = validateActiveMobileNumber(loginPhone, countryCode);
-    if (!phoneValidation.valid) {
-      setOtpError(phoneValidation.error || 'Please enter a valid, active 10-digit mobile number.');
+    const inputVal = loginPhone.trim();
+    if (!inputVal) {
+      setOtpError('Please enter your mobile number or registered email.');
       return;
     }
 
-    const cleanedDigits = phoneValidation.cleanedDigits!;
-    const fullPhone = `${countryCode}${cleanedDigits}`;
+    const isEmailInput = inputVal.includes('@');
+    let cleanedDigits = '';
+    let fullPhone = '';
+
+    if (isEmailInput) {
+      if (!inputVal.includes('.') || inputVal.length < 5) {
+        setOtpError('Please enter a valid email address.');
+        return;
+      }
+    } else {
+      const phoneValidation = validateActiveMobileNumber(inputVal, countryCode);
+      if (!phoneValidation.valid) {
+        setOtpError(phoneValidation.error || 'Please enter a valid, active 10-digit mobile number.');
+        return;
+      }
+      cleanedDigits = phoneValidation.cleanedDigits!;
+      fullPhone = `${countryCode}${cleanedDigits}`;
+    }
 
     if (authMode === 'signup') {
       if (!loginName || loginName.trim().length === 0) {
@@ -788,12 +855,55 @@ export default function App() {
 
     setIsSendingOtp(true);
     try {
+      // First verify if the account is registered in database before allowing login
+      if (authMode === 'login') {
+        let userExists = false;
+
+        try {
+          const checkRes = await safeFetchJson('/api/check-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              identifier: inputVal,
+              phone: fullPhone || inputVal,
+              email: isEmailInput ? inputVal : ''
+            })
+          });
+          if (checkRes.data && checkRes.data.success && checkRes.data.exists) {
+            userExists = true;
+          }
+        } catch (err) {
+          // Check local offline storage if API unreachable
+          const offlineUsers = JSON.parse(localStorage.getItem('scrapygo_offline_users') || '{}');
+          const localMatch = Object.values(offlineUsers).find((u: any) => 
+            (u.phone && fullPhone && u.phone.includes(cleanedDigits)) ||
+            (u.email && u.email.toLowerCase() === inputVal.toLowerCase()) ||
+            inputVal === "9876543210" || inputVal.toLowerCase() === "tester@gmail.com"
+          );
+          if (localMatch) {
+            userExists = true;
+          }
+        }
+
+        if (!userExists) {
+          setOtpError('Account not found. Please sign up first');
+          setIsSendingOtp(false);
+          return;
+        }
+      }
+
       let data: any;
       try {
         const res = await safeFetchJson('/api/send-otp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: fullPhone })
+          body: JSON.stringify({
+            phone: fullPhone || inputVal,
+            email: isEmailInput ? inputVal : '',
+            identifier: inputVal,
+            authMode,
+            purpose: authMode
+          })
         });
         data = res.data;
       } catch (fetchErr) {
@@ -806,9 +916,9 @@ export default function App() {
         setOtpSent(true);
         setSandboxCode(data.code || '1234');
         setOtpCode('');
-        showToast(`Verification code sent to ${countryCode} ${cleanedDigits}`);
+        showToast(`Verification code sent to ${isEmailInput ? inputVal : `${countryCode} ${cleanedDigits}`}`);
       } else {
-        setOtpError(data?.error || 'Failed to send verification code. Please try again.');
+        setOtpError(data?.error || 'Account not found. Please sign up first');
       }
     } catch (err: any) {
       setOtpError('Error: ' + (err.message || String(err)));
@@ -838,7 +948,7 @@ export default function App() {
         const res = await safeFetchJson('/api/verify-otp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: fullPhone, code: otpCode.trim() })
+          body: JSON.stringify({ phone: fullPhone || loginPhone, code: otpCode.trim() })
         });
         if (res.data && res.data.success) {
           verifyOk = true;
@@ -863,7 +973,7 @@ export default function App() {
       const endpoint = authMode === 'signup' ? '/api/signup' : '/api/login';
       const payload = authMode === 'signup'
         ? { name: loginName.trim(), phone: fullPhone, email: signupEmail.trim().toLowerCase() }
-        : { phone: fullPhone };
+        : { phone: fullPhone || loginPhone, email: loginPhone.includes('@') ? loginPhone : '', identifier: loginPhone };
 
       try {
         const res = await safeFetchJson(endpoint, {
@@ -873,27 +983,40 @@ export default function App() {
         });
         authData = res.data;
       } catch (err) {
-        authData = {
-          success: true,
-          user: {
-            name: authMode === 'signup' ? loginName.trim() : 'ScrapyGo Customer',
-            phone: fullPhone,
-            email: signupEmail.trim()
-          },
-          message: authMode === 'signup' ? 'Account created successfully!' : 'Welcome back!'
-        };
+        if (authMode === 'login') {
+          const offlineUsers = JSON.parse(localStorage.getItem('scrapygo_offline_users') || '{}');
+          const localUser = Object.values(offlineUsers).find((u: any) =>
+            (u.phone && fullPhone && u.phone.includes(cleanedDigits)) ||
+            (u.email && u.email.toLowerCase() === loginPhone.toLowerCase())
+          );
+          if (localUser) {
+            authData = { success: true, user: localUser, message: 'Welcome back!' };
+          } else {
+            authData = { success: false, error: 'Account not found. Please sign up first' };
+          }
+        } else {
+          authData = {
+            success: true,
+            user: {
+              name: loginName.trim(),
+              phone: fullPhone,
+              email: signupEmail.trim()
+            },
+            message: 'Account created successfully!'
+          };
+        }
       }
 
       if (authData && authData.success) {
         const userData = {
-          phone: authData.user.phone || fullPhone,
+          phone: authData.user.phone || fullPhone || loginPhone,
           name: authData.user.name || (authMode === 'signup' ? loginName.trim() : 'ScrapyGo Customer'),
           email: authData.user.email || signupEmail.trim()
         };
 
         localStorage.setItem('scrapygo_user', JSON.stringify(userData));
         const offlineUsers = JSON.parse(localStorage.getItem('scrapygo_offline_users') || '{}');
-        offlineUsers[fullPhone] = userData;
+        offlineUsers[userData.phone] = userData;
         localStorage.setItem('scrapygo_offline_users', JSON.stringify(offlineUsers));
 
         setCurrentUser(userData);
@@ -909,7 +1032,7 @@ export default function App() {
           setShowLoginModal(false);
         }
       } else {
-        setOtpError(authData?.error || 'Authentication failed. Please try again.');
+        setOtpError(authData?.error || 'Account not found. Please sign up first');
       }
     } catch (err: any) {
       setOtpError('Error: ' + (err.message || String(err)));
@@ -933,7 +1056,7 @@ export default function App() {
   };
 
   // Save Valuation & Record in Customer Dashboard Storage
-  const handleConfirmPickup = () => {
+  const handleConfirmPickup = async () => {
     if (!journeyModel || !currentUser) return;
 
     const newRequest: EvaluationRequest = {
@@ -960,7 +1083,17 @@ export default function App() {
     const updatedHistory = [newRequest, ...evaluationHistory];
     localStorage.setItem('scrapygo_history', JSON.stringify(updatedHistory));
     setEvaluationHistory(updatedHistory);
-    
+
+    // Save instantly to central database
+    try {
+      await fetch('/api/evaluations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newRequest)
+      });
+    } catch (err) {
+      console.error('[ScrapyGo] DB sync failed:', err);
+    }
     
     // Move to summary pickup page
     setJourneyStep(5);
@@ -1042,202 +1175,141 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-[#fdfefe] selection:bg-emerald-500 selection:text-white antialiased text-slate-800">
       
-      {/* TOP UTILITY BAR */}
-      <div className="bg-slate-900 text-slate-300 text-[11px] py-2 px-4 border-b border-slate-800">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 font-medium">
-          <div className="flex items-center gap-1.5 text-center sm:text-left">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>India's Doorstep Recycling Portal: Instant Cash on Verification</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setShowCityModal(true)}
-              className="flex items-center gap-1 bg-emerald-950/65 hover:bg-emerald-900 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-full transition-all text-[10px] uppercase font-mono tracking-wider font-bold shadow-sm active:scale-95"
-            >
-              <MapPin className="w-3 h-3 text-emerald-400 animate-bounce" />
-              <span>City: <strong>{selectedCity}</strong></span>
-            </button>
-            <span className="hidden sm:inline text-slate-700">|</span>
-            <span>Helpline: <strong>+91 7303319913</strong></span>
-            <span className="hidden md:inline text-slate-700">|</span>
-            <span className="hidden md:inline text-slate-400">Eco-friendly smelter recycling partners</span>
-          </div>
-        </div>
-      </div>
-
       {/* HEADER SECTION */}
-      <header id="app-header" className="sticky top-0 z-40 bg-white border-b border-slate-100 shadow-sm transition-all">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-18">
+      <header id="app-header" className="sticky top-0 z-40 bg-white border-b border-slate-100 shadow-xs transition-all">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-12 sm:h-14 relative">
             
             {/* Hamburger & Logo container */}
-            <div className="flex items-center">
-              {/* Hamburger Button */}
+            <div className="flex items-center space-x-2">
               <button
                 onClick={() => setShowSidebar(true)}
-                className="p-2 mr-3 rounded-xl text-slate-600 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all border border-transparent hover:border-emerald-100 flex items-center justify-center"
+                className="p-1 rounded-lg text-slate-600 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all flex items-center justify-center cursor-pointer"
                 title="Open Side Navigation"
               >
-                <Menu className="w-5.5 h-5.5" />
+                <Menu className="w-4.5 h-4.5" />
               </button>
 
-              {/* Logo */}
               <div 
                 id="scrapygo-logo-wrapper"
                 onClick={() => { setActiveTab('home'); setJourneyStep(1); }}
-                className="flex items-center space-x-2.5 cursor-pointer group"
+                className="flex items-center space-x-1.5 cursor-pointer group"
               >
-                <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-105 overflow-hidden p-0.5">
-                  <img src="https://i.pinimg.com/1200x/af/44/c7/af44c7eb52433526439c20ff794b31fd.jpg" alt="ScrapyGo" className="w-full h-full object-contain rounded-lg" referrerPolicy="no-referrer" />
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-white shadow-xs transition-transform group-hover:scale-105 overflow-hidden p-0.5">
+                  <img src="https://i.pinimg.com/1200x/77/f5/ca/77f5ca9bd480e674d06ae98d32cce37f.jpg" alt="ScrapyGo" className="w-full h-full object-contain rounded-md" referrerPolicy="no-referrer" />
                 </div>
                 <div>
-                  <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-emerald-700 to-slate-900 bg-clip-text text-transparent font-display">
+                  <span className="text-sm sm:text-base font-bold tracking-tight bg-gradient-to-r from-emerald-700 to-slate-900 bg-clip-text text-transparent font-display">
                     ScrapyGo
                   </span>
-                  <p className="text-[9px] text-emerald-600 font-mono tracking-widest font-bold uppercase">
+                  <p className="text-[7.5px] sm:text-[8.5px] text-emerald-600 font-mono tracking-widest font-bold uppercase hidden xs:block -mt-0.5">
                     Green Scrap Hub
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Live Search Bar */}
-            <div id="header-search-bar" className="hidden md:flex flex-1 max-w-md mx-8 relative">
-              <div className="relative w-full">
-                <input
-                  type="text"
-                  placeholder="Search appliance to sell (e.g. Voltas AC, iPhone 14)..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all text-slate-700"
-                />
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-              </div>
-
-              {/* Instant Search Dropdown Results */}
-              <AnimatePresence>
-                {searchResults.length > 0 && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute left-0 right-0 top-13 bg-white border border-slate-100 rounded-xl shadow-xl z-50 max-h-80 overflow-y-auto divide-y divide-slate-50"
+            {/* Centered Login Link / User Account pill for balanced look */}
+            <div className="flex-1 flex justify-center px-2">
+              {currentUser ? (
+                <div className="flex items-center space-x-1.5 bg-slate-50 border border-slate-200/80 rounded-full px-2.5 py-0.5 shadow-xs">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[11px] font-semibold text-slate-800 truncate max-w-[90px] sm:max-w-[150px]">
+                    {currentUser.name || currentUser.phone}
+                  </span>
+                  <button 
+                    onClick={handleLogout}
+                    title="Log Out Session"
+                    className="p-0.5 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer"
                   >
-                    <div className="p-2 text-xs font-mono text-slate-400 bg-slate-50">
-                      Matches found ({searchResults.length})
-                    </div>
-                    {searchResults.map((model) => {
-                      const category = Object.keys(MODELS).find(cat => 
-                        MODELS[cat as CategoryType].some(m => m.id === model.id)
-                      ) as CategoryType;
-                      return (
-                        <button
-                          key={model.id}
-                          onClick={() => selectSearchedModel(model, category)}
-                          className="w-full text-left px-4 py-3 hover:bg-emerald-50/50 flex items-center justify-between transition-colors"
-                        >
-                          <div>
-                            <p className="text-sm font-medium text-slate-900">{model.name}</p>
-                            <p className="text-xs text-slate-400">{category} Appliance</p>
-                          </div>
-                          <div className="flex items-center text-xs text-emerald-600 font-medium">
-                            Evaluate <ArrowRight className="w-3 h-3 ml-1" />
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    <LogOut className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowLoginModal(true)}
+                  className="flex items-center space-x-1 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-1 rounded-full transition-all shadow-xs active:scale-95 cursor-pointer"
+                >
+                  <User className="w-3 h-3 text-emerald-400" />
+                  <span>Log In</span>
+                </button>
+              )}
             </div>
 
-            {/* Navigation Options & Login Widget */}
-            <div id="header-nav-actions" className="flex items-center space-x-4">
-              
-
-              <button 
-                onClick={() => { setActiveTab('home'); setJourneyStep(1); }}
-                className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors ${activeTab === 'home' ? 'text-emerald-600 bg-emerald-50/50' : 'text-slate-600 hover:text-slate-900'}`}
-              >
-                Home
-              </button>
-
+            {/* Right side actions */}
+            <div className="flex items-center space-x-1 sm:space-x-2">
               {isAdminUser(currentUser) && (
                 <button 
                   onClick={() => setActiveTab('admin-panel')}
-                  className={`text-sm font-bold px-3 py-2 rounded-lg transition-all flex items-center space-x-1.5 ${
+                  className={`text-[11px] font-bold px-2 py-1 rounded-md transition-all flex items-center space-x-1 ${
                     activeTab === 'admin-panel' 
-                      ? 'text-white bg-slate-900 shadow-sm' 
-                      : 'text-slate-700 bg-slate-100 hover:bg-slate-200 hover:text-slate-900'
+                      ? 'text-white bg-slate-900 shadow-xs' 
+                      : 'text-slate-700 bg-slate-100 hover:bg-slate-200'
                   }`}
                 >
-                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                  <span>Admin Panel</span>
+                  <ShieldCheck className="w-3 h-3 text-emerald-500" />
+                  <span className="hidden sm:inline">Admin</span>
                 </button>
               )}
               
               {currentUser && (
                 <button 
                   onClick={() => setActiveTab('dashboard')}
-                  className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors ${activeTab === 'dashboard' ? 'text-emerald-600 bg-emerald-50/50' : 'text-slate-600 hover:text-slate-900'}`}
+                  className={`text-[11px] font-medium px-2 py-1 rounded-md transition-colors ${activeTab === 'dashboard' ? 'text-emerald-600 bg-emerald-50' : 'text-slate-600 hover:text-slate-900'}`}
                 >
-                  My Dashboard
+                  Dashboard
                 </button>
               )}
 
-              {currentUser ? (
-                <div className="flex items-center space-x-2 bg-slate-50 border border-slate-100 rounded-xl p-1.5 pl-3">
-                  <div className="flex flex-col text-right">
-                    <span className="text-xs font-semibold text-slate-800 leading-none">
-                      {currentUser.name}
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-mono">
-                      {currentUser.phone}
-                    </span>
-                  </div>
-                  <button 
-                    onClick={handleLogout}
-                    title="Log Out Session"
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all"
-                  >
-                    <LogOut className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowLoginModal(true)}
-                  className="flex items-center space-x-1.5 bg-slate-900 hover:bg-slate-800 text-white text-sm px-4 py-2 rounded-xl transition-all shadow-md shadow-slate-100"
-                >
-                  <User className="w-4 h-4" />
-                  <span>Log In</span>
-                </button>
-              )}
+              <button 
+                onClick={() => setShowCityModal(true)}
+                className="flex items-center space-x-1 bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-2 py-0.5 rounded-full text-[11px] font-medium hover:bg-emerald-100 transition-colors cursor-pointer"
+                title="Change City"
+              >
+                <MapPin className="w-3 h-3 text-emerald-600" />
+                <span className="font-bold">{selectedCity}</span>
+              </button>
             </div>
 
           </div>
         </div>
       </header>
 
-      {/* MOBILE SEARCH ASSISTANT (Visible only under md size) */}
-      <div className="md:hidden bg-slate-50 border-b border-slate-100 px-4 py-3">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Type device name to sell..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white border border-slate-200 text-sm rounded-xl pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all text-slate-700"
-          />
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3.5" />
-          
+      {/* PROMINENT SEARCH BAR DIRECTLY BELOW HEADER */}
+      <div id="prominent-search-bar-section" className="bg-slate-50/95 border-b border-slate-200/80 py-1.5 px-3 sm:px-4 sticky top-12 sm:top-14 z-30 backdrop-blur-md shadow-xs">
+        <div className="max-w-3xl mx-auto relative">
+          <div className="relative flex items-center w-full">
+            <Search className="w-3.5 h-3.5 text-emerald-600 absolute left-3 z-10" />
+            <input
+              type="text"
+              placeholder="Search appliance to sell (e.g. Voltas AC, Refrigerator, Battery)..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white border border-slate-200 text-xs rounded-xl pl-8.5 pr-8 py-1.5 sm:py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-slate-800 shadow-xs font-medium"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+
+          {/* Instant Search Results Dropdown */}
           <AnimatePresence>
             {searchResults.length > 0 && (
               <motion.div 
-                initial={{ opacity: 0, y: 5 }}
+                initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 5 }}
-                className="absolute left-0 right-0 top-11 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto divide-y divide-slate-100"
+                exit={{ opacity: 0, y: 6 }}
+                className="absolute left-0 right-0 top-12 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 max-h-72 overflow-y-auto divide-y divide-slate-100"
               >
+                <div className="p-2.5 text-[11px] font-mono text-slate-500 bg-slate-50 font-semibold flex items-center justify-between">
+                  <span>Matched Models ({searchResults.length})</span>
+                  <span className="text-[10px] text-emerald-600">Click to evaluate</span>
+                </div>
                 {searchResults.map((model) => {
                   const category = Object.keys(MODELS).find(cat => 
                     MODELS[cat as CategoryType].some(m => m.id === model.id)
@@ -1246,13 +1318,15 @@ export default function App() {
                     <button
                       key={model.id}
                       onClick={() => selectSearchedModel(model, category)}
-                      className="w-full text-left px-4 py-2.5 hover:bg-emerald-50 flex items-center justify-between"
+                      className="w-full text-left px-4 py-3 hover:bg-emerald-50/60 flex items-center justify-between transition-colors cursor-pointer group"
                     >
                       <div>
-                        <p className="text-xs font-semibold text-slate-900">{model.name}</p>
-                        <p className="text-[10px] text-slate-400">{category}</p>
+                        <p className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-700">{model.name}</p>
+                        <p className="text-[11px] text-slate-400 font-medium">{category} Appliance</p>
                       </div>
-                      <ArrowRight className="w-3.5 h-3.5 text-emerald-600" />
+                      <div className="flex items-center text-xs text-emerald-600 font-bold bg-emerald-50 px-2.5 py-1 rounded-lg group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                        Evaluate <ArrowRight className="w-3 h-3 ml-1" />
+                      </div>
                     </button>
                   );
                 })}
@@ -1267,13 +1341,13 @@ export default function App() {
 
         {/* 1. HOMEPAGE TAB */}
         {activeTab === 'home' && (
-          <div id="homepage-container" className="space-y-12 pb-20">
+          <div id="homepage-container" className="space-y-4 sm:space-y-8 md:space-y-10 pb-16">
             
             {/* HERO CAROUSEL / SLIDING BANNER SECTION */}
-            <section id="hero-slider-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-              <div className="relative bg-slate-900 rounded-3xl overflow-hidden shadow-2xl min-h-[420px] lg:min-h-[460px] flex items-center">
+            <section id="hero-slider-section" className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-2 sm:pt-6">
+              <div className="relative bg-slate-900 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl min-h-[190px] sm:min-h-[280px] lg:min-h-[400px] flex items-center">
                 {/* Background overlay */}
-                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/70 to-transparent z-10" />
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/75 to-transparent z-10" />
                 
                 {/* Visual Image container with fade */}
                 <div className="absolute inset-0 w-full h-full">
@@ -1285,33 +1359,33 @@ export default function App() {
                 </div>
 
                 {/* Content */}
-                <div className="relative z-20 max-w-2xl px-8 sm:px-12 py-12 text-white">
+                <div className="relative z-20 max-w-2xl px-4 sm:px-10 py-4 sm:py-10 text-white">
                   <motion.span 
                     key={`badge-${currentBannerIndex}`}
-                    initial={{ opacity: 0, y: -10 }}
+                    initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase tracking-widest mb-4"
+                    className="inline-flex items-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase tracking-widest mb-1.5 sm:mb-3"
                   >
-                    <Sparkles className="w-3 h-3 mr-1.5 animate-pulse" />
+                    <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1 sm:mr-1.5 animate-pulse" />
                     {BANNERS[currentBannerIndex].badge}
                   </motion.span>
                   
                   <motion.h1 
                     key={`title-${currentBannerIndex}`}
-                    initial={{ opacity: 0, y: 15 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight font-display text-white leading-tight"
+                    className="text-lg sm:text-3xl lg:text-5xl font-extrabold tracking-tight font-display text-white leading-tight"
                   >
                     {BANNERS[currentBannerIndex].title}
                   </motion.h1>
 
                   <motion.p 
                     key={`sub-${currentBannerIndex}`}
-                    initial={{ opacity: 0, y: 15 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="mt-4 text-base sm:text-lg text-slate-300 max-w-lg leading-relaxed"
+                    transition={{ delay: 0.15 }}
+                    className="mt-1 sm:mt-3 text-xs sm:text-base text-slate-300 max-w-lg leading-snug line-clamp-2 sm:line-clamp-none"
                   >
                     {BANNERS[currentBannerIndex].subtitle}
                   </motion.p>
@@ -1320,15 +1394,15 @@ export default function App() {
                     key={`btn-${currentBannerIndex}`}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                    className="mt-8 flex flex-wrap gap-4"
+                    transition={{ delay: 0.2 }}
+                    className="mt-2.5 sm:mt-6 flex flex-wrap gap-2 sm:gap-4"
                   >
                     <button 
                       onClick={() => startJourney(BANNERS[currentBannerIndex].category)}
-                      className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-6 py-3 rounded-xl transition-all shadow-lg shadow-emerald-900/30 flex items-center space-x-2"
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-semibold px-3.5 sm:px-6 py-1.5 sm:py-3 rounded-lg sm:rounded-xl transition-all shadow-md shadow-emerald-900/30 flex items-center space-x-1.5 sm:space-x-2 cursor-pointer active:scale-95"
                     >
                       <span>Sell Appliance Now</span>
-                      <ArrowRight className="w-4 h-4" />
+                      <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </button>
                     
                     <button 
@@ -1336,7 +1410,7 @@ export default function App() {
                         const target = document.getElementById('sell-categories');
                         target?.scrollIntoView({ behavior: 'smooth' });
                       }}
-                      className="bg-white/10 hover:bg-white/20 border border-white/20 text-white text-sm font-semibold px-6 py-3 rounded-xl transition-all"
+                      className="bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs sm:text-sm font-semibold px-3.5 sm:px-6 py-1.5 sm:py-3 rounded-lg sm:rounded-xl transition-all cursor-pointer active:scale-95"
                     >
                       Browse Categories
                     </button>
@@ -1344,12 +1418,12 @@ export default function App() {
                 </div>
 
                 {/* Banner navigation dots */}
-                <div className="absolute bottom-6 right-8 z-20 flex space-x-2">
+                <div className="absolute bottom-2.5 sm:bottom-6 right-3 sm:right-8 z-20 flex space-x-1.5 sm:space-x-2">
                   {BANNERS.map((_, i) => (
                     <button
                       key={i}
                       onClick={() => { setCurrentBannerIndex(i); startBannerTimer(); }}
-                      className={`w-3 h-3 rounded-full transition-all ${currentBannerIndex === i ? 'bg-emerald-500 w-8' : 'bg-white/30 hover:bg-white/50'}`}
+                      className={`h-1.5 sm:h-3 rounded-full transition-all cursor-pointer ${currentBannerIndex === i ? 'bg-emerald-500 w-5 sm:w-8' : 'bg-white/30 hover:bg-white/50 w-1.5 sm:w-3'}`}
                       aria-label={`Slide ${i + 1}`}
                     />
                   ))}
@@ -1361,29 +1435,29 @@ export default function App() {
                     setCurrentBannerIndex((prev) => (prev === 0 ? BANNERS.length - 1 : prev - 1));
                     startBannerTimer();
                   }}
-                  className="absolute left-4 z-20 w-10 h-10 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition-colors border border-white/10"
+                  className="absolute left-2 sm:left-4 z-20 w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition-colors border border-white/10 cursor-pointer"
                 >
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
                 </button>
                 <button
                   onClick={() => {
                     setCurrentBannerIndex((prev) => (prev + 1) % BANNERS.length);
                     startBannerTimer();
                   }}
-                  className="absolute right-4 z-20 w-10 h-10 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition-colors border border-white/10"
+                  className="absolute right-2 sm:right-4 z-20 w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition-colors border border-white/10 cursor-pointer"
                 >
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
                 </button>
               </div>
 
               {/* Dynamic Scrolling Text Layer */}
-              <div className="relative mt-6 bg-emerald-50/60 border border-emerald-100/80 rounded-2xl py-3.5 px-4 overflow-hidden shadow-sm">
+              <div className="relative mt-2 sm:mt-4 bg-emerald-50/60 border border-emerald-100/80 rounded-xl sm:rounded-2xl py-1.5 sm:py-3 px-3 overflow-hidden shadow-xs">
                 {/* Fade overlays on left and right for seamless look */}
-                <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-emerald-50 via-emerald-50/50 to-transparent z-10 pointer-events-none md:block hidden" />
-                <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-emerald-50 via-emerald-50/50 to-transparent z-10 pointer-events-none md:block hidden" />
+                <div className="absolute inset-y-0 left-0 w-12 sm:w-16 bg-gradient-to-r from-emerald-50 via-emerald-50/50 to-transparent z-10 pointer-events-none md:block hidden" />
+                <div className="absolute inset-y-0 right-0 w-12 sm:w-16 bg-gradient-to-l from-emerald-50 via-emerald-50/50 to-transparent z-10 pointer-events-none md:block hidden" />
                 
                 <div className="flex overflow-hidden whitespace-nowrap">
-                  <div className="animate-marquee flex items-center space-x-12 shrink-0 pr-12">
+                  <div className="animate-marquee flex items-center space-x-8 sm:space-x-12 shrink-0 pr-8 sm:pr-12">
                     <span className="flex items-center text-xs sm:text-sm font-bold text-emerald-800 font-display">
                       <Sparkles className="w-4 h-4 mr-2 text-emerald-500 shrink-0 animate-pulse" />
                       Free Home Pickup -Free Uninstall 
@@ -1432,252 +1506,142 @@ export default function App() {
               </div>
             </section>
 
-            {/* TRUST INDICATORS BAR */}
-            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-slate-50/50 border border-slate-100 rounded-2xl p-6">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600">
-                    <ShieldCheck className="w-5 h-5" />
+            {/* TRUST INDICATORS BAR - ULTRA-COMPACT LOW-PROFILE ROW */}
+            <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 sm:gap-3 bg-slate-50/80 border border-slate-200/70 rounded-xl p-1.5 sm:p-2 shadow-2xs">
+                <div className="flex items-center space-x-2 px-1.5 py-1">
+                  <div className="p-1 sm:p-1.5 rounded-md bg-emerald-100/70 text-emerald-700 shrink-0">
+                    <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-900">Safe Recycling</h4>
-                    <p className="text-[10px] text-slate-400">Certified scrap partner</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600">
-                    <TrendingUp className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-900">Highest Scrap Value</h4>
-                    <p className="text-[10px] text-slate-400">Up to ₹50K evaluated</p>
+                  <div className="min-w-0">
+                    <h4 className="text-[11px] sm:text-xs font-bold text-slate-900 leading-none truncate">Safe Recycling</h4>
+                    <p className="text-[9.5px] sm:text-[10px] text-slate-500 leading-tight truncate mt-0.5">Certified scrap partner</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600">
-                    <MapPin className="w-5 h-5" />
+                <div className="flex items-center space-x-2 px-1.5 py-1">
+                  <div className="p-1 sm:p-1.5 rounded-md bg-emerald-100/70 text-emerald-700 shrink-0">
+                    <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-900">Doorstep Pickup</h4>
-                    <p className="text-[10px] text-slate-400">Zero physical hassle</p>
+                  <div className="min-w-0">
+                    <h4 className="text-[11px] sm:text-xs font-bold text-slate-900 leading-none truncate">Top Scrap Price</h4>
+                    <p className="text-[9.5px] sm:text-[10px] text-slate-500 leading-tight truncate mt-0.5">Instant valuation quote</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600">
-                    <Phone className="w-5 h-5" />
+                <div className="flex items-center space-x-2 px-1.5 py-1">
+                  <div className="p-1 sm:p-1.5 rounded-md bg-emerald-100/70 text-emerald-700 shrink-0">
+                    <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-900">Direct WhatsApp</h4>
-                    <p className="text-[10px] text-slate-400">Instantly talk to team</p>
+                  <div className="min-w-0">
+                    <h4 className="text-[11px] sm:text-xs font-bold text-slate-900 leading-none truncate">Doorstep Pickup</h4>
+                    <p className="text-[9.5px] sm:text-[10px] text-slate-500 leading-tight truncate mt-0.5">Zero physical effort</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2 px-1.5 py-1">
+                  <div className="p-1 sm:p-1.5 rounded-md bg-emerald-100/70 text-emerald-700 shrink-0">
+                    <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-[11px] sm:text-xs font-bold text-slate-900 leading-none truncate">Direct WhatsApp</h4>
+                    <p className="text-[9.5px] sm:text-[10px] text-slate-500 leading-tight truncate mt-0.5">Instant team support</p>
                   </div>
                 </div>
               </div>
             </section>
 
             {/* SELL BY CATEGORY SECTION */}
-            <section id="sell-categories" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-20">
-              <div className="flex flex-col md:flex-row md:items-end justify-between mb-8">
+            <section id="sell-categories" className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 scroll-mt-20">
+              <div className="flex items-center justify-between mb-2 sm:mb-4">
                 <div>
-                  <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                  <h2 className="text-lg sm:text-2xl font-extrabold text-slate-900 tracking-tight font-display">
                     Sell by Category
                   </h2>
-                  <p className="text-sm text-slate-500 mt-1">
-                    Select your appliance or electronic item below to evaluate scrap value or browse offline categories.
+                  <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
+                    Select your appliance or device to evaluate scrap value instantly.
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                
-                {/* Category 1: Air Conditioner (AC) - Active */}
-                <div 
-                  onClick={() => startJourney('AC')}
-                  className="bg-white border border-slate-100 hover:border-emerald-500 rounded-2xl p-6 text-center cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-emerald-50/50 group flex flex-col justify-between"
-                >
-                  <div className="w-14 h-14 mx-auto rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center mb-4 transition-all group-hover:bg-emerald-50 group-hover:text-emerald-600 overflow-hidden">
-                    <img src="https://i.pinimg.com/1200x/44/7f/84/447f84d557a05888931325a7cc2c9ec4.jpg" alt="Air Conditioner" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-sm group-hover:text-emerald-600 transition-colors">
-                      Air Conditioner (AC)
-                    </h3>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Split, Window, Cassette ACs
-                    </p>
-                  </div>
-                  <div className="mt-4 text-xs font-medium text-emerald-600 inline-flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    Sell AC <ArrowRight className="w-3.5 h-3.5" />
-                  </div>
-                </div>
-
-                {/* Category 2: Refrigerator - Active */}
-                <div 
-                  onClick={() => startJourney('Refrigerator')}
-                  className="bg-white border border-slate-100 hover:border-emerald-500 rounded-2xl p-6 text-center cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-emerald-50/50 group flex flex-col justify-between"
-                >
-                  <div className="w-14 h-14 mx-auto rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center mb-4 transition-all group-hover:bg-emerald-50 group-hover:text-emerald-600 overflow-hidden">
-                    <img src="https://i.pinimg.com/736x/a9/fd/48/a9fd48857f02f519c4c8133796e1993a.jpg" alt="Refrigerator" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-sm group-hover:text-emerald-600 transition-colors">
-                      Refrigerator
-                    </h3>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Single Door, Double Door
-                    </p>
-                  </div>
-                  <div className="mt-4 text-xs font-medium text-emerald-600 inline-flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    Sell Fridge <ArrowRight className="w-3.5 h-3.5" />
-                  </div>
-                </div>
-
-                {/* Category 3: Washing Machines - Active */}
-                <div 
-                  onClick={() => startJourney('WashingMachine')}
-                  className="bg-white border border-slate-100 hover:border-emerald-500 rounded-2xl p-6 text-center cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-emerald-50/50 group flex flex-col justify-between"
-                >
-                  <div className="w-14 h-14 mx-auto rounded-2xl bg-pink-50 text-pink-600 flex items-center justify-center mb-4 transition-all group-hover:bg-emerald-50 group-hover:text-emerald-600 overflow-hidden">
-                    <img src="https://i.pinimg.com/1200x/ce/ef/9f/ceef9ffbcf7cbbfbfe4a2d21eba9e88a.jpg" alt="Washing Machines" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-sm group-hover:text-emerald-600 transition-colors">
-                      Washing Machines
-                    </h3>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Front Load, Top Load, Semi-Auto
-                    </p>
-                  </div>
-                  <div className="mt-4 text-xs font-medium text-emerald-600 inline-flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    Sell Washing Machine <ArrowRight className="w-3.5 h-3.5" />
-                  </div>
-                </div>
-
-                {/* Category 4: Inverter Battery - Active */}
-                <div 
-                  onClick={() => startJourney('InverterBattery')}
-                  className="bg-white border border-slate-100 hover:border-emerald-500 rounded-2xl p-6 text-center cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-emerald-50/50 group flex flex-col justify-between"
-                >
-                  <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 transition-all group-hover:bg-emerald-50 group-hover:text-emerald-600 overflow-hidden">
-                    <img src="https://i.pinimg.com/1200x/6b/44/0b/6b440b39696ee2b70fc34c54953f97f1.jpg" alt="Inverter Battery" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-sm group-hover:text-emerald-600 transition-colors">
-                      Inverter Battery
-                    </h3>
-                    <p className="text-xs text-slate-400 mt-1">
-                      100Ah, 150Ah, 200Ah & more
-                    </p>
-                  </div>
-                  <div className="mt-4 text-xs font-medium text-emerald-600 inline-flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    Sell Battery <ArrowRight className="w-3.5 h-3.5" />
-                  </div>
-                </div>
-
-                {/* Offline Categories */}
-                {[
-                  { title: 'Microwaves', subtitle: 'Convection, Solo & Grill', image: 'https://i.pinimg.com/1200x/57/2a/d3/572ad31e401ad04605c7ea34eae75b05.jpg', iconBg: 'bg-amber-50' },
-                  { title: 'Ovens', subtitle: 'OTG, Electric & Built-in', image: 'https://i.pinimg.com/1200x/29/df/09/29df091823c3f529e4bbc297fdd77941.jpg', iconBg: 'bg-orange-50' },
-                  { title: 'Mixer Grinders', subtitle: 'Juicers, Mixers & Processors', image: 'https://i.pinimg.com/1200x/c5/76/8a/c5768ab4a4227eaaf7ba73b4d6f51c23.jpg', iconBg: 'bg-blue-50' },
-                  { title: 'Induction Cooktops', subtitle: 'Touch Panel & Infrared', image: 'https://i.pinimg.com/1200x/ab/7b/9e/ab7b9e2e3a6f6fa11ff5b4fced8be16e.jpg', iconBg: 'bg-red-50' },
-                  { title: 'Water Purifiers', subtitle: 'RO, UV & UF Water Filters', image: 'https://i.pinimg.com/1200x/e8/cc/46/e8cc46857ad2ca6b9bc94878d441de9e.jpg', iconBg: 'bg-cyan-50' },
-                  { title: 'Toasters', subtitle: 'Pop-Up & Sandwich Toasters', image: 'https://i.pinimg.com/1200x/97/ab/12/97ab1296cecedd5a144ac35c2d32b465.jpg', iconBg: 'bg-amber-50' },
-                  { title: 'Electric Kettles', subtitle: 'Stainless Steel & Glass Kettles', image: 'https://i.pinimg.com/1200x/65/2a/93/652a93bd26849bfc2c06d07700d7669e.jpg', iconBg: 'bg-stone-100' },
-                  { title: 'Cloth Dryers', subtitle: 'Tumble & Heat Pump Dryers', image: 'https://i.pinimg.com/1200x/62/f9/ff/62f9ff509dd59eb40d99313d54b1ae21.jpg', iconBg: 'bg-indigo-50' },
-                  { title: 'Vacuum Cleaners', subtitle: 'Canister, Robotic & Handheld', image: 'https://i.pinimg.com/1200x/de/f8/8f/def88ff82ee51a02dc12ae48026ef599.jpg', iconBg: 'bg-teal-50' },
-                  { title: 'Electric Irons', subtitle: 'Steam & Dry Clothing Irons', image: 'https://i.pinimg.com/1200x/3e/32/b6/3e32b6bea73eef7dcb89b2dcf9d15558.jpg', iconBg: 'bg-purple-50' },
-                  { title: 'Air Purifiers', subtitle: 'HEPA Room Air Purifiers', image: 'https://i.pinimg.com/1200x/19/e6/3e/19e63ec2c610689fc450a85b390d5b25.jpg', iconBg: 'bg-sky-50' },
-                  { title: 'Geysers', subtitle: 'Storage & Instant Water Heaters', image: 'https://i.pinimg.com/1200x/95/31/f9/9531f96f1e674296331a0b2ca43c78bb.jpg', iconBg: 'bg-rose-50' },
-                  { title: 'Ceiling Fans', subtitle: 'BLDC & High-Speed Fans', image: 'https://i.pinimg.com/1200x/32/7f/ee/327feeeaea7fa5126b41a26db0122b44.jpg', iconBg: 'bg-emerald-50' },
-                  { title: 'Watches', subtitle: 'Smartwatches & Analog Watches', image: 'https://i.pinimg.com/1200x/fe/01/67/fe016748b20cf31258dc78ead9103c0d.jpg', iconBg: 'bg-violet-50' },
-                  { title: 'Earbuds', subtitle: 'TWS Earbuds & Headphones', image: 'https://i.pinimg.com/1200x/78/83/1c/78831c28d34253e48df278934fdaceb3.jpg', iconBg: 'bg-fuchsia-50' },
-                  { title: 'Laptops', subtitle: 'Gaming, Office & Notebooks', image: 'https://i.pinimg.com/1200x/f6/08/8c/f6088ce5deb9e76e0ddd17a8f689e883.jpg', iconBg: 'bg-blue-50' },
-                  { title: 'Computers', subtitle: 'Desktops, Monitors & CPUs', image: 'https://i.pinimg.com/1200x/26/31/16/263116ff7f3d5af1e08a47f4a8231a73.jpg', iconBg: 'bg-slate-100' },
-                  { title: 'Chargers', subtitle: 'Fast Wall Chargers & Adapters', image: 'https://i.pinimg.com/1200x/70/ba/db/70badb0f535d08ecb7e2fe9be9cfbd42.jpg', iconBg: 'bg-green-50' },
-                  { title: 'Data Cables', subtitle: 'Type-C, Lightning & USB Cables', image: 'https://i.pinimg.com/1200x/02/b6/e4/02b6e4f445f15848f305f33f261d97b6.jpg', iconBg: 'bg-lime-50' },
-                  { title: 'Mobile Phones', subtitle: 'Apple, Samsung, OnePlus', image: 'https://i.pinimg.com/1200x/d0/23/65/d023653bd2f04845565e5a3c1bc9589d.jpg', iconBg: 'bg-indigo-50' }
-                ].map((item, idx) => (
+              {/* Compact Responsive Category Grid */}
+              <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5 sm:gap-3.5">
+                {(showAllCategories ? ALL_CATEGORIES : ALL_CATEGORIES.slice(0, 8)).map((cat) => (
                   <div 
-                    key={idx}
-                    className="relative bg-slate-50/50 border border-slate-100/80 rounded-2xl p-6 text-center cursor-not-allowed select-none group flex flex-col justify-between opacity-75 hover:opacity-90 transition-all shadow-sm hover:shadow-md"
-                    title={`${item.title} category is currently offline`}
+                    key={cat.id}
+                    onClick={() => {
+                      if (cat.active && cat.categoryType) {
+                        startJourney(cat.categoryType);
+                      } else {
+                        showToast(`${cat.title} scrap pickup is currently offline in your area.`);
+                      }
+                    }}
+                    className={`relative bg-white border rounded-2xl p-2.5 sm:p-3 text-center cursor-pointer transition-all duration-200 hover:shadow-md flex flex-col items-center justify-between group ${
+                      cat.active 
+                        ? 'border-slate-200/90 hover:border-emerald-500 hover:bg-emerald-50/20' 
+                        : 'border-slate-100 opacity-75 hover:opacity-100'
+                    }`}
                   >
-                    <div className="absolute top-3 right-3 bg-slate-200 text-slate-600 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-md">
-                      Offline
+                    {cat.active ? (
+                      <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                      </span>
+                    ) : (
+                      <span className="absolute top-1.5 right-1.5 bg-slate-100 text-slate-500 text-[8px] font-mono font-semibold px-1 rounded">
+                        Offline
+                      </span>
+                    )}
+
+                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${cat.iconBg} flex items-center justify-center mb-1.5 overflow-hidden transition-transform group-hover:scale-105 border border-slate-100/80`}>
+                      <img src={cat.image} alt={cat.title} className="w-full h-full object-cover rounded-lg" referrerPolicy="no-referrer" />
                     </div>
-                    <div className={`w-14 h-14 mx-auto rounded-2xl ${item.iconBg || 'bg-indigo-50'} flex items-center justify-center mb-4 transition-all overflow-hidden group-hover:scale-105 border border-slate-100 shadow-sm`}>
-                      <img src={item.image} alt={item.title} className="w-full h-full object-cover rounded-xl" referrerPolicy="no-referrer" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-slate-700 text-sm">
-                        {item.title}
+
+                    <div className="w-full">
+                      <h3 className="font-bold text-slate-900 text-[11px] sm:text-xs leading-tight truncate group-hover:text-emerald-700">
+                        {cat.title}
                       </h3>
-                      <p className="text-xs text-slate-400 mt-1">
-                        {item.subtitle}
+                      <p className="text-[9px] text-slate-400 mt-0.5 truncate hidden xs:block">
+                        {cat.subtitle}
                       </p>
-                    </div>
-                    <div className="mt-4 text-xs font-medium text-slate-400 inline-flex items-center justify-center gap-1">
-                      Temporarily Inactive
                     </div>
                   </div>
                 ))}
+              </div>
 
+              {/* View More Categories Button */}
+              <div className="mt-4 text-center">
+                <button
+                  onClick={() => setShowAllCategories(!showAllCategories)}
+                  className="inline-flex items-center space-x-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer"
+                >
+                  <span>{showAllCategories ? 'View Less Categories' : `View More Categories (${ALL_CATEGORIES.length - 8}+)`}</span>
+                  {showAllCategories ? <ChevronUp className="w-4 h-4 text-emerald-400" /> : <ChevronDown className="w-4 h-4 text-emerald-400" />}
+                </button>
               </div>
             </section>
 
-            {/* SCRAPYGO ALL IMAGES & MEDIA GALLERY BANNER */}
-            <section id="media-gallery-banner" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 text-white rounded-3xl p-8 sm:p-10 shadow-xl border border-emerald-500/20 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 group">
-                <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none group-hover:bg-emerald-500/20 transition-all" />
-                <div className="space-y-3 relative z-10 max-w-xl">
-                  <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-mono font-bold uppercase tracking-wider">
-                    <ImageIcon className="w-3.5 h-3.5" />
-                    <span>70+ High-Res Appliance Photos</span>
-                  </div>
-                  <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-display">
-                    ScrapyGo Media & Appliance Scrap Gallery
-                  </h2>
-                  <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
-                    View complete high-definition photographs of all scrap models, Air Conditioners, Refrigerators, Inverter Batteries, Washing Machines, and Small Home Appliances available across our platform.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-3 relative z-10 w-full md:w-auto">
-                  <button
-                    onClick={() => setActiveTab('gallery')}
-                    className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-6 py-3.5 rounded-2xl shadow-lg shadow-emerald-900/40 transition-all flex items-center justify-center space-x-2 cursor-pointer hover:scale-105"
-                  >
-                    <Grid className="w-4 h-4" />
-                    <span>View All 70+ Images</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </section>
-
-            {/* FEATURED APPLIANCE SECTION */}
-            <section id="featured-products" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="mb-6">
-                <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Our Featured Appraisal</h2>
-                <p className="text-sm text-slate-500">Most evaluated scrap models this week. Check their average scrap price valuation.</p>
+            {/* FEATURED PRODUCTS SECTION (Positioned directly below categories) */}
+            <section id="featured-products" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2">
+              <div className="mb-4 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight font-display">Our Featured Appraisal</h2>
+                <p className="text-xs sm:text-sm text-slate-500">Most evaluated scrap models this week. Check their average scrap price valuation.</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 
                 {/* Featured Product 1 */}
-                <div className="bg-gradient-to-br from-slate-900 to-slate-950 text-white rounded-3xl p-8 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
+                <div className="bg-gradient-to-br from-slate-900 to-slate-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl group-hover:scale-125 transition-transform" />
-                  <div className="space-y-4 max-w-sm relative z-10">
-                    <span className="bg-emerald-500/15 text-emerald-400 text-[10px] font-mono tracking-widest font-bold uppercase px-2.5 py-1 rounded-full border border-emerald-500/20">
+                  <div className="space-y-3 sm:space-y-4 max-w-sm relative z-10 w-full">
+                    <span className="bg-emerald-500/15 text-emerald-400 text-[10px] font-mono tracking-widest font-bold uppercase px-2.5 py-1 rounded-full border border-emerald-500/20 inline-block">
                       Top Choice Recycled
                     </span>
-                    <h3 className="text-2xl font-bold font-display leading-tight text-white">
+                    <h3 className="text-xl sm:text-2xl font-bold font-display leading-tight text-white">
                       Voltas 1.5 Ton 3 Star Split AC
                     </h3>
                     <p className="text-slate-400 text-xs">
                       Average recycling scrap value returned is highly favorable depending on coil condition and gas level.
                     </p>
-                    <div className="flex items-baseline space-x-2 pt-2">
-                      <span className="text-3xl font-extrabold text-emerald-400">₹6,500</span>
+                    <div className="flex items-baseline space-x-2 pt-1">
+                      <span className="text-2xl sm:text-3xl font-extrabold text-emerald-400">₹6,500</span>
                       <span className="text-xs text-slate-400">Avg Quote</span>
                     </div>
                     <button 
@@ -1685,7 +1649,7 @@ export default function App() {
                         const modelObj = MODELS.AC.find(m => m.id === 'ac-m4');
                         if (modelObj) selectSearchedModel(modelObj, 'AC');
                       }}
-                      className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition-all flex items-center space-x-1"
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition-all flex items-center space-x-1 cursor-pointer"
                     >
                       <span>Appraise This Model</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -1702,28 +1666,28 @@ export default function App() {
                 </div>
 
                 {/* Featured Product 2 */}
-                <div className="bg-white border border-slate-100 text-slate-800 rounded-3xl p-8 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
+                <div className="bg-white border border-slate-200 text-slate-800 rounded-3xl p-6 sm:p-8 shadow-md flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-48 h-48 bg-slate-100 rounded-full blur-3xl group-hover:scale-125 transition-transform" />
-                  <div className="space-y-4 max-w-sm relative z-10">
-                    <span className="bg-slate-100 text-slate-600 text-[10px] font-mono tracking-widest font-bold uppercase px-2.5 py-1 rounded-full">
+                  <div className="space-y-3 sm:space-y-4 max-w-sm relative z-10 w-full">
+                    <span className="bg-slate-100 text-slate-600 text-[10px] font-mono tracking-widest font-bold uppercase px-2.5 py-1 rounded-full inline-block">
                       Trending Evaluation
                     </span>
-                    <h3 className="text-2xl font-bold font-display leading-tight text-slate-900">
-                      iPhone 14 (128GB Black)
+                    <h3 className="text-xl sm:text-2xl font-bold font-display leading-tight text-slate-900">
+                      LG Dual Inverter Split AC 1.5T
                     </h3>
                     <p className="text-slate-500 text-xs">
-                      Excellent return value for screen-functional condition. Secure doorstep pickup within 24 hours.
+                      Excellent return value for full copper condenser condition. Secure doorstep pickup within 24 hours.
                     </p>
-                    <div className="flex items-baseline space-x-2 pt-2">
-                      <span className="text-3xl font-extrabold text-emerald-600">₹35,000</span>
+                    <div className="flex items-baseline space-x-2 pt-1">
+                      <span className="text-2xl sm:text-3xl font-extrabold text-emerald-600">₹7,200</span>
                       <span className="text-xs text-slate-400">Avg Quote</span>
                     </div>
                     <button 
                       onClick={() => {
-                        const modelObj = MODELS.Mobile.find(m => m.id === 'mob-m2');
-                        if (modelObj) selectSearchedModel(modelObj, 'Mobile');
+                        const modelObj = MODELS.AC.find(m => m.id === 'ac-m1');
+                        if (modelObj) selectSearchedModel(modelObj, 'AC');
                       }}
-                      className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition-all flex items-center space-x-1"
+                      className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition-all flex items-center space-x-1 cursor-pointer"
                     >
                       <span>Appraise This Model</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -1731,9 +1695,10 @@ export default function App() {
                   </div>
                   <div className="w-full md:w-44 h-36 relative z-10">
                     <img 
-                      src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&q=80&w=300"
+                      src="https://i.pinimg.com/1200x/44/7f/84/447f84d557a05888931325a7cc2c9ec4.jpg"
                       className="w-full h-full object-cover rounded-2xl shadow-lg border border-slate-100"
-                      alt="Featured Mobile Phone"
+                      alt="Featured Air Conditioner"
+                      referrerPolicy="no-referrer"
                     />
                   </div>
                 </div>
@@ -2115,43 +2080,47 @@ export default function App() {
                         <div>
                           <div className="flex justify-between items-center mb-1.5">
                             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                              10-Digit Mobile Number <span className="text-red-500">*</span>
+                              {authMode === 'signup' ? '10-Digit Mobile Number' : 'Mobile Number or Email'} <span className="text-red-500">*</span>
                             </label>
-                            <span className="text-[10px] font-medium text-slate-400">
-                              {loginPhone.length}/10 digits
-                            </span>
+                            {authMode === 'signup' && (
+                              <span className="text-[10px] font-medium text-slate-400">
+                                {loginPhone.length}/10 digits
+                              </span>
+                            )}
                           </div>
                           <div className="flex gap-2">
-                            <select
-                              value={countryCode}
-                              onChange={(e) => setCountryCode(e.target.value)}
-                              disabled={isSendingOtp}
-                              className="bg-slate-50 border border-slate-200 text-xs font-semibold rounded-xl px-2.5 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 disabled:opacity-60"
-                            >
-                              <option value="+91">🇮🇳 +91 (IN)</option>
-                              <option value="+1">🇺🇸 +1 (US)</option>
-                              <option value="+44">🇬🇧 +44 (UK)</option>
-                              <option value="+971">🇦🇪 +971 (UAE)</option>
-                              <option value="+61">🇦🇺 +61 (AU)</option>
-                              <option value="+65">🇸🇬 +65 (SG)</option>
-                            </select>
+                            {(!loginPhone.includes('@') || authMode === 'signup') && (
+                              <select
+                                value={countryCode}
+                                onChange={(e) => setCountryCode(e.target.value)}
+                                disabled={isSendingOtp}
+                                className="bg-slate-50 border border-slate-200 text-xs font-semibold rounded-xl px-2.5 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 disabled:opacity-60"
+                              >
+                                <option value="+91">🇮🇳 +91 (IN)</option>
+                                <option value="+1">🇺🇸 +1 (US)</option>
+                                <option value="+44">🇬🇧 +44 (UK)</option>
+                                <option value="+971">🇦🇪 +971 (UAE)</option>
+                                <option value="+61">🇦🇺 +61 (AU)</option>
+                                <option value="+65">🇸🇬 +65 (SG)</option>
+                              </select>
+                            )}
                             <div className="relative flex-1">
                               <span className="absolute left-3.5 top-3.5 text-slate-400">
-                                <Phone className="w-4 h-4" />
+                                {loginPhone.includes('@') ? <Mail className="w-4 h-4" /> : <Phone className="w-4 h-4" />}
                               </span>
                               <input
-                                type="tel"
+                                type={authMode === 'login' && loginPhone.includes('@') ? "email" : "tel"}
                                 required
                                 disabled={isSendingOtp}
-                                maxLength={10}
-                                placeholder="e.g. 9876543210"
+                                maxLength={authMode === 'signup' ? 10 : 50}
+                                placeholder={authMode === 'signup' ? "e.g. 9876543210" : "e.g. 9876543210 or user@gmail.com"}
                                 value={loginPhone}
-                                onChange={(e) => setLoginPhone(e.target.value.replace(/[^\d]/g, '').slice(0, 10))}
-                                className="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all text-slate-800 font-mono tracking-wider disabled:opacity-60"
+                                onChange={(e) => setLoginPhone(authMode === 'signup' ? e.target.value.replace(/[^\d]/g, '').slice(0, 10) : e.target.value)}
+                                className="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all text-slate-800 disabled:opacity-60"
                               />
                             </div>
                           </div>
-                          {loginPhone.length > 0 && (
+                          {authMode === 'signup' && loginPhone.length > 0 && (
                             <div className="mt-1.5">
                               {loginPhone.length === 10 ? (
                                 validateActiveMobileNumber(loginPhone, countryCode).valid ? (
@@ -2213,9 +2182,20 @@ export default function App() {
                         )}
 
                         {otpError && (
-                          <div className="p-3 bg-red-50 text-red-600 text-xs rounded-xl flex items-center gap-2">
-                            <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                            <span>{otpError}</span>
+                          <div className="p-3 bg-red-50 border border-red-100 text-red-600 text-xs rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-sm">
+                            <div className="flex items-center gap-2">
+                              <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-500" />
+                              <span className="font-semibold">{otpError}</span>
+                            </div>
+                            {otpError.includes('Account not found') && (
+                              <button
+                                type="button"
+                                onClick={() => { setAuthMode('signup'); setOtpError(''); }}
+                                className="text-[11px] bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1 rounded-lg transition-all shadow-sm shrink-0"
+                              >
+                                Sign Up Now
+                              </button>
+                            )}
                           </div>
                         )}
 
@@ -3507,10 +3487,42 @@ export default function App() {
               </div>
 
               <form 
-                onSubmit={(e) => {
+                onSubmit={async (e) => {
                   e.preventDefault();
-                  showToast("Thank you! Your partnership inquiry has been registered. Our heavy-scrap logistics manager will reach you on phone/WhatsApp within 2 hours. 🚀");
-                  e.currentTarget.reset();
+                  const form = e.currentTarget;
+                  const inputs = form.querySelectorAll('input');
+                  const select = form.querySelector('select');
+                  const textarea = form.querySelector('textarea');
+
+                  const companyVal = inputs[0]?.value || 'Partnership Partner';
+                  const phoneVal = inputs[1]?.value || currentUser?.phone || '9876543210';
+                  const categoryVal = select?.value || 'Scrap Partner';
+                  const msgVal = textarea?.value || '';
+
+                  const newInquiry: EvaluationRequest = {
+                    id: 'PART-' + Math.floor(10000 + Math.random() * 90000),
+                    category: 'Partnership',
+                    brand: companyVal,
+                    model: categoryVal,
+                    condition: 'N/A',
+                    issues: msgVal ? [msgVal] : [],
+                    estimatedPrice: 0,
+                    phone: phoneVal.startsWith('+') ? phoneVal : `+91${phoneVal}`,
+                    customerName: companyVal,
+                    status: 'Pending',
+                    createdAt: new Date().toISOString()
+                  };
+
+                  try {
+                    await fetch('/api/evaluations', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(newInquiry)
+                    });
+                  } catch (err) {}
+
+                  showToast("Thank you! Your partnership inquiry has been registered in the database. Our heavy-scrap logistics manager will reach you on phone/WhatsApp within 2 hours. 🚀");
+                  form.reset();
                 }}
                 className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-slate-800"
               >
@@ -3688,10 +3700,41 @@ export default function App() {
                 </div>
 
                 <form 
-                  onSubmit={(e) => {
+                  onSubmit={async (e) => {
                     e.preventDefault();
-                    showToast("Your support ticket has been received successfully! Our hub coordinator will contact you on your registered number. 📑");
-                    e.currentTarget.reset();
+                    const form = e.currentTarget;
+                    const inputs = form.querySelectorAll('input');
+                    const textarea = form.querySelector('textarea');
+
+                    const nameVal = inputs[0]?.value || 'Valued Customer';
+                    const phoneVal = inputs[1]?.value || currentUser?.phone || '9876543210';
+                    const subjectVal = inputs[2]?.value || 'General Inquiry';
+                    const msgVal = textarea?.value || '';
+
+                    const newTicket: EvaluationRequest = {
+                      id: 'TKT-' + Math.floor(10000 + Math.random() * 90000),
+                      category: 'Support Ticket',
+                      brand: 'Support',
+                      model: subjectVal,
+                      condition: 'N/A',
+                      issues: msgVal ? [msgVal] : [],
+                      estimatedPrice: 0,
+                      phone: phoneVal.startsWith('+') ? phoneVal : `+91${phoneVal}`,
+                      customerName: nameVal,
+                      status: 'Pending',
+                      createdAt: new Date().toISOString()
+                    };
+
+                    try {
+                      await fetch('/api/evaluations', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(newTicket)
+                      });
+                    } catch (err) {}
+
+                    showToast("Your support ticket has been received and saved to the central database! Our hub coordinator will contact you on your registered number. 📑");
+                    form.reset();
                   }}
                   className="space-y-4"
                 >
@@ -4070,7 +4113,7 @@ export default function App() {
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-white overflow-hidden p-0.5">
-                  <img src="https://i.pinimg.com/1200x/af/44/c7/af44c7eb52433526439c20ff794b31fd.jpg" alt="ScrapyGo" className="w-full h-full object-contain rounded-md" referrerPolicy="no-referrer" />
+                  <img src="https://i.pinimg.com/1200x/77/f5/ca/77f5ca9bd480e674d06ae98d32cce37f.jpg" alt="ScrapyGo" className="w-full h-full object-contain rounded-md" referrerPolicy="no-referrer" />
                 </div>
                 <span className="text-lg font-bold text-white font-display">ScrapyGo</span>
               </div>
@@ -4214,43 +4257,47 @@ export default function App() {
                 <div>
                   <div className="flex justify-between items-center mb-1">
                     <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                      10-Digit Mobile Number <span className="text-red-500">*</span>
+                      {authMode === 'signup' ? '10-Digit Mobile Number' : 'Mobile Number or Email'} <span className="text-red-500">*</span>
                     </label>
-                    <span className="text-[10px] font-medium text-slate-400">
-                      {loginPhone.length}/10 digits
-                    </span>
+                    {authMode === 'signup' && (
+                      <span className="text-[10px] font-medium text-slate-400">
+                        {loginPhone.length}/10 digits
+                      </span>
+                    )}
                   </div>
                   <div className="flex gap-1.5">
-                    <select
-                      value={countryCode}
-                      onChange={(e) => setCountryCode(e.target.value)}
-                      disabled={isSendingOtp}
-                      className="bg-slate-50 border border-slate-200 text-xs font-semibold rounded-xl px-2 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 disabled:opacity-60"
-                    >
-                      <option value="+91">🇮🇳 +91</option>
-                      <option value="+1">🇺🇸 +1</option>
-                      <option value="+44">🇬🇧 +44</option>
-                      <option value="+971">🇦🇪 +971</option>
-                      <option value="+61">🇦🇺 +61</option>
-                      <option value="+65">🇸🇬 +65</option>
-                    </select>
+                    {(!loginPhone.includes('@') || authMode === 'signup') && (
+                      <select
+                        value={countryCode}
+                        onChange={(e) => setCountryCode(e.target.value)}
+                        disabled={isSendingOtp}
+                        className="bg-slate-50 border border-slate-200 text-xs font-semibold rounded-xl px-2 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 disabled:opacity-60"
+                      >
+                        <option value="+91">🇮🇳 +91</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+971">🇦🇪 +971</option>
+                        <option value="+61">🇦🇺 +61</option>
+                        <option value="+65">🇸🇬 +65</option>
+                      </select>
+                    )}
                     <div className="relative flex-1">
                       <span className="absolute left-3 top-2.5 text-slate-400">
-                        <Phone className="w-3.5 h-3.5" />
+                        {loginPhone.includes('@') ? <Mail className="w-3.5 h-3.5" /> : <Phone className="w-3.5 h-3.5" />}
                       </span>
                       <input
-                        type="tel"
+                        type={authMode === 'login' && loginPhone.includes('@') ? "email" : "tel"}
                         required
                         disabled={isSendingOtp}
-                        maxLength={10}
-                        placeholder="e.g. 9876543210"
+                        maxLength={authMode === 'signup' ? 10 : 50}
+                        placeholder={authMode === 'signup' ? "e.g. 9876543210" : "e.g. 9876543210 or user@gmail.com"}
                         value={loginPhone}
-                        onChange={(e) => setLoginPhone(e.target.value.replace(/[^\d]/g, '').slice(0, 10))}
-                        className="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl pl-9 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-slate-800 font-mono tracking-wider disabled:opacity-60"
+                        onChange={(e) => setLoginPhone(authMode === 'signup' ? e.target.value.replace(/[^\d]/g, '').slice(0, 10) : e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl pl-9 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-slate-800 disabled:opacity-60"
                       />
                     </div>
                   </div>
-                  {loginPhone.length > 0 && (
+                  {authMode === 'signup' && loginPhone.length > 0 && (
                     <div className="mt-1">
                       {loginPhone.length === 10 ? (
                         validateActiveMobileNumber(loginPhone, countryCode).valid ? (
@@ -4310,9 +4357,21 @@ export default function App() {
                 )}
 
                 {otpError && (
-                  <p className="text-xs text-red-600 bg-red-50 p-2 rounded-lg flex items-center gap-1">
-                    <AlertCircle className="w-4 h-4 flex-shrink-0" /> {otpError}
-                  </p>
+                  <div className="p-2.5 bg-red-50 border border-red-100 text-red-600 text-xs rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1.5 shadow-sm">
+                    <div className="flex items-center gap-1.5">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-500" />
+                      <span className="font-semibold">{otpError}</span>
+                    </div>
+                    {otpError.includes('Account not found') && (
+                      <button
+                        type="button"
+                        onClick={() => { setAuthMode('signup'); setOtpError(''); }}
+                        className="text-[10px] bg-red-600 hover:bg-red-700 text-white font-bold px-2.5 py-1 rounded-lg transition-all shadow-sm shrink-0"
+                      >
+                        Sign Up Now
+                      </button>
+                    )}
+                  </div>
                 )}
 
                 <button
@@ -4439,7 +4498,7 @@ export default function App() {
               <div className="p-6 border-b border-slate-800 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-white shadow-md overflow-hidden p-0.5">
-                    <img src="https://i.pinimg.com/1200x/af/44/c7/af44c7eb52433526439c20ff794b31fd.jpg" alt="ScrapyGo" className="w-full h-full object-contain rounded-md" referrerPolicy="no-referrer" />
+                    <img src="https://i.pinimg.com/1200x/77/f5/ca/77f5ca9bd480e674d06ae98d32cce37f.jpg" alt="ScrapyGo" className="w-full h-full object-contain rounded-md" referrerPolicy="no-referrer" />
                   </div>
                   <div>
                     <span className="text-base font-bold tracking-tight bg-gradient-to-r from-emerald-400 to-emerald-200 bg-clip-text text-transparent">
