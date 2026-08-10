@@ -289,10 +289,11 @@ export default function App() {
   const bannerTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Selling Journey Step State
-  // Steps: 1 = Brand/Model, 2 = Phone/OTP, 3 = Questionnaire, 4 = Price Generation, 5 = Ready for Pickup Summary
+  // Steps: 1 = Category & Type, 2 = Brand Search, 3 = Initial Valuation, 4 = Device Evaluation, 5 = Final Quote & Pickup, 6 = Confirmation
   const [journeyStep, setJourneyStep] = useState(1);
   const [journeyBrand, setJourneyBrand] = useState<Brand | null>(null);
   const [journeyModel, setJourneyModel] = useState<DeviceModel | null>(null);
+  const [brandSearchQuery, setBrandSearchQuery] = useState('');
   
   // OTP / Auth Form State
   const [loginPhone, setLoginPhone] = useState('');
@@ -451,47 +452,70 @@ export default function App() {
   // Dynamic Price Calculator Engine
   const calculatePrice = (model: DeviceModel, cat: CategoryType) => {
     if (cat === 'AC') {
-      let finalPrice = 5500; // default for 1.5 Ton, Good condition
+      let finalPrice = 4800; // default for 1.5 Ton, Good condition
 
-      // Detect capacity
+      // Detect capacity from capacity state or model name
       let detectedCapacity = capacity || '1.5 Ton';
+      if (model && model.name) {
+        const nameLower = model.name.toLowerCase();
+        if (nameLower.includes('0.8')) {
+          detectedCapacity = '0.8 Ton';
+        } else if (nameLower.includes('1.0') || nameLower.includes('1 ton')) {
+          detectedCapacity = '1.0 Ton';
+        } else if (nameLower.includes('2.0+') || nameLower.includes('2+ ton') || nameLower.includes('2.5') || nameLower.includes('3.0')) {
+          detectedCapacity = '2.0+ Ton';
+        } else if (nameLower.includes('2.0') || nameLower.includes('2 ton')) {
+          detectedCapacity = '2.0 Ton';
+        } else if (nameLower.includes('1.5')) {
+          detectedCapacity = '1.5 Ton';
+        }
+      }
 
-      if (detectedCapacity === '0.8 Ton' || detectedCapacity === '1.0 Ton') {
-        if (condition === 'excellent') finalPrice = 5000;
-        else if (condition === 'good') finalPrice = 4500;
-        else if (condition === 'average') finalPrice = 4100;
-        else if (condition === 'poor') finalPrice = 4000;
-        else finalPrice = 4500;
-      } else if (detectedCapacity === '2.0 Ton' || detectedCapacity === '2.0+ Ton') {
-        if (condition === 'excellent') finalPrice = 8000;
-        else if (condition === 'good') finalPrice = 7500;
-        else if (condition === 'average') finalPrice = 7100;
-        else if (condition === 'poor') finalPrice = 7000;
-        else finalPrice = 7500;
+      if (detectedCapacity.includes('0.8')) {
+        if (condition === 'excellent') finalPrice = 3800;
+        else if (condition === 'good') finalPrice = 3500;
+        else if (condition === 'average') finalPrice = 3100;
+        else if (condition === 'poor') finalPrice = 2700;
+        else finalPrice = 3500;
+      } else if (detectedCapacity.includes('1.0') || detectedCapacity === '1 Ton' || detectedCapacity === '1.0 Ton') {
+        if (condition === 'excellent') finalPrice = 4500;
+        else if (condition === 'good') finalPrice = 4200;
+        else if (condition === 'average') finalPrice = 4000;
+        else if (condition === 'poor') finalPrice = 3800;
+        else finalPrice = 4200;
+      } else if (detectedCapacity.includes('2.0+') || detectedCapacity.includes('2+') || detectedCapacity.includes('2.5') || detectedCapacity.includes('3.0')) {
+        if (condition === 'excellent') finalPrice = 6500;
+        else if (condition === 'good') finalPrice = 6000;
+        else if (condition === 'average') finalPrice = 5800;
+        else if (condition === 'poor') finalPrice = 5500;
+        else finalPrice = 6000;
+      } else if (detectedCapacity.includes('2.0') || detectedCapacity === '2 Ton' || detectedCapacity === '2.0 Ton') {
+        if (condition === 'excellent') finalPrice = 6000;
+        else if (condition === 'good') finalPrice = 5600;
+        else if (condition === 'average') finalPrice = 5400;
+        else if (condition === 'poor') finalPrice = 4900;
+        else finalPrice = 5600;
       } else {
         // Default to 1.5 Ton
-        if (condition === 'excellent') finalPrice = 6500;
-        else if (condition === 'good') finalPrice = 5500;
-        else if (condition === 'average') finalPrice = 4600;
-        else if (condition === 'poor') finalPrice = 4500;
-        else finalPrice = 5500;
+        if (condition === 'excellent') finalPrice = 5000;
+        else if (condition === 'good') finalPrice = 4800;
+        else if (condition === 'average') finalPrice = 4300;
+        else if (condition === 'poor') finalPrice = 4000;
+        else finalPrice = 4800;
       }
 
-      // AC Split vs AC Window adjustment
-      if (acType === 'AC Split') {
-        finalPrice += 500;
+      // Deduct ₹500 if 'Not cooling properly' flaw is selected
+      if (selectedIssues.includes('Not cooling properly')) {
+        finalPrice -= 500;
       }
 
-      // Star rating adjustment
-      if (energyRating === '5 Star' || energyRating === 'Inverter AC') {
-        finalPrice += 300;
-      } else if (energyRating === '4 Star') {
-        finalPrice += 150;
-      } else if (energyRating === '1 Star' || energyRating === '2 Star') {
-        finalPrice -= 200;
+      // Deduct ₹100 for each other flaw
+      const otherIssues = selectedIssues.filter(issue => issue !== 'Not cooling properly');
+      if (otherIssues.length > 0) {
+        finalPrice -= otherIssues.length * 100;
       }
 
-      return finalPrice;
+      return Math.max(2000, finalPrice);
     }
 
     if (cat === 'Refrigerator') {
@@ -665,25 +689,42 @@ export default function App() {
     return Math.max(Math.round(price), Math.round(floorPrice));
   };
 
+  // Helper for initial estimated valuation before detailed device questions
+  const getInitialEstimatePrice = (cat: CategoryType) => {
+    if (cat === 'AC') {
+      return acType === 'AC Window' ? 6500 : 8000;
+    }
+    if (cat === 'Refrigerator') {
+      if (fridgeType === 'Single Door') return 4500;
+      if (fridgeType === 'Side-by-Side') return 9500;
+      return 6500;
+    }
+    if (cat === 'WashingMachine') {
+      if (wmType.includes('Semi')) return 3500;
+      if (wmType.includes('Front')) return 7000;
+      return 5000;
+    }
+    if (cat === 'InverterBattery') {
+      if (batteryType.includes('Short')) return 3500;
+      if (batteryType.includes('Flat')) return 3000;
+      return 4500;
+    }
+    return 5000;
+  };
+
   // Direct AC Variant Selection
   const selectAcTypeAndNavigate = (type: 'AC Split' | 'AC Window') => {
     setAcType(type);
     setSelectedCategory('AC');
-    const defaultBrand = BRANDS.AC[0];
-    const defaultModel = MODELS.AC.find(m => 
-      type === 'AC Split' ? m.name.toLowerCase().includes('split') : m.name.toLowerCase().includes('window')
-    ) || MODELS.AC[0];
-    setJourneyBrand(defaultBrand);
-    setJourneyModel({
-      ...defaultModel,
-      name: `${type} (${capacity}, ${energyRating})`
-    });
+    setJourneyBrand(null);
+    setJourneyModel(null);
+    setBrandSearchQuery('');
     setSelectedIssues([]);
     setCondition('good');
     setShowPickupForm(false);
     setPickupAddress('');
     setActiveTab('sell-journey');
-    setJourneyStep(3); // Directly take user to Device Evaluation page
+    setJourneyStep(2); // Step 2: Searchable Brand Selection
   };
 
   // Launch Selling Journey
@@ -692,9 +733,10 @@ export default function App() {
     setSelectedCategory(category);
     setJourneyBrand(null);
     setJourneyModel(null);
+    setBrandSearchQuery('');
     setSelectedIssues([]);
     setCondition('good');
-    setJourneyStep(1);
+    setJourneyStep(1); // Step 1: Category & Type Selection
     setShowPickupForm(false);
     setPickupAddress('');
     setActiveTab('sell-journey');
@@ -707,9 +749,16 @@ export default function App() {
     const brandObj = BRANDS[category].find(b => b.id === model.brandId) || null;
     setJourneyBrand(brandObj);
     setJourneyModel(model);
+    if (category === 'AC') {
+      if (model.name.toLowerCase().includes('window')) {
+        setAcType('AC Window');
+      } else {
+        setAcType('AC Split');
+      }
+    }
     setSelectedIssues([]);
     setCondition('good');
-    setJourneyStep(currentUser ? 3 : 2); // Skip OTP if already logged in
+    setJourneyStep(3); // Step 3: Initial Estimated Valuation
     setShowPickupForm(false);
     setPickupAddress('');
     setSearchQuery('');
@@ -916,7 +965,7 @@ export default function App() {
     }
   };
 
-  // Submit Questionnaire & Generate Price Quote
+  // Submit Questionnaire & Generate Final Valuation Quote
   const handleSubmitAppraisal = () => {
     let modelToUse = journeyModel;
     if (!modelToUse && selectedCategory === 'AC') {
@@ -925,7 +974,7 @@ export default function App() {
       ) || MODELS.AC?.[0] || { id: 'ac-default', name: `${acType} (${capacity})`, basePrice: 4500, category: 'AC' };
       modelToUse = {
         ...defaultModel,
-        name: `${acType} (${capacity}, ${energyRating})`
+        name: `${journeyBrand ? journeyBrand.name : 'Voltas'} ${acType} (${capacity}, ${energyRating})`
       };
       setJourneyModel(modelToUse);
     } else if (!modelToUse && selectedCategory && MODELS[selectedCategory] && MODELS[selectedCategory].length > 0) {
@@ -934,7 +983,7 @@ export default function App() {
     }
 
     if (!modelToUse) {
-      modelToUse = { id: 'gen-default', name: `${selectedCategory} Appliance`, basePrice: 3500, category: selectedCategory as any };
+      modelToUse = { id: 'gen-default', name: `${journeyBrand ? journeyBrand.name : ''} ${selectedCategory} Appliance`, basePrice: 3500, category: selectedCategory as any };
       setJourneyModel(modelToUse);
     }
     
@@ -945,7 +994,7 @@ export default function App() {
     const orderId = 'SG-' + Math.floor(100000 + Math.random() * 900000);
     setEvaluationId(orderId);
     
-    setJourneyStep(4);
+    setJourneyStep(5); // Move to Final Quote & Doorstep Pickup Form
   };
 
   // Complete Booking & Schedule Instant Pickup
@@ -1013,7 +1062,7 @@ export default function App() {
     }
 
     showToast('Instant Pickup Scheduled! Order ID: ' + currentEvalId);
-    setJourneyStep(5);
+    setJourneyStep(6);
   };
 
   // Save Valuation & Record in Customer Dashboard Storage
@@ -1802,11 +1851,11 @@ export default function App() {
                 <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-0.5 bg-slate-100 z-0" />
                 
                 {[
-                  { step: 1, label: 'Select Model' },
-                  { step: 2, label: 'Verify User' },
-                  { step: 3, label: 'Appraisal' },
-                  { step: 4, label: 'Price Quote' },
-                  { step: 5, label: 'Done' }
+                  { step: 1, label: '1. Category & Type' },
+                  { step: 2, label: '2. Select Brand' },
+                  { step: 3, label: '3. Initial Quote' },
+                  { step: 4, label: '4. Evaluation' },
+                  { step: 5, label: '5. Pickup & Payout' }
                 ].map((item) => (
                   <div key={item.step} className="flex-1 relative z-10 flex flex-col items-center">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
@@ -1830,7 +1879,7 @@ export default function App() {
               <div className="lg:col-span-2 bg-white border border-slate-100 rounded-3xl shadow-xl p-6 sm:p-8">
                 <AnimatePresence mode="wait">
                 
-                {/* STEP 1: CHOOSE BRAND & MODEL / AC VARIANT */}
+                {/* STEP 1: CATEGORY & SPECIFIC APPLIANCE TYPE SELECTION */}
                 {journeyStep === 1 && (
                   <motion.div 
                     key="step-1"
@@ -1839,387 +1888,412 @@ export default function App() {
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-8"
                   >
-                    {selectedCategory === 'AC' ? (
-                      <div className="space-y-6">
-                        <div className="text-center max-w-md mx-auto">
-                          <span className="inline-block text-[11px] font-bold font-mono tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full uppercase mb-2">
-                            Air Conditioner Category
-                          </span>
-                          <h3 className="text-2xl font-extrabold text-slate-900 font-display">Choose AC Type</h3>
-                          <p className="text-xs text-slate-400 mt-1">Select your air conditioner variant below to proceed directly to device evaluation.</p>
-                        </div>
+                    {/* Category Selector Tabs */}
+                    <div className="space-y-4">
+                      <div className="text-center max-w-md mx-auto">
+                        <span className="inline-block text-[11px] font-bold font-mono tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full uppercase mb-2">
+                          Step 1 of 5
+                        </span>
+                        <h3 className="text-2xl font-extrabold text-slate-900 font-display">Select Appliance Category & Type</h3>
+                        <p className="text-xs text-slate-400 mt-1">Choose your appliance category and specific type to initiate valuation.</p>
+                      </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto pt-2">
-                          {/* Large Cube 1: AC Split */}
+                      {/* Top Category Buttons */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
+                        {[
+                          { id: 'AC', name: 'Air Conditioner', icon: Wind },
+                          { id: 'Refrigerator', name: 'Refrigerator', icon: Snowflake },
+                          { id: 'WashingMachine', name: 'Washing Machine', icon: ShieldCheck },
+                          { id: 'InverterBattery', name: 'Inverter Battery', icon: Zap }
+                        ].map((cat) => {
+                          const IconComp = cat.icon;
+                          const isSelected = selectedCategory === cat.id;
+                          return (
+                            <button
+                              key={cat.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedCategory(cat.id as CategoryType);
+                                setJourneyBrand(null);
+                                setJourneyModel(null);
+                              }}
+                              className={`p-3.5 rounded-2xl border text-xs font-bold transition-all flex flex-col items-center gap-2 cursor-pointer ${
+                                isSelected
+                                  ? 'bg-slate-900 border-slate-900 text-white shadow-md'
+                                  : 'bg-slate-50 border-slate-100 text-slate-700 hover:bg-slate-100'
+                              }`}
+                            >
+                              <IconComp className={`w-5 h-5 ${isSelected ? 'text-emerald-400' : 'text-slate-500'}`} />
+                              <span className="text-[11px] font-bold text-center leading-tight">{cat.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Specific Appliance Type Cards */}
+                    <div className="space-y-4 pt-4 border-t border-slate-100">
+                      <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider text-center">
+                        Select Specific {selectedCategory === 'WashingMachine' ? 'Washing Machine' : selectedCategory === 'InverterBattery' ? 'Battery' : selectedCategory} Type
+                      </h4>
+
+                      {/* AC Specific Types */}
+                      {selectedCategory === 'AC' && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                          {/* Split AC */}
                           <div 
                             onClick={() => selectAcTypeAndNavigate('AC Split')}
-                            className="group relative bg-white border-2 border-slate-100 hover:border-emerald-500 rounded-3xl p-6 text-center cursor-pointer transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/10 flex flex-col items-center justify-between min-h-[280px] active:scale-[0.98]"
+                            className="group relative bg-white border-2 border-slate-100 hover:border-emerald-500 rounded-3xl p-6 text-center cursor-pointer transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/10 flex flex-col items-center justify-between min-h-[260px] active:scale-[0.98]"
                           >
-                            <div className="w-full flex justify-end">
-                              <span className="bg-sky-50 text-sky-700 text-[10px] font-bold px-3 py-1 rounded-full border border-sky-100 group-hover:bg-emerald-50 group-hover:text-emerald-700 group-hover:border-emerald-200 transition-colors">
-                                Split AC
-                              </span>
+                            <div className="w-full flex justify-between items-center">
+                              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">Estimated ~ ₹8,000</span>
+                              <span className="bg-sky-50 text-sky-700 text-[10px] font-bold px-3 py-1 rounded-full border border-sky-100">Split AC</span>
                             </div>
 
-                            {/* Clickable Icon / Image */}
-                            <div 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                selectAcTypeAndNavigate('AC Split');
-                              }}
-                              className="relative w-28 h-28 my-2 rounded-2xl bg-sky-50 p-2 flex items-center justify-center border border-sky-100 shadow-sm group-hover:scale-105 group-hover:bg-emerald-50 group-hover:border-emerald-200 transition-all duration-300 overflow-hidden cursor-pointer"
-                              title="Click icon for AC Split"
-                            >
+                            <div className="relative w-28 h-28 my-2 rounded-2xl bg-sky-50 p-2 flex items-center justify-center border border-sky-100 shadow-sm group-hover:scale-105 group-hover:bg-emerald-50 transition-all duration-300 overflow-hidden">
                               <img 
                                 src="https://i.pinimg.com/1200x/44/7f/84/447f84d557a05888931325a7cc2c9ec4.jpg" 
                                 alt="AC Split Icon" 
                                 className="w-full h-full object-cover rounded-xl" 
                                 referrerPolicy="no-referrer" 
                               />
-                              <div className="absolute inset-0 bg-emerald-950/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <span className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow">
-                                  Select Split
-                                </span>
-                              </div>
                             </div>
 
-                            <div className="space-y-1.5">
-                              <h4 className="text-xl font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">
-                                AC Split
-                              </h4>
-                              <p className="text-xs text-slate-500 leading-relaxed">
-                                Wall-Mounted Indoor & Outdoor Dual Condenser Unit
-                              </p>
+                            <div className="space-y-1">
+                              <h4 className="text-xl font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">AC Split</h4>
+                              <p className="text-xs text-slate-500">Wall-Mounted Indoor & Outdoor Condenser Unit</p>
                             </div>
 
-                            <div className="mt-4 w-full bg-slate-50 group-hover:bg-emerald-600 group-hover:text-white text-slate-700 font-bold text-xs py-3 rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 shadow-sm">
-                              <span>Select AC Split</span>
-                              <ArrowRight className="w-4 h-4" />
+                            <div className="mt-4 w-full bg-slate-900 text-white font-bold text-xs py-3 rounded-2xl group-hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2 shadow-sm">
+                              <span>Select AC Split →</span>
                             </div>
                           </div>
 
-                          {/* Large Cube 2: AC Window */}
+                          {/* Window AC */}
                           <div 
                             onClick={() => selectAcTypeAndNavigate('AC Window')}
-                            className="group relative bg-white border-2 border-slate-100 hover:border-emerald-500 rounded-3xl p-6 text-center cursor-pointer transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/10 flex flex-col items-center justify-between min-h-[280px] active:scale-[0.98]"
+                            className="group relative bg-white border-2 border-slate-100 hover:border-emerald-500 rounded-3xl p-6 text-center cursor-pointer transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/10 flex flex-col items-center justify-between min-h-[260px] active:scale-[0.98]"
                           >
-                            <div className="w-full flex justify-end">
-                              <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-3 py-1 rounded-full border border-indigo-100 group-hover:bg-emerald-50 group-hover:text-emerald-700 group-hover:border-emerald-200 transition-colors">
-                                Window AC
-                              </span>
+                            <div className="w-full flex justify-between items-center">
+                              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">Estimated ~ ₹6,500</span>
+                              <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-3 py-1 rounded-full border border-indigo-100">Window AC</span>
                             </div>
 
-                            {/* Clickable Icon / Image */}
-                            <div 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                selectAcTypeAndNavigate('AC Window');
-                              }}
-                              className="relative w-28 h-28 my-2 rounded-2xl bg-indigo-50 p-2 flex items-center justify-center border border-indigo-100 shadow-sm group-hover:scale-105 group-hover:bg-emerald-50 group-hover:border-emerald-200 transition-all duration-300 overflow-hidden cursor-pointer"
-                              title="Click icon for AC Window"
-                            >
-                                <img 
-                                  src="https://i.pinimg.com/1200x/44/7f/84/447f84d557a05888931325a7cc2c9ec4.jpg" 
-                                  alt="AC Window Icon" 
-                                  className="w-full h-full object-cover rounded-xl" 
-                                  referrerPolicy="no-referrer" 
-                                />
-                              <div className="absolute inset-0 bg-emerald-950/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <span className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow">
-                                  Select Window
-                                </span>
-                              </div>
+                            <div className="relative w-28 h-28 my-2 rounded-2xl bg-indigo-50 p-2 flex items-center justify-center border border-indigo-100 shadow-sm group-hover:scale-105 group-hover:bg-emerald-50 transition-all duration-300 overflow-hidden">
+                              <img 
+                                src="https://i.pinimg.com/1200x/44/7f/84/447f84d557a05888931325a7cc2c9ec4.jpg" 
+                                alt="AC Window Icon" 
+                                className="w-full h-full object-cover rounded-xl" 
+                                referrerPolicy="no-referrer" 
+                              />
                             </div>
 
-                            <div className="space-y-1.5">
-                              <h4 className="text-xl font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">
-                                AC Window
-                              </h4>
-                              <p className="text-xs text-slate-500 leading-relaxed">
-                                Single Self-Contained Box Window Unit
-                              </p>
+                            <div className="space-y-1">
+                              <h4 className="text-xl font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">AC Window</h4>
+                              <p className="text-xs text-slate-500">Single Compact Self-Contained Window Unit</p>
                             </div>
 
-                            <div className="mt-4 w-full bg-slate-50 group-hover:bg-emerald-600 group-hover:text-white text-slate-700 font-bold text-xs py-3 rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 shadow-sm">
-                              <span>Select AC Window</span>
-                              <ArrowRight className="w-4 h-4" />
+                            <div className="mt-4 w-full bg-slate-900 text-white font-bold text-xs py-3 rounded-2xl group-hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2 shadow-sm">
+                              <span>Select AC Window →</span>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ) : !journeyBrand ? (
-                      <div className="space-y-6">
-                        <div className="text-center max-w-md mx-auto">
-                          <h3 className="text-lg font-bold text-slate-900">Choose Brand</h3>
-                          <p className="text-xs text-slate-400 mt-1">Select the original manufacturer of your device.</p>
-                        </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                          {BRANDS[selectedCategory].map((brand) => (
+                      )}
+
+                      {/* Refrigerator Specific Types */}
+                      {selectedCategory === 'Refrigerator' && (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          {[
+                            { type: 'Single Door', est: '₹4,500', desc: 'Compact Single Door Direct Cool' },
+                            { type: 'Double Door', est: '₹6,500', desc: 'Frost-Free Dual Door Freezer' },
+                            { type: 'Side-by-Side', est: '₹9,500', desc: 'Multi-Door Premium Side-by-Side' }
+                          ].map((item) => (
                             <button
-                              key={brand.id}
-                              onClick={() => setJourneyBrand(brand)}
-                              className="bg-slate-50 hover:bg-emerald-50/50 border border-slate-100 hover:border-emerald-500 rounded-2xl p-6 text-center transition-all duration-200 group"
+                              key={item.type}
+                              type="button"
+                              onClick={() => {
+                                setFridgeType(item.type);
+                                setJourneyStep(2);
+                              }}
+                              className="bg-slate-50 hover:bg-emerald-50 border border-slate-100 hover:border-emerald-500 rounded-2xl p-5 text-left transition-all duration-200 group flex flex-col justify-between min-h-[160px]"
                             >
-                              <span className="block text-sm font-bold text-slate-700 group-hover:text-emerald-700 font-display uppercase tracking-wider">
-                                {brand.name}
-                              </span>
+                              <div>
+                                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full inline-block mb-2">
+                                  Est. {item.est}
+                                </span>
+                                <h5 className="font-bold text-slate-900 text-base group-hover:text-emerald-700">{item.type}</h5>
+                                <p className="text-xs text-slate-400 mt-1 leading-snug">{item.desc}</p>
+                              </div>
+                              <div className="mt-4 flex items-center justify-between text-xs font-bold text-emerald-600">
+                                <span>Select & Next</span>
+                                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                              </div>
                             </button>
                           ))}
                         </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-6">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                          <button 
-                            onClick={() => { setJourneyBrand(null); setJourneyModel(null); }}
-                            className="text-xs font-semibold text-slate-400 hover:text-slate-900 flex items-center gap-1"
-                          >
-                            <ArrowLeft className="w-3 h-3" /> Change Brand ({journeyBrand.name})
-                          </button>
-                        </div>
+                      )}
 
-                        <div className="text-center max-w-md mx-auto">
-                          <h3 className="text-lg font-bold text-slate-900">Select Specific Model</h3>
-                          <p className="text-xs text-slate-400 mt-1">Choose the exact configuration model matching your device.</p>
+                      {/* Washing Machine Specific Types */}
+                      {selectedCategory === 'WashingMachine' && (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          {[
+                            { type: 'Fully Automatic Front Load', est: '₹7,000', desc: 'Front Door Tumble Washer' },
+                            { type: 'Fully Automatic Top Load', est: '₹5,000', desc: 'Single Drum Top Load Auto' },
+                            { type: 'Semi-Automatic', est: '₹3,500', desc: 'Twin Tub Washer & Dryer' }
+                          ].map((item) => (
+                            <button
+                              key={item.type}
+                              type="button"
+                              onClick={() => {
+                                setWmType(item.type);
+                                setJourneyStep(2);
+                              }}
+                              className="bg-slate-50 hover:bg-emerald-50 border border-slate-100 hover:border-emerald-500 rounded-2xl p-5 text-left transition-all duration-200 group flex flex-col justify-between min-h-[160px]"
+                            >
+                              <div>
+                                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full inline-block mb-2">
+                                  Est. {item.est}
+                                </span>
+                                <h5 className="font-bold text-slate-900 text-sm group-hover:text-emerald-700">{item.type}</h5>
+                                <p className="text-xs text-slate-400 mt-1 leading-snug">{item.desc}</p>
+                              </div>
+                              <div className="mt-4 flex items-center justify-between text-xs font-bold text-emerald-600">
+                                <span>Select & Next</span>
+                                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                              </div>
+                            </button>
+                          ))}
                         </div>
+                      )}
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-1">
-                          {MODELS[selectedCategory]
-                            .filter(m => m.brandId === journeyBrand.id)
-                            .map((model) => (
-                              <button
-                                key={model.id}
-                                onClick={() => {
-                                  setJourneyModel(model);
-                                  // Skip OTP step if user is already authenticated
-                                  if (currentUser) {
-                                    setJourneyStep(3);
-                                  } else {
-                                    setJourneyStep(2);
-                                  }
-                                }}
-                                className="bg-slate-50 hover:bg-emerald-50 border border-slate-100 hover:border-emerald-500 rounded-xl p-4 text-left transition-colors flex justify-between items-center group"
-                              >
-                                <div>
-                                  <p className="text-sm font-semibold text-slate-800">{model.name}</p>
-                                  <p className="text-xs font-mono text-slate-400 mt-0.5">Base scrap value: ₹{model.basePrice.toLocaleString('en-IN')}</p>
-                                </div>
-                                <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-emerald-600 transition-colors" />
-                              </button>
-                            ))}
+                      {/* Inverter Battery Specific Types */}
+                      {selectedCategory === 'InverterBattery' && (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          {[
+                            { type: 'Tall Tubular', est: '₹4,500', desc: 'Heavy Duty Deep Cycle Battery' },
+                            { type: 'Short Tubular', est: '₹3,500', desc: 'Compact Tubular Inverter Battery' },
+                            { type: 'Flat Plate', est: '₹3,000', desc: 'Standard Lead-Acid Flat Battery' }
+                          ].map((item) => (
+                            <button
+                              key={item.type}
+                              type="button"
+                              onClick={() => {
+                                setBatteryType(item.type);
+                                setJourneyStep(2);
+                              }}
+                              className="bg-slate-50 hover:bg-emerald-50 border border-slate-100 hover:border-emerald-500 rounded-2xl p-5 text-left transition-all duration-200 group flex flex-col justify-between min-h-[160px]"
+                            >
+                              <div>
+                                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full inline-block mb-2">
+                                  Est. {item.est}
+                                </span>
+                                <h5 className="font-bold text-slate-900 text-sm group-hover:text-emerald-700">{item.type}</h5>
+                                <p className="text-xs text-slate-400 mt-1 leading-snug">{item.desc}</p>
+                              </div>
+                              <div className="mt-4 flex items-center justify-between text-xs font-bold text-emerald-600">
+                                <span>Select & Next</span>
+                                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                              </div>
+                            </button>
+                          ))}
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </motion.div>
                 )}
 
-                {/* STEP 2: USER LOGIN & REGISTER */}
+                {/* STEP 2: SEARCHABLE BRAND SELECTION */}
                 {journeyStep === 2 && (
                   <motion.div 
                     key="step-2"
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="max-w-md mx-auto space-y-6"
+                    className="space-y-6"
                   >
-                    <div className="text-center">
-                      <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <UserCheck className="w-5 h-5" />
-                      </div>
-                      <h3 className="text-xl font-bold text-slate-900">
-                        Account Login
-                      </h3>
-                      <p className="text-xs text-slate-500 mt-1">
-                        Enter your valid 10-digit mobile number to receive a verification OTP code.
-                      </p>
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                      <button 
+                        onClick={() => setJourneyStep(1)}
+                        className="text-xs font-semibold text-slate-500 hover:text-slate-900 flex items-center gap-1"
+                      >
+                        <ArrowLeft className="w-3.5 h-3.5" /> Back to Category & Type
+                      </button>
+                      <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full font-bold uppercase">
+                        Step 2 of 5
+                      </span>
                     </div>
 
-                    {!otpSent ? (
-                      <form onSubmit={handleSendOtpForAuth} className="space-y-4">
-                        <div>
-                          <div className="flex justify-between items-center mb-1.5">
-                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                              10-Digit Mobile Number <span className="text-red-500">*</span>
-                            </label>
-                            <span className="text-[10px] font-medium text-slate-400">
-                              {loginPhone.length}/10 digits
+                    <div className="text-center max-w-md mx-auto">
+                      <h3 className="text-2xl font-extrabold text-slate-900 font-display">Select Appliance Brand</h3>
+                      <p className="text-xs text-slate-400 mt-1">Search or choose the manufacturer brand for your device.</p>
+                    </div>
+
+                    {/* Search Bar Input */}
+                    <div className="relative max-w-md mx-auto">
+                      <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
+                      <input 
+                        type="text"
+                        value={brandSearchQuery}
+                        onChange={(e) => setBrandSearchQuery(e.target.value)}
+                        placeholder="Search brand e.g., Voltas, Daikin, LG, Samsung, Blue Star, Whirlpool..."
+                        className="w-full bg-slate-50 border border-slate-200 text-xs sm:text-sm rounded-xl pl-10 pr-10 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 font-medium"
+                      />
+                      {brandSearchQuery && (
+                        <button 
+                          onClick={() => setBrandSearchQuery('')}
+                          className="absolute right-3 top-3 text-xs text-slate-400 hover:text-slate-700 bg-slate-200 w-5 h-5 rounded-full flex items-center justify-center font-bold"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Filtered Brand Cards Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[360px] overflow-y-auto p-1">
+                      {BRANDS[selectedCategory]
+                        .filter(brand => brand.name.toLowerCase().includes(brandSearchQuery.toLowerCase().trim()))
+                        .map((brand) => (
+                          <button
+                            key={brand.id}
+                            type="button"
+                            onClick={() => {
+                              setJourneyBrand(brand);
+                              const defaultModel = MODELS[selectedCategory]?.find(m => m.brandId === brand.id) || MODELS[selectedCategory]?.[0] || { id: 'gen-1', name: `${brand.name} ${selectedCategory}`, basePrice: 4500, category: selectedCategory as any };
+                              setJourneyModel(defaultModel);
+                              setJourneyStep(3); // Advance to Step 3: Initial Estimated Valuation
+                            }}
+                            className="bg-slate-50 hover:bg-emerald-50 border border-slate-100 hover:border-emerald-500 rounded-2xl p-4 text-center transition-all duration-200 group flex flex-col items-center justify-center min-h-[90px] shadow-sm hover:shadow-md cursor-pointer"
+                          >
+                            <span className="block text-sm font-bold text-slate-800 group-hover:text-emerald-700 font-display uppercase tracking-wider">
+                              {brand.name}
                             </span>
-                          </div>
-                          <div className="flex gap-2">
-                            <select
-                              value={countryCode}
-                              onChange={(e) => setCountryCode(e.target.value)}
-                              disabled={isSendingOtp}
-                              className="bg-slate-50 border border-slate-200 text-xs font-semibold rounded-xl px-2.5 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 disabled:opacity-60"
-                            >
-                              <option value="+91">🇮🇳 +91 (IN)</option>
-                              <option value="+1">🇺🇸 +1 (US)</option>
-                              <option value="+44">🇬🇧 +44 (UK)</option>
-                              <option value="+971">🇦🇪 +971 (UAE)</option>
-                              <option value="+61">🇦🇺 +61 (AU)</option>
-                              <option value="+65">🇸🇬 +65 (SG)</option>
-                            </select>
-                            <div className="relative flex-1">
-                              <span className="absolute left-3.5 top-3.5 text-slate-400">
-                                <Phone className="w-4 h-4" />
-                              </span>
-                              <input
-                                type="tel"
-                                required
-                                disabled={isSendingOtp}
-                                maxLength={10}
-                                placeholder="e.g. 9876543210"
-                                value={loginPhone}
-                                onChange={(e) => setLoginPhone(e.target.value.replace(/[^\d]/g, '').slice(0, 10))}
-                                className="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all text-slate-800 disabled:opacity-60"
-                              />
-                            </div>
-                          </div>
-                          {loginPhone.length > 0 && (
-                            <div className="mt-1.5">
-                              {loginPhone.length === 10 ? (
-                                validateActiveMobileNumber(loginPhone, countryCode).valid ? (
-                                  <p className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
-                                    <CheckCircle className="w-3.5 h-3.5" /> Active cellular line verified (Voice call & SMS ready)
-                                  </p>
-                                ) : (
-                                  <p className="text-[11px] text-rose-500 font-medium flex items-center gap-1">
-                                    <AlertCircle className="w-3.5 h-3.5" /> {validateActiveMobileNumber(loginPhone, countryCode).error}
-                                  </p>
-                                )
-                              ) : (
-                                <p className="text-[11px] text-slate-400">
-                                  Enter {10 - loginPhone.length} more digit{10 - loginPhone.length > 1 ? 's' : ''} for active mobile verification
-                                </p>
-                              )}
-                            </div>
-                          )}
-                        </div>
+                            <span className="text-[10px] text-slate-400 mt-1 font-medium group-hover:text-emerald-600">
+                              Tap to select →
+                            </span>
+                          </button>
+                        ))}
+                    </div>
 
-                        <div className="flex items-start gap-2.5 pt-1">
-                          <input
-                            type="checkbox"
-                            id="terms-check-step2"
-                            checked={termsAccepted}
-                            onChange={(e) => setTermsAccepted(e.target.checked)}
-                            disabled={isSendingOtp}
-                            className="mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
-                          />
-                          <label htmlFor="terms-check-step2" className="text-xs text-slate-600 cursor-pointer leading-tight">
-                            I agree to the{' '}
-                            <span className="text-emerald-600 font-semibold underline">Terms & Conditions</span> and{' '}
-                            <span className="text-emerald-600 font-semibold underline">Privacy Policy</span>
-                          </label>
-                        </div>
-
-                        {otpError && (
-                          <div className="p-3 bg-red-50 border border-red-100 text-red-600 text-xs rounded-xl flex items-center gap-2 shadow-sm">
-                            <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-500" />
-                            <span className="font-semibold">{otpError}</span>
-                          </div>
-                        )}
-
-                        <button
-                          type="submit"
-                          disabled={isSendingOtp || !termsAccepted || loginPhone.length !== 10 || !validateActiveMobileNumber(loginPhone, countryCode).valid}
-                          className="w-full bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 text-white text-xs font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
-                        >
-                          {isSendingOtp ? (
-                            <>
-                              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                              <span>Sending OTP Code...</span>
-                            </>
-                          ) : (
-                            <span>Send Verification OTP Code</span>
-                          )}
-                        </button>
-                      </form>
-                    ) : (
-                      <form onSubmit={handleVerifyOtpForAuth} className="space-y-4">
-                        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-900">
-                          <p className="font-semibold">
-                            Verification code sent to <span className="font-bold">{countryCode} {loginPhone}</span>
-                          </p>
-                          {sandboxCode && (
-                            <p className="mt-1.5 text-xs text-emerald-800 bg-emerald-100 border border-emerald-200/80 px-2.5 py-1 rounded-lg inline-flex items-center gap-1.5 font-medium">
-                              <span>OTP:</span>
-                              <strong className="font-mono text-emerald-950 text-sm font-bold tracking-widest">{sandboxCode}</strong>
-                            </p>
-                          )}
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                            Enter 4-Digit OTP Code
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            autoFocus
-                            maxLength={6}
-                            disabled={isVerifyingOtp}
-                            placeholder="e.g. 1234"
-                            value={otpCode}
-                            onChange={(e) => setOtpCode(e.target.value.replace(/[^\d]/g, ''))}
-                            className="w-full bg-slate-50 border border-slate-200 text-center text-lg font-mono font-bold tracking-widest rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all text-slate-900 disabled:opacity-60"
-                          />
-                        </div>
-
-                        {otpError && (
-                          <div className="p-3 bg-red-50 text-red-600 text-xs rounded-xl flex items-center gap-2">
-                            <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                            <span>{otpError}</span>
-                          </div>
-                        )}
-
-                        <button
-                          type="submit"
-                          disabled={isVerifyingOtp}
-                          className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white text-xs font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
-                        >
-                          {isVerifyingOtp ? (
-                            <>
-                              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                              <span>Verifying OTP...</span>
-                            </>
-                          ) : (
-                            <span>Verify OTP & Log In</span>
-                          )}
-                        </button>
-
-                        <button
+                    {BRANDS[selectedCategory].filter(brand => brand.name.toLowerCase().includes(brandSearchQuery.toLowerCase().trim())).length === 0 && (
+                      <div className="text-center py-8 bg-slate-50 rounded-2xl border border-slate-100">
+                        <p className="text-xs text-slate-500">No brand matching "{brandSearchQuery}".</p>
+                        <button 
                           type="button"
-                          onClick={() => { setOtpSent(false); setOtpError(''); }}
-                          className="w-full text-center text-xs text-slate-500 hover:text-slate-900 font-medium py-1"
+                          onClick={() => {
+                            const customBrand = { id: 'custom-b', name: brandSearchQuery || 'Generic Brand' };
+                            setJourneyBrand(customBrand as any);
+                            setJourneyStep(3);
+                          }}
+                          className="mt-3 text-xs font-bold text-emerald-600 hover:underline"
                         >
-                          ← Change Number or Resend Code
+                          Proceed with "{brandSearchQuery || 'Generic Brand'}" →
                         </button>
-                      </form>
+                      </div>
                     )}
+                  </motion.div>
+                )}
 
-                    <div className="flex items-center justify-center pt-6 border-t border-slate-100">
+                {/* STEP 3: INITIAL ESTIMATED VALUATION (PRE-DETAILED QUESTIONS) */}
+                {journeyStep === 3 && (
+                  <motion.div 
+                    key="step-3"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="max-w-md mx-auto space-y-6"
+                  >
+                    <div className="text-center space-y-1">
+                      <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full font-bold uppercase tracking-wider">
+                        Step 3 of 5 • Initial Estimate
+                      </span>
+                      <h3 className="text-2xl font-extrabold text-slate-900 font-display mt-2">Initial Estimated Valuation</h3>
+                      <p className="text-xs text-slate-400">Pre-evaluation estimated market quote before detailed condition checks.</p>
+                    </div>
+
+                    {/* Large Initial Quote Card */}
+                    <div className="bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white rounded-3xl p-8 text-center relative overflow-hidden shadow-2xl border border-emerald-800">
+                      <div className="absolute -top-10 -right-10 w-36 h-36 bg-emerald-500/20 rounded-full blur-3xl" />
+                      
+                      <div className="inline-flex items-center gap-1.5 bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-4">
+                        <Zap className="w-3.5 h-3.5" /> Initial Market Base Value
+                      </div>
+
+                      <div className="my-2">
+                        <span className="block text-xs text-slate-300 font-medium">Estimated Handover Price</span>
+                        <div className="text-5xl font-black font-display text-white mt-1">
+                          ₹{getInitialEstimatePrice(selectedCategory).toLocaleString('en-IN')}
+                        </div>
+                      </div>
+
+                      <div className="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-300">
+                        <div>
+                          <span className="text-[10px] text-slate-400 block">Brand</span>
+                          <strong className="text-white font-bold">{journeyBrand?.name || 'Standard'}</strong>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-400 block">Appliance Type</span>
+                          <strong className="text-emerald-400 font-bold">
+                            {selectedCategory === 'AC' ? acType : selectedCategory === 'Refrigerator' ? fridgeType : selectedCategory === 'WashingMachine' ? wmType : batteryType}
+                          </strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 text-xs text-emerald-900 flex items-start gap-3">
+                      <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                      <div>
+                        <strong className="block font-bold">What happens next?</strong>
+                        <p className="text-[11px] text-emerald-800 mt-0.5 leading-relaxed">
+                          Proceed to the detailed evaluation step where you specify working condition, capacity size, star rating, and functional defects for your final guaranteed payout quote.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 pt-2">
                       <button
-                        onClick={() => setJourneyStep(1)}
-                        className="text-xs font-semibold text-slate-400 hover:text-slate-900 flex items-center gap-1"
+                        type="button"
+                        onClick={() => setJourneyStep(4)}
+                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold py-4 rounded-xl transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
                       >
-                        <ArrowLeft className="w-3 h-3" /> Back to Model Selection
+                        <span>Proceed to Detailed Device Evaluation</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setJourneyStep(2)}
+                        className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold py-2.5 rounded-xl transition-all"
+                      >
+                        ← Change Brand or Appliance Type
                       </button>
                     </div>
                   </motion.div>
                 )}
 
-                {/* STEP 3: DEVICE APPRAISAL QUESTIONNAIRE */}
-                {journeyStep === 3 && (
+                {/* STEP 4: DETAILED DEVICE EVALUATION (QUESTIONNAIRE) */}
+                {journeyStep === 4 && (
                   <motion.div 
-                    key="step-3"
+                    key="step-4"
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-8"
                   >
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                      <button 
+                        onClick={() => setJourneyStep(3)}
+                        className="text-xs font-semibold text-slate-500 hover:text-slate-900 flex items-center gap-1"
+                      >
+                        <ArrowLeft className="w-3.5 h-3.5" /> Back to Initial Estimate
+                      </button>
+                      <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full font-bold uppercase">
+                        Step 4 of 5
+                      </span>
+                    </div>
+
                     <div className="text-center max-w-md mx-auto">
-                      <h3 className="text-xl font-bold text-slate-900">Device Evaluation</h3>
-                      <p className="text-xs text-slate-400 mt-1">Please evaluate honestly. This allows us to calculate your highest scrap pricing.</p>
+                      <h3 className="text-2xl font-extrabold text-slate-900 font-display">Detailed Device Evaluation</h3>
+                      <p className="text-xs text-slate-400 mt-1">Specify condition, capacity size, star rating, and functional flaws for accurate payout calculation.</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -2341,7 +2415,7 @@ export default function App() {
                           <>
                             <div>
                               <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
-                                Refrigerator Litre Volume
+                                Refrigerator Volume
                               </label>
                               <div className="grid grid-cols-3 gap-2">
                                 {['190L', '250L', '350L+'].map((cap) => (
@@ -2361,7 +2435,7 @@ export default function App() {
 
                             <div>
                               <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
-                                Refrigerator Door Type
+                                Door Configuration
                               </label>
                               <div className="grid grid-cols-2 gap-2">
                                 {['Single Door', 'Double Door', 'Side-by-Side'].map((type) => (
@@ -2379,29 +2453,6 @@ export default function App() {
                               </div>
                             </div>
                           </>
-                        )}
-
-                        {/* Mobile specific metrics */}
-                        {selectedCategory === 'Mobile' && (
-                          <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
-                              Device Storage Configuration
-                            </label>
-                            <div className="grid grid-cols-4 gap-2">
-                              {['64GB', '128GB', '256GB', '512GB+'].map((storage) => (
-                                <button
-                                  type="button"
-                                  key={storage}
-                                  onClick={() => setPhoneStorage(storage)}
-                                  className={`py-2 px-1 text-center text-xs rounded-xl border font-semibold ${
-                                    phoneStorage === storage ? 'bg-slate-900 border-slate-900 text-white' : 'bg-slate-50 border-slate-100 hover:bg-slate-100 text-slate-700'
-                                  }`}
-                                >
-                                  {storage}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
                         )}
 
                         {/* Washing Machine specific metrics */}
@@ -2429,10 +2480,10 @@ export default function App() {
 
                             <div>
                               <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
-                                Loading & Automation Type
+                                Automation Type
                               </label>
                               <div className="grid grid-cols-1 gap-2">
-                                {['Top Load Fully Automatic', 'Front Load Fully Automatic', 'Semi-Automatic'].map((type) => (
+                                {['Fully Automatic Top Load', 'Fully Automatic Front Load', 'Semi-Automatic'].map((type) => (
                                   <button
                                     type="button"
                                     key={type}
@@ -2474,7 +2525,7 @@ export default function App() {
 
                             <div>
                               <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
-                                Battery Type
+                                Battery Technology Type
                               </label>
                               <div className="grid grid-cols-3 gap-2">
                                 {['Tall Tubular', 'Short Tubular', 'Flat Plate'].map((type) => (
@@ -2503,7 +2554,7 @@ export default function App() {
                             Functional Flaws / Deficiencies
                           </label>
                           <p className="text-[11px] text-slate-400 mb-4 leading-relaxed">
-                            Check any problems that apply to your device. Leaves boxes blank if item is completely functional.
+                            Check any defects that apply to your device. Leave unselected if fully functional.
                           </p>
                           
                           <div className="space-y-2.5">
@@ -2542,12 +2593,12 @@ export default function App() {
                         </div>
 
                         {selectedIssues.length > 0 && (
-                          <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                            <span className="text-[10px] font-mono text-amber-600 font-bold block mb-1">
-                              ⚠️ ESTIMATION IMPACT NOTICE
+                          <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl">
+                            <span className="text-[10px] font-mono text-amber-700 font-bold block mb-1">
+                              ⚠️ ESTIMATION DEDUCTION NOTICE
                             </span>
-                            <span className="text-[10px] text-slate-400 leading-normal block">
-                              Deductions will apply to the base value since the technical team must repair/re-gas details during pick up.
+                            <span className="text-[10px] text-amber-800 leading-normal block">
+                              Deductions apply for selected functional flaws. Technician will verify during doorstep pickup.
                             </span>
                           </div>
                         )}
@@ -2558,7 +2609,7 @@ export default function App() {
                     <div className="flex justify-between items-center pt-8 border-t border-slate-100">
                       <button
                         type="button"
-                        onClick={() => setJourneyStep(currentUser ? 1 : 2)}
+                        onClick={() => setJourneyStep(3)}
                         className="text-xs font-semibold text-slate-500 hover:text-slate-900 flex items-center gap-1"
                       >
                         <ArrowLeft className="w-3.5 h-3.5" /> Back Step
@@ -2567,296 +2618,178 @@ export default function App() {
                       <button
                         type="button"
                         onClick={handleSubmitAppraisal}
-                        className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-8 py-3 rounded-xl transition-all shadow-md shadow-emerald-100 flex items-center gap-2"
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold px-8 py-3.5 rounded-xl transition-all shadow-md shadow-emerald-100 flex items-center gap-2 cursor-pointer"
                       >
-                        <span>Calculate Scrap Price</span>
+                        <span>Calculate Final Valuation Quote</span>
                         <ArrowRight className="w-4 h-4" />
                       </button>
                     </div>
                   </motion.div>
                 )}
 
-                {/* STEP 4: GENERATED ESTIMATED PRICE */}
-                {journeyStep === 4 && (
-                  <motion.div 
-                    key="step-4"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="max-w-md mx-auto space-y-8"
-                  >
-                    {!showPickupForm ? (
-                      <>
-                        <div className="text-center space-y-2">
-                          <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-2 animate-bounce">
-                            <Zap className="w-6 h-6" />
-                          </div>
-                          <h3 className="text-2xl font-extrabold text-slate-900 font-display">Evaluation Complete!</h3>
-                          <p className="text-xs text-slate-400">Here is the real-time evaluated quote based on current raw scrap rates.</p>
-                        </div>
-
-                        {/* Price Payout Visual Card */}
-                        <div className="bg-gradient-to-br from-emerald-950 to-emerald-900 text-white rounded-3xl p-8 relative overflow-hidden shadow-xl text-center">
-                          <div className="absolute top-0 left-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl" />
-                          
-                          <span className="text-[10px] font-mono tracking-widest bg-emerald-800 text-emerald-300 font-bold px-3 py-1 rounded-full uppercase">
-                            Guaranteed Instant Cash
-                          </span>
-
-                          <div className="my-6">
-                            <h4 className="text-xs text-emerald-300 font-medium">Estimated Handover Price</h4>
-                            <div className="text-5xl font-black font-display text-white mt-1">
-                              ₹{estimatedPrice.toLocaleString('en-IN')}
-                            </div>
-                            <p className="text-[10px] text-emerald-400 mt-2">Subject to matching on-site check validation</p>
-                          </div>
-
-                          <div className="border-t border-emerald-800 pt-4 mt-4 grid grid-cols-2 gap-2 text-left text-xs">
-                            <div>
-                              <span className="block text-[10px] text-emerald-300">Device Model</span>
-                              <span className="block font-bold truncate text-white">{selectedCategory === 'AC' ? `${acType} (${capacity})` : journeyModel?.name}</span>
-                            </div>
-                            <div>
-                              <span className="block text-[10px] text-emerald-300">Assigned ID</span>
-                              <span className="block font-mono font-bold text-white">{evaluationId}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Cost breakdown checklist */}
-                        <div className="space-y-3 bg-slate-50 border border-slate-100 rounded-2xl p-5 text-xs text-slate-600">
-                          <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[10px] mb-2">Valuation Metrics</h4>
-                          
-                          {selectedCategory === 'AC' ? (
-                            <>
-                              <div className="flex justify-between">
-                                <span>AC Type Variant</span>
-                                <span className="font-semibold text-slate-950">{acType}</span>
-                              </div>
-
-                              <div className="flex justify-between">
-                                <span>Capacity Size</span>
-                                <span className="font-semibold text-slate-950">{capacity}</span>
-                              </div>
-
-                              <div className="flex justify-between">
-                                <span>BEE Star Rating</span>
-                                <span className="font-semibold text-slate-950">{energyRating}</span>
-                              </div>
-                              
-                              <div className="flex justify-between">
-                                <span>Condition Status</span>
-                                <span className="font-semibold text-slate-950 capitalize">{condition}</span>
-                              </div>
-
-                              {selectedIssues.length > 0 && (
-                                <div className="border-t border-slate-200/60 pt-2.5 mt-2 space-y-1 text-slate-500">
-                                  <span className="font-bold block text-[10px] text-slate-700">Functional Deductions ({selectedIssues.length}):</span>
-                                  <span className="text-[11px] italic">Factored into final quotation.</span>
-                                </div>
-                              )}
-                            </>
-                          ) : (
-                            <>
-                              <div className="flex justify-between">
-                                <span>Original Model Base Value</span>
-                                <span className="font-semibold text-slate-950">₹{journeyModel?.basePrice.toLocaleString('en-IN')}</span>
-                              </div>
-                              
-                              <div className="flex justify-between">
-                                <span>Condition Status Adjustment ({condition})</span>
-                                <span className={`font-semibold ${condition === 'excellent' ? 'text-emerald-600' : 'text-amber-600'}`}>
-                                  {condition === 'excellent' ? '+15%' : condition === 'good' ? '100% (No change)' : condition === 'average' ? '-25%' : '-55%'}
-                                </span>
-                              </div>
-
-                              {selectedIssues.length > 0 && (
-                                <div className="border-t border-slate-200/60 pt-2.5 mt-2 space-y-1 text-rose-700">
-                                  <span className="font-bold block text-[10px] text-rose-900">Functional Deductions applied:</span>
-                                  {selectedIssues.map((issue) => (
-                                    <div key={issue} className="flex justify-between text-[11px]">
-                                      <span>• {issue}</span>
-                                      <span className="font-bold">Applied</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </>
-                          )}
-                        </div>
-
-                        {/* Confirmation Button Block */}
-                        <div className="space-y-3">
-                          <button
-                            onClick={() => {
-                              if (!pickupName && currentUser?.name) setPickupName(currentUser.name);
-                              if (!pickupPhone && currentUser?.phone) setPickupPhone(currentUser.phone);
-                              setShowPickupForm(true);
-                            }}
-                            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2"
-                          >
-                            <CheckCircle className="w-5 h-5" />
-                            <span>Confirm Doorstep Pickup</span>
-                          </button>
-
-                          <button
-                            onClick={() => setJourneyStep(3)}
-                            className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-2.5 rounded-xl transition-all"
-                          >
-                            Adjust Appraisal Checklist
-                          </button>
-                        </div>
-                      </>
-                    ) : (
-                      // Custom Doorstep Pickup Details Form
-                      <motion.div 
-                        initial={{ opacity: 0, y: 15 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="space-y-6"
-                      >
-                        <div className="text-center space-y-2">
-                          <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
-                            <MapPin className="w-6 h-6 animate-pulse" />
-                          </div>
-                          <h3 className="text-xl font-bold text-slate-900 font-display">Doorstep Pickup Details</h3>
-                          <p className="text-xs text-slate-400">Please provide your contact and address details to coordinate the quick payout pickup.</p>
-                        </div>
-
-                        <div className="bg-white border border-slate-100 rounded-2xl p-5 space-y-4 shadow-sm">
-                          {/* Name Input */}
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Full Name</label>
-                            <input 
-                              type="text" 
-                              value={pickupName}
-                              onChange={(e) => setPickupName(e.target.value)}
-                              placeholder="e.g. Alex Johnson"
-                              className="w-full text-xs sm:text-sm px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-950 font-medium"
-                            />
-                          </div>
-
-                          {/* Phone Input */}
-                          <div>
-                            <div className="flex justify-between items-center mb-1.5">
-                              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Contact Phone Number (10-Digit Active Mobile)</label>
-                              <span className="text-[10px] font-medium text-slate-400">{pickupPhone.length}/10</span>
-                            </div>
-                            <input 
-                              type="tel" 
-                              value={pickupPhone}
-                              onChange={(e) => setPickupPhone(e.target.value.replace(/[^\d]/g, '').slice(0, 10))}
-                              placeholder="e.g. 9876543210"
-                              maxLength={10}
-                              className="w-full text-xs sm:text-sm px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-950 font-medium font-mono"
-                            />
-                            {pickupPhone.length > 0 && (
-                              <div className="mt-1">
-                                {pickupPhone.length === 10 ? (
-                                  validateActiveMobileNumber(pickupPhone, '+91').valid ? (
-                                    <p className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
-                                      <CheckCircle className="w-3 h-3" /> Valid 10-digit mobile number
-                                    </p>
-                                  ) : (
-                                    <p className="text-[10px] text-rose-500 font-medium flex items-center gap-1">
-                                      <AlertCircle className="w-3 h-3" /> {validateActiveMobileNumber(pickupPhone, '+91').error}
-                                    </p>
-                                  )
-                                ) : (
-                                  <p className="text-[10px] text-slate-400">
-                                    {10 - pickupPhone.length} digits remaining
-                                  </p>
-                                )}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Address Input */}
-                          <div>
-                            <div className="flex justify-between items-center mb-1.5">
-                              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Pickup Address</label>
-                              <div className="flex space-x-2">
-                                <button
-                                  type="button"
-                                  onClick={handleGetCurrentLocation}
-                                  disabled={isLocating}
-                                  className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1"
-                                >
-                                  {isLocating ? (
-                                    <>
-                                      <Loader2 className="w-3 h-3 animate-spin text-emerald-500" />
-                                      <span>Locating...</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <MapPin className="w-3 h-3 text-emerald-500" />
-                                      <span>Use Current Location</span>
-                                    </>
-                                  )}
-                                </button>
-                                <span className="text-slate-300 text-[10px]">|</span>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setPickupAddress('');
-                                    showToast('Cleared address input. Please write manually.');
-                                  }}
-                                  className="text-[10px] font-bold text-slate-400 hover:text-slate-600 transition-colors"
-                                >
-                                  Manual Entry
-                                </button>
-                              </div>
-                            </div>
-                            <textarea 
-                              rows={3}
-                              value={pickupAddress}
-                              onChange={(e) => setPickupAddress(e.target.value)}
-                              placeholder="Enter house number, building, street, and landmark..."
-                              className="w-full text-xs sm:text-sm px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-950 font-medium leading-relaxed"
-                            />
-                            {locationError && (
-                              <p className="text-[10px] text-rose-500 mt-1 font-medium">⚠️ {locationError}</p>
-                            )}
-                          </div>
-
-                          {/* Pickup ETA Alert Message */}
-                          <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 flex items-start gap-2.5 text-[11px] text-amber-800">
-                            <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5 animate-pulse" />
-                            <div>
-                              <strong className="block font-semibold">Fast Turnaround Guarantee:</strong>
-                              Our designated pickup agent will arrive at this address <strong>within 1 to 2 hours</strong> of booking confirmation.
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Confirmation Buttons */}
-                        <div className="space-y-3">
-                          <button
-                            type="button"
-                            disabled={!pickupName.trim() || !pickupPhone.trim() || !pickupAddress.trim()}
-                            onClick={() => handleCompleteBooking(pickupName, pickupPhone, pickupAddress)}
-                            className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:hover:bg-emerald-600 text-white text-sm font-semibold py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2"
-                          >
-                            <CheckCircle className="w-5 h-5" />
-                            <span>Confirm & Schedule Instant Pickup</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setShowPickupForm(false)}
-                            className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold py-2.5 rounded-xl transition-all"
-                          >
-                            Back to Estimated Quote
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </motion.div>
-                )}
-
-                {/* STEP 5: READY FOR PICKUP SUMMARY & WHATSAPP REDIRECT */}
+                {/* STEP 5: FINAL VALUATION QUOTE & DOORSTEP PICKUP DETAILS */}
                 {journeyStep === 5 && (
                   <motion.div 
                     key="step-5"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="max-w-md mx-auto space-y-6"
+                  >
+                    <div className="text-center space-y-1">
+                      <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-2 animate-bounce">
+                        <Zap className="w-6 h-6" />
+                      </div>
+                      <h3 className="text-2xl font-extrabold text-slate-900 font-display">Final Valuation Quote</h3>
+                      <p className="text-xs text-slate-400">Provide phone and address details to schedule doorstep pickup.</p>
+                    </div>
+
+                    {/* Final Price Card */}
+                    <div className="bg-gradient-to-br from-emerald-950 to-slate-900 text-white rounded-3xl p-6 text-center relative overflow-hidden shadow-xl border border-emerald-800">
+                      <span className="text-[10px] font-mono tracking-widest bg-emerald-800 text-emerald-300 font-bold px-3 py-1 rounded-full uppercase">
+                        Guaranteed Cash Handover
+                      </span>
+
+                      <div className="my-4">
+                        <span className="block text-xs text-emerald-300 font-medium">Final Evaluated Price</span>
+                        <div className="text-4xl sm:text-5xl font-black font-display text-white mt-1">
+                          ₹{estimatedPrice.toLocaleString('en-IN')}
+                        </div>
+                      </div>
+
+                      <div className="border-t border-emerald-800/80 pt-3 grid grid-cols-2 gap-2 text-left text-xs">
+                        <div>
+                          <span className="text-[10px] text-emerald-300 block">Appliance</span>
+                          <strong className="text-white truncate block">{journeyBrand?.name || 'Device'} • {selectedCategory === 'AC' ? acType : selectedCategory}</strong>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-emerald-300 block">Evaluation ID</span>
+                          <strong className="text-white font-mono block">{evaluationId}</strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Doorstep Pickup Form */}
+                    <div className="bg-white border border-slate-100 rounded-2xl p-5 space-y-4 shadow-sm">
+                      <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                        <MapPin className="w-4 h-4 text-emerald-600" /> Doorstep Pickup Details
+                      </h4>
+
+                      {/* Name Input */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Full Name <span className="text-rose-500">*</span></label>
+                        <input 
+                          type="text" 
+                          value={pickupName}
+                          onChange={(e) => setPickupName(e.target.value)}
+                          placeholder="e.g. Rahul Sharma"
+                          className="w-full text-xs sm:text-sm px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-950 font-medium"
+                        />
+                      </div>
+
+                      {/* Phone Input */}
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">10-Digit Mobile Number <span className="text-rose-500">*</span></label>
+                          <span className="text-[10px] font-medium text-slate-400">{pickupPhone.length}/10</span>
+                        </div>
+                        <input 
+                          type="tel" 
+                          value={pickupPhone}
+                          onChange={(e) => setPickupPhone(e.target.value.replace(/[^\d]/g, '').slice(0, 10))}
+                          placeholder="e.g. 9876543210"
+                          maxLength={10}
+                          className="w-full text-xs sm:text-sm px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-950 font-medium font-mono"
+                        />
+                        {pickupPhone.length > 0 && (
+                          <div className="mt-1">
+                            {pickupPhone.length === 10 ? (
+                              validateActiveMobileNumber(pickupPhone, '+91').valid ? (
+                                <p className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                                  <CheckCircle className="w-3 h-3" /> Valid mobile line verified
+                                </p>
+                              ) : (
+                                <p className="text-[10px] text-rose-500 font-medium flex items-center gap-1">
+                                  <AlertCircle className="w-3 h-3" /> {validateActiveMobileNumber(pickupPhone, '+91').error}
+                                </p>
+                              )
+                            ) : (
+                              <p className="text-[10px] text-slate-400">
+                                {10 - pickupPhone.length} digits remaining
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Address Input */}
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Doorstep Address <span className="text-rose-500">*</span></label>
+                          <button
+                            type="button"
+                            onClick={handleGetCurrentLocation}
+                            disabled={isLocating}
+                            className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1"
+                          >
+                            {isLocating ? (
+                              <>
+                                <Loader2 className="w-3 h-3 animate-spin text-emerald-500" />
+                                <span>Locating...</span>
+                              </>
+                            ) : (
+                              <>
+                                <MapPin className="w-3 h-3 text-emerald-500" />
+                                <span>Use GPS Location</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        <textarea 
+                          rows={2}
+                          value={pickupAddress}
+                          onChange={(e) => setPickupAddress(e.target.value)}
+                          placeholder="House/Flat No., Building name, Street, Landmark..."
+                          className="w-full text-xs sm:text-sm px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-950 font-medium leading-relaxed"
+                        />
+                      </div>
+
+                      {/* Pickup ETA Banner */}
+                      <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 flex items-start gap-2 text-[11px] text-amber-800">
+                        <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5 animate-pulse" />
+                        <div>
+                          <strong>Fast Turnaround:</strong> Field agent will arrive at your doorstep <strong>within 1 to 2 hours</strong> for instant cash pickup.
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="space-y-3">
+                      <button
+                        type="button"
+                        disabled={!pickupName.trim() || !pickupPhone.trim() || !pickupAddress.trim() || pickupPhone.length !== 10}
+                        onClick={() => handleCompleteBooking(pickupName, pickupPhone, pickupAddress)}
+                        className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+                      >
+                        <CheckCircle className="w-5 h-5" />
+                        <span>Confirm & Schedule Doorstep Pickup</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setJourneyStep(4)}
+                        className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold py-2.5 rounded-xl transition-all"
+                      >
+                        Adjust Device Evaluation Checklist
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* STEP 6: BOOKING CONFIRMATION & WHATSAPP PHOTO UPLOAD */}
+                {journeyStep === 6 && (
+                  <motion.div 
+                    key="step-6"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="space-y-8"
@@ -2865,66 +2798,46 @@ export default function App() {
                       <div className="w-16 h-16 bg-emerald-50 border border-emerald-200 rounded-full flex items-center justify-center mx-auto text-emerald-600">
                         <Check className="w-8 h-8 stroke-[3]" />
                       </div>
-                      <h3 className="text-2xl font-extrabold text-slate-900 font-display">Pickup Request Registered!</h3>
-                      <p className="text-xs text-slate-500">Your appraisal record has been logged in your customer account history.</p>
+                      <h3 className="text-2xl font-extrabold text-slate-900 font-display">Doorstep Pickup Scheduled!</h3>
+                      <p className="text-xs text-slate-500">Your order has been logged successfully and assigned to our field dispatch team.</p>
                     </div>
 
-                    {/* Billing Summary Table */}
+                    {/* Order Summary Table */}
                     <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 space-y-4">
-                      <h4 className="font-bold text-slate-800 uppercase tracking-wider text-xs border-b border-slate-200 pb-2">
-                        📋 Order Summary Details
+                      <h4 className="font-bold text-slate-800 uppercase tracking-wider text-xs border-b border-slate-200 pb-2 flex items-center justify-between">
+                        <span>📋 Pickup Order Summary</span>
+                        <span className="font-mono text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded">{evaluationId}</span>
                       </h4>
                       
                       <div className="grid grid-cols-2 gap-y-3.5 text-xs text-slate-600">
-                        <div>
-                          <span className="block text-slate-400 text-[10px] uppercase font-bold tracking-wider">Order Booking ID</span>
-                          <span className="font-mono font-bold text-slate-900">{evaluationId}</span>
-                        </div>
                         <div>
                           <span className="block text-slate-400 text-[10px] uppercase font-bold tracking-wider">Customer Name</span>
                           <span className="font-bold text-slate-900">{pickupName || currentUser?.name || 'ScrapyGo Customer'}</span>
                         </div>
                         <div>
                           <span className="block text-slate-400 text-[10px] uppercase font-bold tracking-wider">Contact Phone</span>
-                          <span className="font-bold text-slate-900">+91 {pickupPhone || currentUser?.phone || 'Not Provided'}</span>
+                          <span className="font-bold text-slate-900 font-mono">+91 {pickupPhone || currentUser?.phone || 'Not Provided'}</span>
                         </div>
                         <div>
-                          <span className="block text-slate-400 text-[10px] uppercase font-bold tracking-wider">Assigned ETA</span>
+                          <span className="block text-slate-400 text-[10px] uppercase font-bold tracking-wider">Assigned Pickup ETA</span>
                           <span className="font-bold text-amber-600 flex items-center gap-1">
                             <Clock className="w-3 h-3 animate-pulse" /> Within 1 to 2 Hours
                           </span>
                         </div>
+                        <div>
+                          <span className="block text-slate-400 text-[10px] uppercase font-bold tracking-wider">Guaranteed Cash</span>
+                          <span className="font-bold text-emerald-600 font-mono text-sm">₹{estimatedPrice.toLocaleString('en-IN')}</span>
+                        </div>
                         <div className="col-span-2 border-t border-dashed border-slate-200 pt-3">
                           <span className="block text-slate-400 text-[10px] uppercase font-bold tracking-wider">Pickup Address</span>
                           <span className="font-medium text-slate-900 leading-relaxed block bg-white p-2.5 rounded-lg border border-slate-100 mt-1">
-                            {pickupAddress || 'Direct Storefront Handoff'}
+                            {pickupAddress || 'Storefront Handoff'}
                           </span>
-                        </div>
-                      </div>
-
-                      <div className="border-t border-slate-200 pt-4 space-y-2">
-                        <div className="flex justify-between text-xs text-slate-600">
-                          <span>Appliance Model</span>
-                          <span className="font-bold text-slate-900">{journeyModel?.name}</span>
-                        </div>
-                        <div className="flex justify-between text-xs text-slate-600">
-                          <span>Assessed Condition</span>
-                          <span className="font-bold text-slate-900 capitalize">{condition}</span>
-                        </div>
-                        {selectedCategory === 'AC' && (
-                          <div className="flex justify-between text-xs text-slate-600">
-                            <span>Specs</span>
-                            <span className="font-bold text-slate-900">{capacity} | {energyRating}</span>
-                          </div>
-                        )}
-                        <div className="flex justify-between pt-3 border-t border-slate-100">
-                          <span className="text-sm font-bold text-slate-900">Estimated Cash Payout</span>
-                          <span className="text-lg font-black text-emerald-600 font-mono">₹{estimatedPrice.toLocaleString('en-IN')}</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Custom Final Action: Upload Photos on WhatsApp */}
+                    {/* WhatsApp Photo Upload CTA Banner */}
                     <div className="bg-gradient-to-br from-emerald-950 via-emerald-900 to-slate-900 text-white border border-emerald-800 rounded-3xl p-6 sm:p-7 shadow-xl space-y-4 relative overflow-hidden">
                       <div className="absolute top-0 right-0 w-40 h-40 bg-[#25D366]/15 rounded-full blur-3xl pointer-events-none" />
                       
@@ -2942,7 +2855,7 @@ export default function App() {
                             </span>
                           </div>
                           <p className="text-xs text-slate-300 leading-relaxed">
-                            Click below to copy your evaluation details and open WhatsApp. Simply attach/upload photo(s) of your AC (Indoor unit, Outdoor compressor, or Serial label) in the chat for instant spot verification and cash payout confirmation!
+                            Click below to open WhatsApp chat. Attach photo(s) of your appliance for instant spot verification and cash payout confirmation!
                           </p>
                         </div>
                       </div>
@@ -2959,8 +2872,7 @@ export default function App() {
                         <button
                           type="button"
                           onClick={() => {
-                            const isAc = selectedCategory === 'AC';
-                            const info = `*ScrapyGo Evaluation Order*\n\n📋 ID: ${evaluationId}\n🏷️ Category: ${selectedCategory}\n📦 Model: ${journeyModel?.name || acType}\n${isAc ? `⚡ Capacity: ${capacity}\n⭐ BEE Rating: ${energyRating}\n` : ''}🛠️ Condition: ${condition}\n💰 Quote: ₹${estimatedPrice.toLocaleString('en-IN')}\n👤 Customer: ${pickupName || currentUser?.name || 'ScrapyGo Customer'}\n📞 Phone: +91 ${pickupPhone || currentUser?.phone || ''}\n📍 Address: ${pickupAddress || ''}\n\n📸 Attached photo(s) of AC unit for instant verification!`;
+                            const info = `*ScrapyGo Order Details*\n\n📋 ID: ${evaluationId}\n🏷️ Appliance: ${journeyBrand?.name || ''} ${selectedCategory}\n💰 Quote: ₹${estimatedPrice.toLocaleString('en-IN')}\n👤 Customer: ${pickupName}\n📞 Phone: +91 ${pickupPhone}\n📍 Address: ${pickupAddress}`;
                             if (navigator.clipboard && navigator.clipboard.writeText) {
                               navigator.clipboard.writeText(info).catch(() => {});
                             }
@@ -2972,14 +2884,6 @@ export default function App() {
                           <span>Copy Details</span>
                         </button>
                       </div>
-                    </div>
-
-                    {/* Helper Instruction Block */}
-                    <div className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-100 rounded-xl text-xs text-slate-500">
-                      <Clock className="w-5 h-5 text-emerald-600 flex-shrink-0 animate-pulse" />
-                      <p>
-                        Our dispatch driver will call your authenticated number <strong>+91 {currentUser?.phone}</strong> within 1 hour to schedule same-day cash handoff pickup.
-                      </p>
                     </div>
 
                     <div className="flex justify-center space-x-4 pt-4">
