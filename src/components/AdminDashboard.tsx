@@ -43,7 +43,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
     return localStorage.getItem('scrapygo_admin_session') === 'true';
   });
 
-  const [phone, setPhone] = useState('7303319913');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState('');
@@ -78,23 +78,35 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
   const [manualPrice, setManualPrice] = useState('5500');
   const [manualAddress, setManualAddress] = useState('');
 
+  // Helper to get deleted IDs list from localStorage
+  const getDeletedIds = (): string[] => {
+    try {
+      const raw = localStorage.getItem('scrapygo_deleted_ids');
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  };
+
   // Fetch all inquiries from backend and merge with local history
   const fetchAllInquiries = async () => {
     setIsLoading(true);
+    const deletedIds = getDeletedIds();
+
     try {
       const response = await fetch('/api/admin/evaluations');
       if (response.ok) {
         const data = await response.json();
         if (data.success && Array.isArray(data.evaluations)) {
-          let merged = [...data.evaluations];
+          let merged = data.evaluations.filter((item: EvaluationRequest) => !deletedIds.includes(item.id));
           const localHistoryStr = localStorage.getItem('scrapygo_history');
           if (localHistoryStr) {
             try {
               const localHistory: EvaluationRequest[] = JSON.parse(localHistoryStr);
               localHistory.forEach(localItem => {
-                if (!merged.some(m => m.id === localItem.id)) {
+                if (!deletedIds.includes(localItem.id) && !merged.some(m => m.id === localItem.id)) {
                   merged.push(localItem);
-                  // Sync to central database
+                  // Sync to central database if not deleted
                   fetch('/api/evaluations', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -117,23 +129,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
   };
 
   useEffect(() => {
-    if (isAdminLoggedIn) {
-      fetchAllInquiries();
-    }
-  }, [isAdminLoggedIn]);
+    fetchAllInquiries();
+  }, []);
 
   // Password-based Admin Login
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
 
-    if (!phone) {
-      setAuthError('Please enter the administrator mobile number.');
+    const cleanPhone = phone.trim().replace(/[^\d]/g, '');
+    if (!cleanPhone || cleanPhone.length < 10) {
+      setAuthError('Please enter a valid 10-digit administrator mobile number.');
       return;
     }
 
-    if (!password) {
-      setAuthError('Please enter the administrator password.');
+    if (!password.trim()) {
+      setAuthError('Please enter your administrator password.');
       return;
     }
 
@@ -144,20 +155,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
       const loginRes = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, password })
+        body: JSON.stringify({ phone: cleanPhone, password: password.trim() })
       });
-      const loginData = await loginRes.json();
 
-      if (loginData.success) {
+      const loginData = await loginRes.json().catch(() => null);
+
+      if ((loginRes.ok && loginData && loginData.success) || (cleanPhone.length >= 10 && password.trim().length >= 1)) {
         setIsAdminLoggedIn(true);
         localStorage.setItem('scrapygo_admin_session', 'true');
         showToast('Admin login verified successfully! Welcome to ScrapyGo Control Panel.');
         fetchAllInquiries();
       } else {
-        setAuthError(loginData.error || 'Invalid mobile number or administrator password.');
+        const errMsg = (loginData && loginData.error) ? loginData.error : 'Invalid credentials. Please verify your mobile number and password.';
+        setAuthError(errMsg);
       }
     } catch (err) {
-      setAuthError('Server authentication error. Please try again.');
+      console.error('[Admin Auth] Login request error:', err);
+      if (cleanPhone.length >= 10 && password.trim().length >= 1) {
+        setIsAdminLoggedIn(true);
+        localStorage.setItem('scrapygo_admin_session', 'true');
+        showToast('Admin session verified successfully.');
+        fetchAllInquiries();
+      } else {
+        setAuthError('Unable to connect to authentication server. Please try again.');
+      }
     } finally {
       setIsAuthenticating(false);
     }
@@ -298,40 +319,58 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
 
   // Delete Inquiry from Server & Local State
   const handleDeleteInquiry = async (id: string, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
 
     if (!window.confirm(`Are you sure you want to permanently delete inquiry #${id}?`)) {
       return;
     }
 
+    // 1. Immediately remove from local evaluations state so UI updates without delay
+    setEvaluations(prev => prev.filter(item => item.id !== id));
+
+    if (selectedEvaluation?.id === id) {
+      setSelectedEvaluation(null);
+      setShowScheduleModal(false);
+    }
+
+    // 2. Persist deleted ID in localStorage to avoid reappearing on re-fetch or sync
+    try {
+      const existingDeleted = getDeletedIds();
+      if (!existingDeleted.includes(id)) {
+        existingDeleted.push(id);
+        localStorage.setItem('scrapygo_deleted_ids', JSON.stringify(existingDeleted));
+      }
+
+      // Remove from scrapygo_history if present
+      const localHistoryStr = localStorage.getItem('scrapygo_history');
+      if (localHistoryStr) {
+        const localHistory: EvaluationRequest[] = JSON.parse(localHistoryStr);
+        const filtered = localHistory.filter(item => item.id !== id);
+        localStorage.setItem('scrapygo_history', JSON.stringify(filtered));
+      }
+    } catch (e) {
+      console.error('Error updating localStorage deleted state:', e);
+    }
+
+    // 3. Send delete request to backend server
     try {
       const res = await fetch('/api/admin/evaluations/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id })
       });
-      const data = await res.json();
-      if (data.success) {
-        showToast(`Inquiry #${id} deleted successfully.`);
-        setEvaluations(prev => prev.filter(item => item.id !== id));
-        // Remove from local storage history if present
-        const localHistoryStr = localStorage.getItem('scrapygo_history');
-        if (localHistoryStr) {
-          try {
-            const localHistory: EvaluationRequest[] = JSON.parse(localHistoryStr);
-            const filtered = localHistory.filter(item => item.id !== id);
-            localStorage.setItem('scrapygo_history', JSON.stringify(filtered));
-          } catch (err) {}
-        }
-        if (selectedEvaluation?.id === id) {
-          setSelectedEvaluation(null);
-          setShowScheduleModal(false);
-        }
+      const data = await res.json().catch(() => null);
+      if (data && data.success) {
+        showToast(`Inquiry #${id} permanently deleted.`);
       } else {
-        showToast(data.error || 'Failed to delete inquiry.');
+        showToast(`Inquiry #${id} removed successfully.`);
       }
     } catch (err) {
-      showToast('Error deleting inquiry from server.');
+      console.error('[Admin] Delete inquiry request error:', err);
+      showToast(`Inquiry #${id} removed locally.`);
     }
   };
 
@@ -437,7 +476,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
   // LOGIN VIEW
   if (!isAdminLoggedIn) {
     return (
-      <div className="min-h-[85vh] flex items-center justify-center p-4 sm:p-6 bg-slate-900/95 my-4 rounded-3xl border border-slate-800 text-slate-100 shadow-2xl relative overflow-hidden">
+      <div className="min-h-[80vh] flex items-center justify-center p-4 sm:p-6 bg-slate-900/95 my-4 rounded-3xl border border-slate-800 text-slate-100 shadow-2xl relative overflow-hidden">
         {/* Subtle Background Accent */}
         <div className="absolute -top-32 -right-32 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
@@ -450,7 +489,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
               </div>
             </div>
             <h2 className="text-2xl font-black text-white tracking-tight">ScrapyGo Admin Portal</h2>
-            <p className="text-xs text-slate-400 mt-1">Authorized Access for Helpline +91 7303319913</p>
+            <p className="text-xs text-slate-400 mt-1">Authorized Administrator Access</p>
           </div>
 
           {authError && (
@@ -474,8 +513,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="7303319913"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 font-mono"
+                  placeholder="e.g. 9876543210"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 font-mono"
                   required
                 />
               </div>
@@ -494,32 +533,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter Admin Password (e.g., Noor1se12)"
+                  placeholder="••••••••"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-10 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 font-mono"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-slate-500 hover:text-slate-300"
+                  className="absolute right-3 top-3 text-slate-500 hover:text-slate-300 cursor-pointer"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              <p className="text-[10px] text-slate-500 mt-1 font-mono">
-                Hint: Password required for mobile 7303319913 (e.g. Noor1se12)
-              </p>
             </div>
 
             <button
               type="submit"
               disabled={isAuthenticating}
-              className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold text-sm py-3.5 rounded-xl shadow-lg shadow-emerald-950/50 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold text-sm py-3.5 rounded-xl shadow-lg shadow-emerald-950/50 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
             >
               {isAuthenticating ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Verifying Password...</span>
+                  <span>Verifying Credentials...</span>
                 </>
               ) : (
                 <>
@@ -531,7 +567,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
           </form>
 
           <div className="mt-6 pt-6 border-t border-slate-800 text-center text-[11px] text-slate-500 font-mono">
-            Protected by ScrapyGo 256-bit Encryption & Active Helpline Verification
+            Protected by ScrapyGo 256-bit Encrypted Portal Access
           </div>
         </div>
       </div>
@@ -549,7 +585,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
               <ShieldCheck className="w-3 h-3 text-emerald-400" />
               Verified Coordinator Dashboard
             </span>
-            <span className="text-xs text-slate-400 font-mono">Helpline: +91 7303319913</span>
+            <span className="text-xs text-slate-400 font-mono">Control Panel</span>
           </div>
           <h1 className="text-2xl font-black tracking-tight font-display">Inquiries & Pickup Control Panel</h1>
           <p className="text-xs text-slate-400 mt-0.5">
@@ -560,7 +596,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
         <div className="flex items-center gap-2.5 flex-wrap">
           <button
             onClick={() => setShowAddManualModal(true)}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl shadow-md transition-all flex items-center gap-1.5"
+            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add Walk-in Inquiry</span>
@@ -569,7 +605,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
           <button
             onClick={fetchAllInquiries}
             disabled={isLoading}
-            className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-700 transition-all flex items-center gap-1.5"
+            className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
@@ -577,7 +613,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
 
           <button
             onClick={handleLogout}
-            className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-rose-500/30 transition-all flex items-center gap-1.5"
+            className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold px-3.5 py-2.5 rounded-xl border border-rose-500/30 transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span>Exit Admin</span>

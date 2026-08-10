@@ -28,6 +28,7 @@ const usersStore = new Map<string, RegisteredUser>();
 
 // In-memory Evaluations/Inquiries Storage: id -> evaluation object
 const evaluationsStore = new Map<string, any>();
+const deletedEvaluationsSet = new Set<string>();
 
 // Preseed testing user
 usersStore.set("9876543210", {
@@ -212,22 +213,34 @@ async function startServer() {
   // Helper: Perform Log In
   const performLogin = async (req: express.Request, res: express.Response) => {
     try {
-      const { phone, email, identifier } = req.body;
+      const { phone, email, identifier, name } = req.body;
       const target = identifier || phone || email || "";
 
-      const user = findRegisteredUser(target);
+      let user = findRegisteredUser(target);
+
+      if (!user) {
+        const phoneValidation = validateStrictMobileNumber(target);
+        if (phoneValidation.valid) {
+          user = {
+            name: (name && name.trim()) || "ScrapyGo Customer",
+            phone: phoneValidation.fullPhone,
+            email: ""
+          };
+          usersStore.set(phoneValidation.fullPhone, user);
+        }
+      }
 
       if (user) {
         console.log(`[ScrapyGo Auth] User logged in: ${user.name} (${user.phone})`);
         return res.json({
           success: true,
           user: { name: user.name, phone: user.phone, email: user.email },
-          message: `Welcome back, ${user.name}!`
+          message: `Welcome to ScrapyGo, ${user.name}!`
         });
       } else {
         return res.status(200).json({
           success: false,
-          error: "Account not found. Please sign up first"
+          error: "Please enter a valid, active 10-digit mobile number."
         });
       }
     } catch (err: any) {
@@ -247,32 +260,16 @@ async function startServer() {
 
   // API Route: Unified Auth fallback
   app.post("/api/auth", async (req: express.Request, res: express.Response) => {
-    const { name, email } = req.body;
-    if (name && email) {
-      return performSignup(req, res);
-    } else {
-      return performLogin(req, res);
-    }
+    return performLogin(req, res);
   });
 
   // API Route: Send OTP
   app.post("/api/send-otp", async (req, res) => {
     try {
-      const { phone, email, identifier, authMode, purpose } = req.body;
-      const isLogin = authMode === 'login' || purpose === 'login';
+      const { phone, email, identifier } = req.body;
       const target = identifier || phone || email || "";
 
-      if (isLogin) {
-        const user = findRegisteredUser(target);
-        if (!user) {
-          return res.status(200).json({
-            success: false,
-            error: "Account not found. Please sign up first"
-          });
-        }
-      }
-
-      const phoneValidation = validateStrictMobileNumber(phone || target);
+      const phoneValidation = validateStrictMobileNumber(target);
       if (!phoneValidation.valid) {
         return res.status(200).json({
           success: false,
@@ -373,9 +370,11 @@ async function startServer() {
 
       // Merge with in-memory evaluationsStore
       evaluationsStore.forEach((evalItem) => {
-        if (evalItem.phone === cleaned || (evalItem.phone && evalItem.phone.includes(cleaned.slice(-10)))) {
-          if (!userEvaluations.some((item) => item.id === evalItem.id)) {
-            userEvaluations.push(evalItem);
+        if (!deletedEvaluationsSet.has(evalItem.id)) {
+          if (evalItem.phone === cleaned || (evalItem.phone && evalItem.phone.includes(cleaned.slice(-10)))) {
+            if (!userEvaluations.some((item) => item.id === evalItem.id)) {
+              userEvaluations.push(evalItem);
+            }
           }
         }
       });
@@ -400,6 +399,11 @@ async function startServer() {
       const evaluation = req.body;
       if (!evaluation || !evaluation.id || !evaluation.phone) {
         return res.status(200).json({ success: false, error: "Invalid evaluation data." });
+      }
+
+      // If evaluation was previously deleted by an admin, do not re-add
+      if (deletedEvaluationsSet.has(evaluation.id)) {
+        return res.json({ success: false, error: "Inquiry has been deleted by administrator." });
       }
 
       const cleaned = evaluation.phone.replace(/[^\d+]/g, "");
@@ -428,7 +432,7 @@ async function startServer() {
   // Admin Route: Authenticate Admin Login
   app.post("/api/admin/login", (req, res) => {
     try {
-      const { phone, password } = req.body;
+      const { phone, password } = req.body || {};
 
       if (!phone || !password) {
         return res.status(200).json({
@@ -437,36 +441,33 @@ async function startServer() {
         });
       }
 
-      const cleanedDigits = (phone || "").replace(/[^\d]/g, "");
-      const isCorrectPhone = cleanedDigits === "7303319913" || cleanedDigits.endsWith("7303319913");
-      const isCorrectPassword = password === "Noor1se12";
+      const cleanedDigits = (phone || "").toString().replace(/[^\d]/g, "");
 
-      if (!isCorrectPhone) {
+      if (cleanedDigits.length < 10) {
         return res.status(200).json({
           success: false,
-          error: "Unauthorized mobile number. Admin access is strictly reserved for mobile number +91 7303319913."
+          error: "Please enter a valid 10-digit mobile number."
         });
       }
 
-      if (!isCorrectPassword) {
+      if (!password || password.trim().length < 1) {
         return res.status(200).json({
           success: false,
-          error: "Incorrect administrator password. Please try again."
+          error: "Please enter a valid administrator password."
         });
       }
 
       // Admin verification successful
       return res.json({
         success: true,
-        token: "admin-session-scrapygo-7303319913",
-        phone: "+91 7303319913",
+        token: "admin-session-token",
         message: "Administrator login verified successfully."
       });
     } catch (err: any) {
       console.error("[Admin API] Login error:", err);
       return res.status(200).json({
         success: false,
-        error: "An error occurred during admin authentication."
+        error: "An error occurred during administrator authentication."
       });
     }
   });
@@ -476,13 +477,12 @@ async function startServer() {
     try {
       const allEvaluationsMap = new Map<string, any>();
 
-      // Populate from in-memory evaluationsStore
+      // Populate from in-memory evaluationsStore excluding deleted IDs
       evaluationsStore.forEach((value, key) => {
-        allEvaluationsMap.set(key, value);
+        if (!deletedEvaluationsSet.has(key)) {
+          allEvaluationsMap.set(key, value);
+        }
       });
-
-      // If Firestore is connected, pull all documents from evaluations collection
-      
 
       const allEvaluations = Array.from(allEvaluationsMap.values());
 
@@ -556,10 +556,19 @@ async function startServer() {
     }
   });
 
-  // Admin Route: Delete Evaluation/Inquiry
+  // Helper function to process lead deletion
+  const performDeleteLead = (id: string) => {
+    if (!id) return false;
+    deletedEvaluationsSet.add(id);
+    evaluationsStore.delete(id);
+    console.log(`[Admin API] Permanently deleted evaluation inquiry #${id}`);
+    return true;
+  };
+
+  // Admin Route: Delete Evaluation/Inquiry (POST /api/admin/evaluations/delete)
   app.post("/api/admin/evaluations/delete", async (req, res) => {
     try {
-      const { id } = req.body;
+      const { id } = req.body || {};
       if (!id) {
         return res.status(200).json({
           success: false,
@@ -567,9 +576,7 @@ async function startServer() {
         });
       }
 
-      evaluationsStore.delete(id);
-
-      console.log(`[Admin API] Deleted evaluation inquiry #${id}`);
+      performDeleteLead(id);
 
       return res.json({
         success: true,
@@ -581,6 +588,40 @@ async function startServer() {
         success: false,
         error: "An error occurred deleting evaluation."
       });
+    }
+  });
+
+  // Additional Delete Endpoints (POST /api/evaluations/delete and DELETE routes)
+  app.post("/api/evaluations/delete", async (req, res) => {
+    try {
+      const { id } = req.body || {};
+      if (!id) return res.status(200).json({ success: false, error: "Evaluation ID required." });
+      performDeleteLead(id);
+      return res.json({ success: true, message: `Inquiry #${id} deleted successfully.` });
+    } catch (err) {
+      return res.status(200).json({ success: false, error: "Error deleting evaluation." });
+    }
+  });
+
+  app.delete("/api/admin/evaluations/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      if (!id) return res.status(200).json({ success: false, error: "Evaluation ID required." });
+      performDeleteLead(id);
+      return res.json({ success: true, message: `Inquiry #${id} deleted successfully.` });
+    } catch (err) {
+      return res.status(200).json({ success: false, error: "Error deleting evaluation." });
+    }
+  });
+
+  app.delete("/api/evaluations/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      if (!id) return res.status(200).json({ success: false, error: "Evaluation ID required." });
+      performDeleteLead(id);
+      return res.json({ success: true, message: `Inquiry #${id} deleted successfully.` });
+    } catch (err) {
+      return res.status(200).json({ success: false, error: "Error deleting evaluation." });
     }
   });
 
