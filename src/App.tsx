@@ -1741,7 +1741,7 @@ export default function App() {
                 <p className="text-xs sm:text-sm text-slate-500">Most evaluated scrap models this week. Check their average scrap price valuation.</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 gap-4 sm:gap-6">
                 
                 {/* Featured Product 1 */}
                 <div className="bg-gradient-to-br from-slate-900 to-slate-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
@@ -1757,7 +1757,7 @@ export default function App() {
                       Average recycling scrap value returned is highly favorable depending on coil condition and gas level.
                     </p>
                     <div className="flex items-baseline space-x-2 pt-1">
-                      <span className="text-2xl sm:text-3xl font-extrabold text-emerald-400">₹6,500</span>
+                      <span className="text-2xl sm:text-3xl font-extrabold text-emerald-400">₹8,000</span>
                       <span className="text-xs text-slate-400">Avg Quote</span>
                     </div>
                     <button 
@@ -1775,44 +1775,6 @@ export default function App() {
                     <img 
                       src="https://i.pinimg.com/1200x/44/7f/84/447f84d557a05888931325a7cc2c9ec4.jpg"
                       className="w-full h-full object-cover rounded-2xl shadow-lg border border-white/10"
-                      alt="Featured Air Conditioner"
-                      referrerPolicy="no-referrer"
-                    />
-                  </div>
-                </div>
-
-                {/* Featured Product 2 */}
-                <div className="bg-white border border-slate-200 text-slate-800 rounded-3xl p-6 sm:p-8 shadow-md flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-48 h-48 bg-slate-100 rounded-full blur-3xl group-hover:scale-125 transition-transform" />
-                  <div className="space-y-3 sm:space-y-4 max-w-sm relative z-10 w-full">
-                    <span className="bg-slate-100 text-slate-600 text-[10px] font-mono tracking-widest font-bold uppercase px-2.5 py-1 rounded-full inline-block">
-                      Trending Evaluation
-                    </span>
-                    <h3 className="text-xl sm:text-2xl font-bold font-display leading-tight text-slate-900">
-                      LG Dual Inverter Split AC 1.5T
-                    </h3>
-                    <p className="text-slate-500 text-xs">
-                      Excellent return value for full copper condenser condition. Secure doorstep pickup within 24 hours.
-                    </p>
-                    <div className="flex items-baseline space-x-2 pt-1">
-                      <span className="text-2xl sm:text-3xl font-extrabold text-emerald-600">₹7,200</span>
-                      <span className="text-xs text-slate-400">Avg Quote</span>
-                    </div>
-                    <button 
-                      onClick={() => {
-                        const modelObj = MODELS.AC.find(m => m.id === 'ac-m1');
-                        if (modelObj) selectSearchedModel(modelObj, 'AC');
-                      }}
-                      className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition-all flex items-center space-x-1 cursor-pointer"
-                    >
-                      <span>Appraise This Model</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  <div className="w-full md:w-44 h-36 relative z-10">
-                    <img 
-                      src="https://i.pinimg.com/1200x/44/7f/84/447f84d557a05888931325a7cc2c9ec4.jpg"
-                      className="w-full h-full object-cover rounded-2xl shadow-lg border border-slate-100"
                       alt="Featured Air Conditioner"
                       referrerPolicy="no-referrer"
                     />

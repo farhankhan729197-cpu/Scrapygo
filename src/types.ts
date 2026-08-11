@@ -111,7 +111,7 @@ export const MODELS: Record<CategoryType, DeviceModel[]> = {
     { id: 'ac-m1', brandId: 'ac-daikin', name: 'Daikin 1.5 Ton Split AC', basePrice: 5500 },
     { id: 'ac-m2', brandId: 'ac-daikin', name: 'Daikin 1.0 Ton Split AC', basePrice: 4500 },
     { id: 'ac-m3', brandId: 'ac-daikin', name: 'Daikin 2.0 Ton Inverter AC', basePrice: 7500 },
-    { id: 'ac-m4', brandId: 'ac-voltas', name: 'Voltas 1.5 Ton 3 Star Split AC', basePrice: 5500 },
+    { id: 'ac-m4', brandId: 'ac-voltas', name: 'Voltas 1.5 Ton 3 Star Split AC', basePrice: 8000 },
     { id: 'ac-m5', brandId: 'ac-voltas', name: 'Voltas 1.5 Ton 5 Star Split AC', basePrice: 5500 },
     { id: 'ac-m6', brandId: 'ac-voltas', name: 'Voltas 1.0 Ton Window AC', basePrice: 4500 },
     { id: 'ac-m7', brandId: 'ac-lg', name: 'LG Dual Inverter 1.5 Ton AC', basePrice: 5500 },
