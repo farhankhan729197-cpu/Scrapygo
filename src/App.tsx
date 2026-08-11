@@ -291,6 +291,39 @@ export default function App() {
   // Custom toast notification state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Dynamic SEO Page Title & Meta updates based on active navigation tab
+  useEffect(() => {
+    switch (activeTab) {
+      case 'sell-journey':
+        document.title = 'Instant Scrap Valuation & Sell Online | ScrapyGo';
+        break;
+      case 'dashboard':
+        document.title = 'My Orders & Scrap Valuations | ScrapyGo';
+        break;
+      case 'about-us':
+        document.title = 'About Us - Doorstep Scrap Collection & Appliance Recycling | ScrapyGo';
+        break;
+      case 'partners':
+        document.title = 'Smelter & Recycling Partners | ScrapyGo';
+        break;
+      case 'faq':
+        document.title = 'Frequently Asked Questions (FAQ) | ScrapyGo';
+        break;
+      case 'contact':
+        document.title = 'Contact Us - Doorstep Scrap Pickup Support | ScrapyGo';
+        break;
+      case 'admin-panel':
+        document.title = 'Admin Control Panel | ScrapyGo';
+        break;
+      case 'gallery':
+        document.title = 'Scrap Recycling Gallery & Scrap Rates | ScrapyGo';
+        break;
+      default:
+        document.title = 'ScrapyGo - Sell Old AC, Appliances & Electronics Online for Instant Cash';
+        break;
+    }
+  }, [activeTab]);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => {
