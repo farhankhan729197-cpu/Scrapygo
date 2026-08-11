@@ -501,24 +501,34 @@ export default function App() {
         else if (condition === 'poor') finalPrice = 3800;
         else finalPrice = 4200;
       } else if (detectedCapacity.includes('2.0+') || detectedCapacity.includes('2+') || detectedCapacity.includes('2.5') || detectedCapacity.includes('3.0')) {
-        if (condition === 'excellent') finalPrice = 6500;
-        else if (condition === 'good') finalPrice = 6000;
-        else if (condition === 'average') finalPrice = 5800;
-        else if (condition === 'poor') finalPrice = 5500;
-        else finalPrice = 6000;
+        if (condition === 'excellent') finalPrice = 7600;
+        else if (condition === 'good') finalPrice = 7000;
+        else if (condition === 'average') finalPrice = 6400;
+        else if (condition === 'poor') finalPrice = 5800;
+        else finalPrice = 7600;
       } else if (detectedCapacity.includes('2.0') || detectedCapacity === '2 Ton' || detectedCapacity === '2.0 Ton') {
-        if (condition === 'excellent') finalPrice = 6000;
-        else if (condition === 'good') finalPrice = 5600;
-        else if (condition === 'average') finalPrice = 5400;
-        else if (condition === 'poor') finalPrice = 4900;
-        else finalPrice = 5600;
+        if (condition === 'excellent') finalPrice = 7600;
+        else if (condition === 'good') finalPrice = 6800;
+        else if (condition === 'average') finalPrice = 6200;
+        else if (condition === 'poor') finalPrice = 5500;
+        else finalPrice = 7600;
       } else {
         // Default to 1.5 Ton
-        if (condition === 'excellent') finalPrice = 5000;
+        if (condition === 'excellent') finalPrice = 5500;
         else if (condition === 'good') finalPrice = 4800;
         else if (condition === 'average') finalPrice = 4300;
         else if (condition === 'poor') finalPrice = 4000;
         else finalPrice = 4800;
+      }
+
+      // If model has a specific basePrice, use model.basePrice if higher
+      if (model && model.basePrice && model.basePrice > 0) {
+        let factor = 1.0;
+        if (condition === 'good') factor = 0.9;
+        else if (condition === 'average') factor = 0.8;
+        else if (condition === 'poor') factor = 0.7;
+        const modelCalc = Math.round(model.basePrice * factor);
+        finalPrice = Math.max(finalPrice, modelCalc);
       }
 
       // Deduct ₹500 if 'Not cooling properly' flaw is selected
