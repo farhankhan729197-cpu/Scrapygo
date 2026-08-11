@@ -443,6 +443,13 @@ async function startServer() {
 
       const cleanedDigits = (phone || "").toString().replace(/[^\d]/g, "");
 
+      if (!cleanedDigits.endsWith("7303319913")) {
+        return res.status(200).json({
+          success: false,
+          error: "Access Denied: Admin panel access is restricted exclusively to authorized mobile number (+91 7303319913)."
+        });
+      }
+
       if (cleanedDigits.length < 10) {
         return res.status(200).json({
           success: false,

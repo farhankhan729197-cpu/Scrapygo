@@ -35,11 +35,13 @@ export interface EvaluationRequest {
   issues: string[];
   estimatedPrice: number;
   phone: string;
+  secondaryPhone?: string;
   status: OrderStatus;
   createdAt: string;
   customerName?: string;
   customerAddress?: string;
   pickupDate?: string;
+  pickupTime?: string;
   pickupSlot?: string;
   pickupAgent?: string;
   adminNotes?: string;

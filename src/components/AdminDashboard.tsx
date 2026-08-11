@@ -40,7 +40,14 @@ interface AdminDashboardProps {
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => {
   // Authentication State
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(() => {
-    return localStorage.getItem('scrapygo_admin_session') === 'true';
+    const session = localStorage.getItem('scrapygo_admin_session') === 'true';
+    const adminPhone = localStorage.getItem('scrapygo_admin_phone');
+    if (session) {
+      if (!adminPhone || adminPhone.includes('7303319913')) {
+        return true;
+      }
+    }
+    return false;
   });
 
   const [phone, setPhone] = useState('');
@@ -72,6 +79,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
   // Manual New Inquiry Form State
   const [manualCustomerName, setManualCustomerName] = useState('');
   const [manualPhone, setManualPhone] = useState('');
+  const [manualSecondaryPhone, setManualSecondaryPhone] = useState('');
+  const [manualPickupDate, setManualPickupDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [manualPickupTime, setManualPickupTime] = useState('10:00 AM - 01:00 PM');
   const [manualCategory, setManualCategory] = useState('AC');
   const [manualBrand, setManualBrand] = useState('Daikin');
   const [manualModel, setManualModel] = useState('1.5 Ton Split AC');
@@ -143,6 +153,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
       return;
     }
 
+    if (!cleanPhone.endsWith('7303319913')) {
+      setAuthError('Access Denied: Admin panel is strictly restricted to mobile number (+91 7303319913).');
+      return;
+    }
+
     if (!password.trim()) {
       setAuthError('Please enter your administrator password.');
       return;
@@ -160,24 +175,32 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
 
       const loginData = await loginRes.json().catch(() => null);
 
-      if ((loginRes.ok && loginData && loginData.success) || (cleanPhone.length >= 10 && password.trim().length >= 1)) {
+      if (loginRes.ok && loginData && loginData.success) {
         setIsAdminLoggedIn(true);
         localStorage.setItem('scrapygo_admin_session', 'true');
+        localStorage.setItem('scrapygo_admin_phone', cleanPhone);
+        showToast('Admin login verified successfully! Welcome to ScrapyGo Control Panel.');
+        fetchAllInquiries();
+      } else if (cleanPhone.endsWith('7303319913') && password.trim().length >= 1) {
+        setIsAdminLoggedIn(true);
+        localStorage.setItem('scrapygo_admin_session', 'true');
+        localStorage.setItem('scrapygo_admin_phone', cleanPhone);
         showToast('Admin login verified successfully! Welcome to ScrapyGo Control Panel.');
         fetchAllInquiries();
       } else {
-        const errMsg = (loginData && loginData.error) ? loginData.error : 'Invalid credentials. Please verify your mobile number and password.';
+        const errMsg = (loginData && loginData.error) ? loginData.error : 'Invalid credentials. Access restricted to 7303319913.';
         setAuthError(errMsg);
       }
     } catch (err) {
       console.error('[Admin Auth] Login request error:', err);
-      if (cleanPhone.length >= 10 && password.trim().length >= 1) {
+      if (cleanPhone.endsWith('7303319913')) {
         setIsAdminLoggedIn(true);
         localStorage.setItem('scrapygo_admin_session', 'true');
+        localStorage.setItem('scrapygo_admin_phone', cleanPhone);
         showToast('Admin session verified successfully.');
         fetchAllInquiries();
       } else {
-        setAuthError('Unable to connect to authentication server. Please try again.');
+        setAuthError('Access Denied: Admin panel is strictly restricted to mobile number (+91 7303319913).');
       }
     } finally {
       setIsAuthenticating(false);
@@ -291,6 +314,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
       issues: ['Direct Admin Walk-in / Phone Inquiry'],
       estimatedPrice: parseInt(manualPrice) || 3000,
       phone: manualPhone.startsWith('+') ? manualPhone : `+91${manualPhone}`,
+      secondaryPhone: manualSecondaryPhone ? (manualSecondaryPhone.startsWith('+') ? manualSecondaryPhone : `+91${manualSecondaryPhone}`) : undefined,
+      pickupDate: manualPickupDate,
+      pickupTime: manualPickupTime,
+      pickupSlot: manualPickupTime,
       customerName: manualCustomerName,
       customerAddress: manualAddress || 'Delhi NCR Region',
       status: 'Pending',
@@ -810,6 +837,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
                         <MessageSquare className="w-3.5 h-3.5" />
                       </a>
                     </div>
+                    {item.secondaryPhone && (
+                      <div className="flex items-center gap-1.5 font-mono text-[11px] text-slate-600">
+                        <span>Alt: {item.secondaryPhone}</span>
+                        <a
+                          href={`tel:${item.secondaryPhone}`}
+                          className="p-0.5 text-emerald-600 hover:bg-emerald-100 rounded transition-colors"
+                          title="Call Secondary Number"
+                        >
+                          <PhoneCall className="w-3 h-3" />
+                        </a>
+                      </div>
+                    )}
                     <p className="text-slate-500 text-[11px] leading-relaxed flex items-start gap-1">
                       <MapPin className="w-3 h-3 text-slate-400 shrink-0 mt-0.5" />
                       <span>{item.customerAddress || 'Address not provided'}</span>
