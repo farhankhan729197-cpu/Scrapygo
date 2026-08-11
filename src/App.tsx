@@ -83,8 +83,11 @@ export const isAdminUser = (_user: { phone: string; name?: string } | null): boo
   }
   const session = typeof window !== 'undefined' && localStorage.getItem('scrapygo_admin_session') === 'true';
   const savedPhone = typeof window !== 'undefined' ? localStorage.getItem('scrapygo_admin_phone') : null;
-  if (session && (!savedPhone || savedPhone.includes(ADMIN_MOBILE_NUMBER))) {
-    return true;
+  if (session && savedPhone) {
+    const cleanSaved = savedPhone.replace(/[^\d]/g, '');
+    if (cleanSaved.endsWith(ADMIN_MOBILE_NUMBER) || cleanSaved === ADMIN_MOBILE_NUMBER) {
+      return true;
+    }
   }
   return false;
 };
@@ -3804,7 +3807,27 @@ export default function App() {
         {/* ADMIN DASHBOARD SECTION */}
         {activeTab === 'admin-panel' && (
           <div id="admin-panel-container" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <AdminDashboard showToast={showToast} />
+            {isAdminUser(currentUser) ? (
+              <AdminDashboard showToast={showToast} />
+            ) : (
+              <div className="bg-white border border-slate-200 rounded-3xl p-8 sm:p-12 max-w-lg mx-auto text-center space-y-4 my-12 shadow-xl">
+                <div className="w-14 h-14 bg-rose-50 text-rose-600 rounded-2xl border border-rose-100 flex items-center justify-center mx-auto shadow-sm">
+                  <ShieldAlert className="w-7 h-7" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">Access Restricted</h2>
+                  <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                    The Admin Control Panel is strictly restricted to authorized mobile number (+91 7303319913).
+                  </p>
+                </div>
+                <button
+                  onClick={() => setActiveTab('home')}
+                  className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer"
+                >
+                  Return to Home
+                </button>
+              </div>
+            )}
           </div>
         )}
 

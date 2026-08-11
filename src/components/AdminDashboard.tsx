@@ -209,6 +209,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
 
   const handleLogout = () => {
     localStorage.removeItem('scrapygo_admin_session');
+    localStorage.removeItem('scrapygo_admin_phone');
     setIsAdminLoggedIn(false);
     setPassword('');
     showToast('Admin logged out successfully.');
