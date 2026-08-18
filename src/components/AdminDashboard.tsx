@@ -28,7 +28,8 @@ import {
   Sparkles,
   MapPin,
   Tag,
-  Trash2
+  Trash2,
+  AlertCircle
 } from 'lucide-react';
 import { EvaluationRequest, OrderStatus } from '../types';
 
@@ -74,6 +75,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
   const [pickupSlot, setPickupSlot] = useState('Morning (09:00 AM - 12:00 PM)');
   const [pickupAgent, setPickupAgent] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
+  const [modalCancellationReason, setModalCancellationReason] = useState('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   // Manual New Inquiry Form State
@@ -98,9 +100,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
     }
   };
 
-  // Fetch all inquiries from backend and merge with local history
-  const fetchAllInquiries = async () => {
-    setIsLoading(true);
+  // Fetch all inquiries from backend and merge with local history (supports silent background sync)
+  const fetchAllInquiries = async (silent = false) => {
+    if (!silent) setIsLoading(true);
     const deletedIds = getDeletedIds();
 
     try {
@@ -132,15 +134,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
       }
     } catch (err) {
       console.error('[Admin] Fetch inquiries error:', err);
-      showToast('Failed to connect to backend server. Operating in offline cache mode.');
+      if (!silent) {
+        showToast('Failed to connect to backend server. Operating in offline cache mode.');
+      }
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
+  // Real-time automatic polling sync (every 4 seconds) when admin is authenticated
   useEffect(() => {
-    fetchAllInquiries();
-  }, []);
+    if (!isAdminLoggedIn) return;
+    fetchAllInquiries(false);
+    const interval = setInterval(() => {
+      fetchAllInquiries(true);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [isAdminLoggedIn]);
 
   // Password-based Admin Login
   const handleAdminLogin = async (e: React.FormEvent) => {
@@ -223,6 +233,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
     setPickupSlot(item.pickupSlot || 'Morning (09:00 AM - 12:00 PM)');
     setPickupAgent(item.pickupAgent || '');
     setAdminNotes(item.adminNotes || '');
+    setModalCancellationReason(item.cancellationReason || '');
     setShowScheduleModal(true);
   };
 
@@ -232,6 +243,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
     setIsUpdatingStatus(true);
 
     try {
+      const isCancelledOrRejected = scheduleStatus === 'Cancelled' || scheduleStatus === 'Rejected';
+      const reasonToSend = isCancelledOrRejected ? modalCancellationReason : (modalCancellationReason || selectedEvaluation.cancellationReason || '');
+
       const response = await fetch('/api/admin/evaluations/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -241,7 +255,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
           pickupDate,
           pickupSlot,
           pickupAgent,
-          adminNotes
+          adminNotes,
+          cancellationReason: reasonToSend,
+          cancelledAt: isCancelledOrRejected ? (selectedEvaluation.cancelledAt || new Date().toISOString()) : undefined
         })
       });
 
@@ -258,7 +274,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
                   pickupDate,
                   pickupSlot,
                   pickupAgent,
-                  adminNotes
+                  adminNotes,
+                  cancellationReason: reasonToSend,
+                  cancelledAt: isCancelledOrRejected ? (item.cancelledAt || new Date().toISOString()) : item.cancelledAt
                 }
               : item
           )
@@ -469,16 +487,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
       (item.phone || '').includes(query) ||
       (item.brand || '').toLowerCase().includes(query) ||
       (item.model || '').toLowerCase().includes(query) ||
-      (item.customerAddress || '').toLowerCase().includes(query);
+      (item.customerAddress || '').toLowerCase().includes(query) ||
+      (item.cancellationReason || '').toLowerCase().includes(query);
 
-    // Status filter match
-    const statusUpper = statusFilter.toUpperCase();
+    // Status filter match for simplified categories
+    const filterKey = statusFilter;
     let matchesStatus = true;
-    if (statusUpper !== 'ALL') {
-      if (statusUpper === 'PENDING') {
-        matchesStatus = item.status === 'Pending' || item.status === 'Pending Pickup';
+    if (filterKey !== 'ALL') {
+      if (filterKey === 'Confirmed') {
+        matchesStatus = item.status === 'Confirmed' || item.status === 'Passed';
+      } else if (filterKey === 'Pending') {
+        matchesStatus = item.status === 'Pending' || item.status === 'Pending Pickup' || item.status === 'Hold';
+      } else if (filterKey === 'Completed') {
+        matchesStatus = item.status === 'Completed';
+      } else if (filterKey === 'Cancelled/Rejected') {
+        matchesStatus = item.status === 'Cancelled' || item.status === 'Rejected' || item.status === 'Failed';
       } else {
-        matchesStatus = (item.status || '').toUpperCase() === statusUpper;
+        matchesStatus = (item.status || '').toLowerCase() === filterKey.toLowerCase();
       }
     }
 
@@ -494,11 +519,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
     return 0;
   });
 
-  // Calculate Summary Metrics
+  // Calculate Summary Metrics based on simplified categories
   const totalCount = evaluations.length;
   const pendingCount = evaluations.filter(e => e.status === 'Pending' || e.status === 'Pending Pickup' || e.status === 'Hold').length;
   const confirmedCount = evaluations.filter(e => e.status === 'Confirmed' || e.status === 'Passed').length;
   const completedCount = evaluations.filter(e => e.status === 'Completed').length;
+  const cancelledRejectedCount = evaluations.filter(e => e.status === 'Cancelled' || e.status === 'Rejected' || e.status === 'Failed').length;
   const totalScrapValue = evaluations.reduce((sum, e) => sum + (e.estimatedPrice || 0), 0);
 
   // LOGIN VIEW
@@ -650,35 +676,41 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
       </div>
 
       {/* Summary Metrics Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-          <p className="text-[11px] font-bold text-slate-400 uppercase font-mono">Total Inquiries</p>
-          <p className="text-2xl font-black text-slate-900 mt-1">{totalCount}</p>
-          <p className="text-[10px] text-slate-500 mt-0.5">All customer evaluations</p>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-3.5">
+        <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm">
+          <p className="text-[10px] font-bold text-slate-400 uppercase font-mono">Total Inquiries</p>
+          <p className="text-xl sm:text-2xl font-black text-slate-900 mt-1">{totalCount}</p>
+          <p className="text-[10px] text-slate-500 mt-0.5">All customer inquiries</p>
         </div>
 
-        <div className="bg-amber-50/50 border border-amber-200/80 rounded-2xl p-4 shadow-sm">
-          <p className="text-[11px] font-bold text-amber-700 uppercase font-mono">Pending / Hold</p>
-          <p className="text-2xl font-black text-amber-900 mt-1">{pendingCount}</p>
-          <p className="text-[10px] text-amber-700/80 mt-0.5">Requires pickup dispatch</p>
+        <div className="bg-emerald-50/60 border border-emerald-200/80 rounded-2xl p-3.5 shadow-sm">
+          <p className="text-[10px] font-bold text-emerald-700 uppercase font-mono">Confirmed</p>
+          <p className="text-xl sm:text-2xl font-black text-emerald-900 mt-1">{confirmedCount}</p>
+          <p className="text-[10px] text-emerald-700/80 mt-0.5">Ready for pickup</p>
         </div>
 
-        <div className="bg-emerald-50/50 border border-emerald-200/80 rounded-2xl p-4 shadow-sm">
-          <p className="text-[11px] font-bold text-emerald-700 uppercase font-mono">Confirmed Pickups</p>
-          <p className="text-2xl font-black text-emerald-900 mt-1">{confirmedCount}</p>
-          <p className="text-[10px] text-emerald-700/80 mt-0.5">Scheduled for vehicle visit</p>
+        <div className="bg-amber-50/60 border border-amber-200/80 rounded-2xl p-3.5 shadow-sm">
+          <p className="text-[10px] font-bold text-amber-700 uppercase font-mono">Pending</p>
+          <p className="text-xl sm:text-2xl font-black text-amber-900 mt-1">{pendingCount}</p>
+          <p className="text-[10px] text-amber-700/80 mt-0.5">Awaiting schedule</p>
         </div>
 
-        <div className="bg-green-50/50 border border-green-200/80 rounded-2xl p-4 shadow-sm">
-          <p className="text-[11px] font-bold text-green-800 uppercase font-mono">Completed Deals</p>
-          <p className="text-2xl font-black text-green-950 mt-1">{completedCount}</p>
-          <p className="text-[10px] text-green-700 mt-0.5">Paid & Recycled</p>
+        <div className="bg-green-50/60 border border-green-200/80 rounded-2xl p-3.5 shadow-sm">
+          <p className="text-[10px] font-bold text-green-800 uppercase font-mono">Completed</p>
+          <p className="text-xl sm:text-2xl font-black text-green-950 mt-1">{completedCount}</p>
+          <p className="text-[10px] text-green-700 mt-0.5">Paid & recycled</p>
         </div>
 
-        <div className="col-span-2 sm:col-span-1 bg-slate-900 text-white border border-slate-800 rounded-2xl p-4 shadow-md">
-          <p className="text-[11px] font-bold text-emerald-400 uppercase font-mono">Total Value (₹)</p>
-          <p className="text-2xl font-black text-white mt-1">₹{totalScrapValue.toLocaleString('en-IN')}</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">Estimated cash payout</p>
+        <div className="bg-rose-50/60 border border-rose-200/80 rounded-2xl p-3.5 shadow-sm">
+          <p className="text-[10px] font-bold text-rose-700 uppercase font-mono">Cancelled/Rejected</p>
+          <p className="text-xl sm:text-2xl font-black text-rose-900 mt-1">{cancelledRejectedCount}</p>
+          <p className="text-[10px] text-rose-700/80 mt-0.5">Cancelled inquiries</p>
+        </div>
+
+        <div className="col-span-2 sm:col-span-1 bg-slate-900 text-white border border-slate-800 rounded-2xl p-3.5 shadow-md">
+          <p className="text-[10px] font-bold text-emerald-400 uppercase font-mono">Scrap Value</p>
+          <p className="text-lg sm:text-xl font-black text-white mt-1">₹{totalScrapValue.toLocaleString('en-IN')}</p>
+          <p className="text-[10px] text-slate-400 mt-0.5">Estimated payout</p>
         </div>
       </div>
 
@@ -712,29 +744,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
           </div>
         </div>
 
-        {/* Status Filter Buttons */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
+        {/* Status Filter Buttons (Simplified 5 Tabs) */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
           {[
-            { id: 'ALL', label: 'All Inquiries' },
-            { id: 'Confirmed', label: 'Confirmed' },
-            { id: 'Pending', label: 'Pending' },
-            { id: 'Hold', label: 'Hold' },
-            { id: 'Completed', label: 'Completed' },
-            { id: 'Passed', label: 'Passed' },
-            { id: 'Failed', label: 'Failed' },
-            { id: 'Rejected', label: 'Rejected' },
-            { id: 'Cancelled', label: 'Cancelled' }
+            { id: 'ALL', label: 'All Inquiries', count: totalCount },
+            { id: 'Confirmed', label: 'Confirmed', count: confirmedCount },
+            { id: 'Pending', label: 'Pending', count: pendingCount },
+            { id: 'Completed', label: 'Completed', count: completedCount },
+            { id: 'Cancelled/Rejected', label: 'Cancelled/Rejected', count: cancelledRejectedCount }
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setStatusFilter(tab.id)}
-              className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap text-xs border ${
+              className={`px-3.5 py-2 rounded-xl font-bold transition-all whitespace-nowrap text-xs border flex items-center gap-1.5 cursor-pointer ${
                 statusFilter === tab.id
                   ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
                   : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
               }`}
             >
-              {tab.label}
+              <span>{tab.label}</span>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-black ${
+                statusFilter === tab.id ? 'bg-slate-800 text-emerald-300' : 'bg-slate-200 text-slate-700'
+              }`}>
+                {tab.count}
+              </span>
             </button>
           ))}
         </div>
@@ -936,6 +969,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
                   </div>
                 </div>
 
+                {/* Cancellation / Rejection Detail Banner */}
+                {(item.cancellationReason || item.status === 'Cancelled' || item.status === 'Rejected') && (
+                  <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 text-xs text-rose-900 space-y-1">
+                    <div className="flex items-center justify-between font-bold text-rose-700">
+                      <div className="flex items-center gap-1.5">
+                        <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                        <span>{item.status === 'Cancelled' ? 'Customer Cancellation Reason' : 'Rejection / Cancellation Reason'}</span>
+                      </div>
+                      {item.cancelledAt && (
+                        <span className="text-[10px] text-rose-600/80 font-mono">
+                          Cancelled on: {new Date(item.cancelledAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-semibold text-rose-950 pl-5 bg-white/70 p-2 rounded-lg border border-rose-100 mt-1">
+                      "{item.cancellationReason || 'No specific reason entered'}"
+                    </p>
+                  </div>
+                )}
+
                 {/* Defect / Issues Chips */}
                 {item.issues && item.issues.length > 0 && (
                   <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-slate-100">
@@ -1062,6 +1115,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
+
+              {/* Cancellation / Rejection Reason Field */}
+              {(scheduleStatus === 'Cancelled' || scheduleStatus === 'Rejected' || modalCancellationReason) && (
+                <div className="bg-rose-50/70 border border-rose-200 rounded-xl p-3 space-y-1">
+                  <label className="block font-bold text-rose-800 uppercase font-mono text-[11px]">
+                    Cancellation / Rejection Reason
+                  </label>
+                  <textarea
+                    value={modalCancellationReason}
+                    onChange={(e) => setModalCancellationReason(e.target.value)}
+                    placeholder="Enter reason for customer cancellation or rejection..."
+                    rows={2}
+                    className="w-full bg-white border border-rose-200 rounded-lg p-2.5 text-xs text-rose-950 focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">

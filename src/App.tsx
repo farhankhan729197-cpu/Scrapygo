@@ -58,7 +58,8 @@ import {
   Download,
   Grid,
   Filter,
-  ShieldAlert
+  ShieldAlert,
+  XCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -290,6 +291,159 @@ export default function App() {
   
   // Custom toast notification state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Customer Order Cancellation Modal State
+  const [cancelModalOrder, setCancelModalOrder] = useState<EvaluationRequest | null>(null);
+  const [cancelReasonPreset, setCancelReasonPreset] = useState<string>('');
+  const [cancelCustomReason, setCancelCustomReason] = useState<string>('');
+  const [cancelModalError, setCancelModalError] = useState<string>('');
+  const [isCancellingOrder, setIsCancellingOrder] = useState<boolean>(false);
+
+  // Open cancellation modal
+  const openCustomerCancelModal = (order: EvaluationRequest) => {
+    setCancelModalOrder(order);
+    setCancelReasonPreset('');
+    setCancelCustomReason('');
+    setCancelModalError('');
+  };
+
+  // Submit customer cancellation with mandatory reason
+  const handleCustomerCancelSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCancelModalError('');
+
+    if (!cancelReasonPreset || cancelReasonPreset.trim() === '') {
+      setCancelModalError('Please select a mandatory cancellation reason from the list.');
+      return;
+    }
+
+    if (cancelReasonPreset === 'Other reason' && !cancelCustomReason.trim()) {
+      setCancelModalError('Please write your specific cancellation reason in the text box.');
+      return;
+    }
+
+    if (!cancelModalOrder) return;
+
+    const finalReason = cancelReasonPreset === 'Other reason'
+      ? cancelCustomReason.trim()
+      : (cancelCustomReason.trim() ? `${cancelReasonPreset} (${cancelCustomReason.trim()})` : cancelReasonPreset);
+
+    setIsCancellingOrder(true);
+    const nowIso = new Date().toISOString();
+
+    try {
+      const res = await fetch('/api/evaluations/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: cancelModalOrder.id,
+          reason: finalReason
+        })
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (res.ok && data && data.success) {
+        // Update local state and persistent storage
+        setEvaluationHistory((prev) =>
+          prev.map((item) =>
+            item.id === cancelModalOrder.id
+              ? {
+                  ...item,
+                  status: 'Cancelled',
+                  cancellationReason: finalReason,
+                  cancelledAt: nowIso
+                }
+              : item
+          )
+        );
+
+        try {
+          const existing = JSON.parse(localStorage.getItem('scrapygo_history') || '[]');
+          const updated = existing.map((item: any) =>
+            item.id === cancelModalOrder.id
+              ? {
+                  ...item,
+                  status: 'Cancelled',
+                  cancellationReason: finalReason,
+                  cancelledAt: nowIso
+                }
+              : item
+          );
+          localStorage.setItem('scrapygo_history', JSON.stringify(updated));
+        } catch (e) {}
+
+        showToast(`Inquiry #${cancelModalOrder.id} has been cancelled successfully.`);
+        setCancelModalOrder(null);
+      } else {
+        setCancelModalError(data?.error || 'Failed to cancel inquiry. Please try again.');
+      }
+    } catch (err) {
+      // Offline fallback
+      setEvaluationHistory((prev) =>
+        prev.map((item) =>
+          item.id === cancelModalOrder.id
+            ? {
+                ...item,
+                status: 'Cancelled',
+                cancellationReason: finalReason,
+                cancelledAt: nowIso
+              }
+            : item
+        )
+      );
+      showToast(`Inquiry #${cancelModalOrder.id} has been cancelled.`);
+      setCancelModalOrder(null);
+    } finally {
+      setIsCancellingOrder(false);
+    }
+  };
+
+  // Real-time synchronization of customer inquiries when on dashboard
+  useEffect(() => {
+    if (activeTab !== 'dashboard') return;
+    const syncInquiries = async () => {
+      try {
+        const res = await fetch('/api/admin/evaluations');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.evaluations)) {
+            const userPhone = currentUser?.phone ? currentUser.phone.replace(/[^\d]/g, '') : '';
+            const localHistory: EvaluationRequest[] = JSON.parse(localStorage.getItem('scrapygo_history') || '[]');
+            const localIds = new Set(localHistory.map(h => h.id));
+
+            let relevantEvaluations: EvaluationRequest[] = [];
+            if (userPhone && userPhone.length >= 10) {
+              relevantEvaluations = data.evaluations.filter((ev: EvaluationRequest) => {
+                const cleanEvPhone = (ev.phone || '').replace(/[^\d]/g, '');
+                return cleanEvPhone.endsWith(userPhone) || userPhone.endsWith(cleanEvPhone) || localIds.has(ev.id);
+              });
+            } else {
+              relevantEvaluations = data.evaluations.filter((ev: EvaluationRequest) => localIds.has(ev.id));
+            }
+
+            if (relevantEvaluations.length > 0) {
+              const mergedMap = new Map<string, EvaluationRequest>();
+              localHistory.forEach(item => mergedMap.set(item.id, item));
+              relevantEvaluations.forEach(item => {
+                const existing = mergedMap.get(item.id);
+                mergedMap.set(item.id, { ...existing, ...item });
+              });
+              const mergedList = Array.from(mergedMap.values()).sort(
+                (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+              );
+              setEvaluationHistory(mergedList);
+              localStorage.setItem('scrapygo_history', JSON.stringify(mergedList));
+            }
+          }
+        }
+      } catch (e) {}
+    };
+
+    syncInquiries();
+    const interval = setInterval(syncInquiries, 4000);
+    return () => clearInterval(interval);
+  }, [activeTab, currentUser?.phone]);
 
   // Dynamic SEO Page Title & Meta updates based on active navigation tab
   useEffect(() => {
@@ -3279,13 +3433,25 @@ export default function App() {
                   {evaluationHistory.map((req) => (
                     <div key={req.id} className="p-6 hover:bg-slate-50/50 transition-colors flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                       
-                      <div className="space-y-1.5 flex-1">
-                        <div className="flex items-center gap-2">
+                      <div className="space-y-2 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-xs font-mono font-bold bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded">
-                            {req.id}
+                            #{req.id}
                           </span>
                           <span className="text-[10px] font-mono text-slate-400">
                             {req.createdAt}
+                          </span>
+                          {/* Status Badge */}
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${
+                            req.status === 'Confirmed'
+                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                              : req.status === 'Completed' || req.status === 'Passed'
+                              ? 'bg-blue-100 text-blue-800 border-blue-300'
+                              : req.status === 'Cancelled' || req.status === 'Rejected' || req.status === 'Failed'
+                              ? 'bg-rose-100 text-rose-800 border-rose-300'
+                              : 'bg-amber-100 text-amber-800 border-amber-300'
+                          }`}>
+                            {req.status || 'Pending'}
                           </span>
                         </div>
 
@@ -3310,36 +3476,75 @@ export default function App() {
                         </div>
 
                         {req.issues.length > 0 ? (
-                          <p className="text-xs text-slate-400">
-                            <strong>Flaws:</strong> {req.issues.join(', ')}
+                          <p className="text-xs text-slate-500">
+                            <strong className="text-slate-700">Flaws:</strong> {req.issues.join(', ')}
                           </p>
                         ) : (
                           <p className="text-xs text-emerald-600 font-semibold flex items-center gap-0.5">
                             <Check className="w-3.5 h-3.5 inline" /> Perfect structural scrap condition
                           </p>
                         )}
+
+                        {/* Scheduled Doorstep Pickup Notice */}
+                        {req.pickupDate && req.status !== 'Cancelled' && (
+                          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 text-xs text-emerald-900 flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-emerald-600 shrink-0" />
+                            <div>
+                              <span className="font-bold">Scheduled Doorstep Pickup: </span>
+                              <span>{req.pickupDate} ({req.pickupSlot || 'Standard Slot'})</span>
+                              {req.pickupAgent && (
+                                <span className="block text-[11px] text-emerald-700 font-medium">Assigned Agent: {req.pickupAgent}</span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Cancellation Reason Notice */}
+                        {(req.cancellationReason || req.status === 'Cancelled') && (
+                          <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 text-xs space-y-1">
+                            <div className="flex items-center justify-between font-bold text-rose-800">
+                              <span className="flex items-center gap-1.5">
+                                <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                                Cancellation Reason:
+                              </span>
+                              {req.cancelledAt && (
+                                <span className="text-[10px] text-rose-600/80 font-mono">
+                                  {new Date(req.cancelledAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-rose-950 font-medium pl-5 bg-white/70 p-2 rounded-lg border border-rose-100 mt-1">
+                              "{req.cancellationReason || 'Inquiry cancelled by customer'}"
+                            </p>
+                          </div>
+                        )}
                       </div>
 
-                      <div className="flex items-center space-x-6 w-full md:w-auto justify-between md:justify-end border-t border-slate-100 md:border-none pt-4 md:pt-0">
+                      <div className="flex items-center space-x-4 w-full md:w-auto justify-between md:justify-end border-t border-slate-100 md:border-none pt-4 md:pt-0">
                         <div className="text-left md:text-right">
                           <span className="block text-[10px] text-slate-400 uppercase font-mono">Estimated Scrap Payout</span>
                           <span className="text-lg font-black text-emerald-600 font-mono">₹{req.estimatedPrice.toLocaleString('en-IN')}</span>
-                          
-                          {/* Live Status indicator */}
-                          <div className="flex items-center gap-1.5 justify-start md:justify-end mt-1">
-                            <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-ping" />
-                            <span className="text-[10px] text-amber-600 font-bold uppercase tracking-wider">{req.status}</span>
-                          </div>
                         </div>
 
-                        <div className="flex flex-col gap-1.5">
+                        <div className="flex flex-col sm:flex-row md:flex-col gap-2">
                           <button
                             onClick={() => handleWhatsAppCheckout(req)}
-                            className="bg-[#25D366] hover:bg-[#20ba5a] text-white text-[11px] font-bold px-4 py-2 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1"
+                            className="bg-[#25D366] hover:bg-[#20ba5a] text-white text-[11px] font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1"
                           >
                             <MessageSquare className="w-3.5 h-3.5" />
-                            <span>WhatsApp Coordinator</span>
+                            <span>WhatsApp</span>
                           </button>
+
+                          {req.status !== 'Cancelled' && req.status !== 'Completed' && req.status !== 'Rejected' && (
+                            <button
+                              onClick={() => openCustomerCancelModal(req)}
+                              className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[11px] font-bold px-3.5 py-2 rounded-xl transition-all flex items-center justify-center gap-1"
+                              title="Cancel this pickup inquiry"
+                            >
+                              <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                              <span>Cancel Order</span>
+                            </button>
+                          )}
                         </div>
                       </div>
 
@@ -4719,6 +4924,175 @@ export default function App() {
                 <div className="bg-slate-50 rounded-2xl p-4 text-[10px] text-slate-400 leading-normal border border-slate-100 text-center font-mono">
                   💡 Payouts are instant via UPI/Cash upon on-site verification.
                 </div>
+              </motion.div>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* CUSTOMER CANCELLATION MODAL */}
+      <AnimatePresence>
+        {cancelModalOrder && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => !isCancellingOrder && setCancelModalOrder(null)}
+                className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm transition-opacity"
+              />
+
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                className="relative transform overflow-hidden rounded-3xl bg-white p-6 sm:p-8 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-slate-100 z-10 space-y-5"
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center">
+                      <XCircle className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900 leading-snug">Cancel Pickup Request</h3>
+                      <p className="text-[11px] text-slate-400 font-mono">Order #{cancelModalOrder.id}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => !isCancellingOrder && setCancelModalOrder(null)}
+                    className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                    disabled={isCancellingOrder}
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Item Details Summary */}
+                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-mono uppercase text-slate-400 font-bold block">Appliance for Pickup</span>
+                    <span className="text-xs font-bold text-slate-800">{cancelModalOrder.brand} {cancelModalOrder.model}</span>
+                    <span className="block text-[10px] text-slate-500 font-mono">Condition: {cancelModalOrder.condition}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] font-mono uppercase text-slate-400 font-bold block">Quoted Cash</span>
+                    <span className="text-sm font-black text-emerald-600 font-mono">₹{cancelModalOrder.estimatedPrice.toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+
+                {/* Mandatory Reason Form */}
+                <form onSubmit={handleCustomerCancelSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-800 mb-2">
+                      Please select a reason for cancellation <span className="text-rose-600 font-bold">*</span>
+                    </label>
+                    <div className="space-y-2">
+                      {[
+                        'Found a better scrap / resale price elsewhere',
+                        'Changed my mind / Postponed selling',
+                        'Pickup timing / slot not convenient',
+                        'Sold locally to neighborhood dealer / kabadiwala',
+                        'Appliance already repaired / working now',
+                        'Booked by mistake / duplicate inquiry',
+                        'Other reason'
+                      ].map((reason) => {
+                        const isSelected = cancelReasonPreset === reason;
+                        return (
+                          <label
+                            key={reason}
+                            onClick={() => {
+                              setCancelReasonPreset(reason);
+                              setCancelModalError('');
+                            }}
+                            className={`flex items-center gap-3 p-3 rounded-xl border text-xs font-medium cursor-pointer transition-all ${
+                              isSelected
+                                ? 'bg-rose-50/70 border-rose-400 text-rose-950 font-bold shadow-xs'
+                                : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="cancellation_reason"
+                              value={reason}
+                              checked={isSelected}
+                              onChange={() => {
+                                setCancelReasonPreset(reason);
+                                setCancelModalError('');
+                              }}
+                              className="accent-rose-600 w-4 h-4"
+                            />
+                            <span>{reason}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Custom reason text if selected or other */}
+                  {cancelReasonPreset && (
+                    <div className="space-y-1 pt-1">
+                      <label className="block text-[11px] font-bold text-slate-700">
+                        {cancelReasonPreset === 'Other reason'
+                          ? 'Please specify your reason *'
+                          : 'Additional feedback / remarks (optional)'}
+                      </label>
+                      <textarea
+                        value={cancelCustomReason}
+                        onChange={(e) => {
+                          setCancelCustomReason(e.target.value);
+                          setCancelModalError('');
+                        }}
+                        rows={2}
+                        placeholder={
+                          cancelReasonPreset === 'Other reason'
+                            ? 'Please provide details about why you are cancelling...'
+                            : 'Help us improve our service with your feedback...'
+                        }
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium"
+                      />
+                    </div>
+                  )}
+
+                  {/* Error Message */}
+                  {cancelModalError && (
+                    <div className="bg-rose-50 border border-rose-200 text-rose-700 px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                      <span>{cancelModalError}</span>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => setCancelModalOrder(null)}
+                      disabled={isCancellingOrder}
+                      className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all cursor-pointer"
+                    >
+                      Keep Booking
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={isCancellingOrder}
+                      className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all shadow-md shadow-rose-600/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    >
+                      {isCancellingOrder ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Cancelling...</span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="w-4 h-4" />
+                          <span>Confirm Cancellation</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
               </motion.div>
             </div>
           </div>

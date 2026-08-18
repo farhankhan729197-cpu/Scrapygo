@@ -45,6 +45,8 @@ export interface EvaluationRequest {
   pickupSlot?: string;
   pickupAgent?: string;
   adminNotes?: string;
+  cancellationReason?: string;
+  cancelledAt?: string;
   updatedAt?: string;
 }
 

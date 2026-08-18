@@ -418,12 +418,47 @@ async function startServer() {
       // Always save to in-memory store
       evaluationsStore.set(evaluation.id, finalEvaluation);
 
-      
-
       return res.json({ success: true, message: "Evaluation saved successfully.", evaluation: finalEvaluation });
     } catch (err) {
       console.error("[Server] Save evaluation error:", err);
       return res.status(200).json({ success: false, error: "An error occurred saving evaluation." });
+    }
+  });
+
+  // API Route: Cancel Evaluation with Mandatory Reason
+  app.post("/api/evaluations/cancel", async (req, res) => {
+    try {
+      const { id, reason } = req.body;
+      if (!id) {
+        return res.status(200).json({ success: false, error: "Evaluation ID is required for cancellation." });
+      }
+      if (!reason || typeof reason !== "string" || !reason.trim()) {
+        return res.status(200).json({ success: false, error: "A cancellation reason is required." });
+      }
+
+      let existing = evaluationsStore.get(id) || {};
+      const now = new Date().toISOString();
+      const updatedEvaluation = {
+        ...existing,
+        id,
+        status: "Cancelled",
+        cancellationReason: reason.trim(),
+        cancelledAt: now,
+        updatedAt: now
+      };
+
+      evaluationsStore.set(id, updatedEvaluation);
+
+      console.log(`[Server] Inquiry #${id} cancelled by customer. Reason: "${reason.trim()}"`);
+
+      return res.json({
+        success: true,
+        message: `Evaluation #${id} has been cancelled.`,
+        evaluation: updatedEvaluation
+      });
+    } catch (err: any) {
+      console.error("[Server] Cancel evaluation error:", err);
+      return res.status(200).json({ success: false, error: "An error occurred while cancelling the evaluation." });
     }
   });
 
@@ -517,7 +552,7 @@ async function startServer() {
   // Admin Route: Update Evaluation Status, Pickup Details & Notes
   app.post("/api/admin/evaluations/update", async (req, res) => {
     try {
-      const { id, status, pickupDate, pickupSlot, pickupAgent, adminNotes } = req.body;
+      const { id, status, pickupDate, pickupSlot, pickupAgent, adminNotes, cancellationReason, cancelledAt } = req.body;
 
       if (!id) {
         return res.status(200).json({
@@ -528,8 +563,6 @@ async function startServer() {
 
       let existing = evaluationsStore.get(id) || {};
 
-      
-
       const updatedEvaluation = {
         ...existing,
         id,
@@ -538,6 +571,8 @@ async function startServer() {
         pickupSlot: pickupSlot !== undefined ? pickupSlot : existing.pickupSlot || "",
         pickupAgent: pickupAgent !== undefined ? pickupAgent : existing.pickupAgent || "",
         adminNotes: adminNotes !== undefined ? adminNotes : existing.adminNotes || "",
+        cancellationReason: cancellationReason !== undefined ? cancellationReason : existing.cancellationReason || "",
+        cancelledAt: cancelledAt !== undefined ? cancelledAt : existing.cancelledAt || "",
         updatedAt: new Date().toISOString()
       };
 
