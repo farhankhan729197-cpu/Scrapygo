@@ -1539,7 +1539,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Centered Login Link / User Account pill for balanced look */}
+            {/* Center area - Verified doorstep pickup guarantee */}
             <div className="flex-1 flex justify-center px-2">
               {currentUser ? (
                 <div className="flex items-center space-x-1.5 bg-slate-50 border border-slate-200/80 rounded-full px-2.5 py-0.5 shadow-xs">
@@ -1549,38 +1549,33 @@ export default function App() {
                   </span>
                   <button 
                     onClick={handleLogout}
-                    title="Log Out Session"
+                    title="Log Out"
                     className="p-0.5 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer"
                   >
                     <LogOut className="w-3 h-3" />
                   </button>
                 </div>
               ) : (
-                <button
-                  onClick={() => setShowLoginModal(true)}
-                  className="flex items-center space-x-1 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-1 rounded-full transition-all shadow-xs active:scale-95 cursor-pointer"
-                >
-                  <User className="w-3 h-3 text-emerald-400" />
-                  <span>Log In</span>
-                </button>
+                <div className="hidden md:flex items-center gap-1.5 text-[11px] font-medium text-emerald-800 bg-emerald-50/70 border border-emerald-100 px-3 py-1 rounded-full">
+                  <Sparkles className="w-3 h-3 text-emerald-600" />
+                  <span>Instant Cash on Doorstep Pickup</span>
+                </div>
               )}
             </div>
 
             {/* Right side actions */}
             <div className="flex items-center space-x-1 sm:space-x-2">
-              {isAdminUser(currentUser) && (
-                <button 
-                  onClick={() => setActiveTab('admin-panel')}
-                  className={`text-[11px] font-bold px-2 py-1 rounded-md transition-all flex items-center space-x-1 ${
-                    activeTab === 'admin-panel' 
-                      ? 'text-white bg-slate-900 shadow-xs' 
-                      : 'text-slate-700 bg-slate-100 hover:bg-slate-200'
-                  }`}
-                >
-                  <ShieldCheck className="w-3 h-3 text-emerald-500" />
-                  <span className="hidden sm:inline">Admin</span>
-                </button>
-              )}
+              <button 
+                onClick={() => setActiveTab('admin-panel')}
+                className={`text-[11px] font-bold px-2 py-1 rounded-md transition-all flex items-center space-x-1 ${
+                  activeTab === 'admin-panel' 
+                    ? 'text-white bg-slate-900 shadow-xs' 
+                    : 'text-slate-700 bg-slate-100 hover:bg-slate-200'
+                }`}
+              >
+                <ShieldCheck className="w-3 h-3 text-emerald-500" />
+                <span className="hidden sm:inline">Admin</span>
+              </button>
               
               {currentUser && (
                 <button 
@@ -4442,196 +4437,6 @@ export default function App() {
           </div>
         </div>
       </footer>
-
-      {/* DETACHED LOGIN MODAL FOR DIRECT ACTIONS */}
-      {showLoginModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-3xl p-8 max-w-sm w-full relative space-y-6"
-          >
-            <button 
-              onClick={() => { setShowLoginModal(false); setOtpSent(false); }}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-900"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="text-center">
-              <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-2">
-                <UserCheck className="w-5 h-5" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900">
-                Account Login
-              </h3>
-              <p className="text-xs text-slate-400 mt-1">
-                Enter your valid 10-digit mobile number to log in via OTP verification.
-              </p>
-            </div>
-
-            {!otpSent ? (
-              <form onSubmit={handleSendOtpForAuth} className="space-y-3.5">
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                      10-Digit Mobile Number <span className="text-red-500">*</span>
-                    </label>
-                    <span className="text-[10px] font-medium text-slate-400">
-                      {loginPhone.length}/10 digits
-                    </span>
-                  </div>
-                  <div className="flex gap-1.5">
-                    <select
-                      value={countryCode}
-                      onChange={(e) => setCountryCode(e.target.value)}
-                      disabled={isSendingOtp}
-                      className="bg-slate-50 border border-slate-200 text-xs font-semibold rounded-xl px-2 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 disabled:opacity-60"
-                    >
-                      <option value="+91">🇮🇳 +91</option>
-                      <option value="+1">🇺🇸 +1</option>
-                      <option value="+44">🇬🇧 +44</option>
-                      <option value="+971">🇦🇪 +971</option>
-                      <option value="+61">🇦🇺 +61</option>
-                      <option value="+65">🇸🇬 +65</option>
-                    </select>
-                    <div className="relative flex-1">
-                      <span className="absolute left-3 top-2.5 text-slate-400">
-                        <Phone className="w-3.5 h-3.5" />
-                      </span>
-                      <input
-                        type="tel"
-                        required
-                        disabled={isSendingOtp}
-                        maxLength={10}
-                        placeholder="e.g. 9876543210"
-                        value={loginPhone}
-                        onChange={(e) => setLoginPhone(e.target.value.replace(/[^\d]/g, '').slice(0, 10))}
-                        className="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl pl-9 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-slate-800 disabled:opacity-60"
-                      />
-                    </div>
-                  </div>
-                  {loginPhone.length > 0 && (
-                    <div className="mt-1">
-                      {loginPhone.length === 10 ? (
-                        validateActiveMobileNumber(loginPhone, countryCode).valid ? (
-                          <p className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
-                            <CheckCircle className="w-3 h-3" /> Active cellular line verified (Voice call & SMS ready)
-                          </p>
-                        ) : (
-                          <p className="text-[10px] text-rose-500 font-medium flex items-center gap-1">
-                            <AlertCircle className="w-3 h-3" /> {validateActiveMobileNumber(loginPhone, countryCode).error}
-                          </p>
-                        )
-                      ) : (
-                        <p className="text-[10px] text-slate-400">
-                          Enter {10 - loginPhone.length} more digit{10 - loginPhone.length > 1 ? 's' : ''} for active mobile verification
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-start gap-2 pt-0.5">
-                  <input
-                    type="checkbox"
-                    id="terms-check-modal"
-                    checked={termsAccepted}
-                    onChange={(e) => setTermsAccepted(e.target.checked)}
-                    disabled={isSendingOtp}
-                    className="mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-3.5 h-3.5 cursor-pointer"
-                  />
-                  <label htmlFor="terms-check-modal" className="text-[11px] text-slate-600 cursor-pointer leading-tight">
-                    I agree to the <span className="text-emerald-600 font-semibold underline">Terms</span> & <span className="text-emerald-600 font-semibold underline">Privacy Policy</span>
-                  </label>
-                </div>
-
-                {otpError && (
-                  <div className="p-2.5 bg-red-50 border border-red-100 text-red-600 text-xs rounded-xl flex items-center gap-1.5 shadow-sm">
-                    <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-500" />
-                    <span className="font-semibold">{otpError}</span>
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={isSendingOtp || !termsAccepted || loginPhone.length !== 10 || !validateActiveMobileNumber(loginPhone, countryCode).valid}
-                  className="w-full bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 text-white text-xs font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed shadow-sm"
-                >
-                  {isSendingOtp ? (
-                    <>
-                      <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                      <span>Sending OTP Code...</span>
-                    </>
-                  ) : (
-                    <span>Send Verification Code</span>
-                  )}
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handleVerifyOtpForAuth} className="space-y-3.5">
-                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 text-xs text-emerald-900">
-                  <p className="font-semibold text-[11px]">
-                    OTP sent to <span className="font-bold">{countryCode} {loginPhone}</span>
-                  </p>
-                  {sandboxCode && (
-                    <p className="mt-1.5 text-xs text-emerald-800 bg-emerald-100 border border-emerald-200/80 px-2.5 py-1 rounded-lg inline-flex items-center gap-1.5 font-medium">
-                      <span>OTP:</span>
-                      <strong className="font-mono text-emerald-950 text-sm font-bold tracking-widest">{sandboxCode}</strong>
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
-                    Enter 4-Digit OTP Code
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    autoFocus
-                    maxLength={6}
-                    disabled={isVerifyingOtp}
-                    placeholder="e.g. 1234"
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value.replace(/[^\d]/g, ''))}
-                    className="w-full bg-slate-50 border border-slate-200 text-center text-base font-mono font-bold tracking-widest rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-slate-900 disabled:opacity-60"
-                  />
-                </div>
-
-                {otpError && (
-                  <p className="text-xs text-red-600 bg-red-50 p-2 rounded-lg flex items-center gap-1">
-                    <AlertCircle className="w-4 h-4 flex-shrink-0" /> {otpError}
-                  </p>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={isVerifyingOtp}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white text-xs font-bold py-2.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  {isVerifyingOtp ? (
-                    <>
-                      <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                      <span>Verifying OTP...</span>
-                    </>
-                  ) : (
-                    <span>Verify OTP & Log In</span>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => { setOtpSent(false); setOtpError(''); }}
-                  className="w-full text-center text-[11px] text-slate-500 hover:text-slate-900 font-medium py-0.5"
-                >
-                  ← Change Number / Resend
-                </button>
-              </form>
-            )}
-          </motion.div>
-        </div>
-      )}
 
       {/* STICKY WHATSAPP CTA */}
       <motion.div 
