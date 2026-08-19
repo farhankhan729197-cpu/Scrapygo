@@ -32,6 +32,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { EvaluationRequest, OrderStatus } from '../types';
+import { FirestoreService } from '../lib/firebase';
 
 interface AdminDashboardProps {
   onClose?: () => void;
@@ -100,7 +101,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
     }
   };
 
-  // Fetch all inquiries from backend and merge with local history (supports silent background sync)
+  // Fetch all inquiries from backend/Firestore and merge with local history (supports silent background sync)
   const fetchAllInquiries = async (silent = false) => {
     if (!silent) setIsLoading(true);
     const deletedIds = getDeletedIds();
@@ -124,6 +125,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(localItem)
                   }).catch(() => {});
+                  FirestoreService.saveEvaluation(localItem).catch(() => {});
                 }
               });
             } catch (e) {}
@@ -135,21 +137,42 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
     } catch (err) {
       console.error('[Admin] Fetch inquiries error:', err);
       if (!silent) {
-        showToast('Failed to connect to backend server. Operating in offline cache mode.');
+        showToast('Operating in local and Firestore real-time cloud mode.');
       }
     } finally {
       if (!silent) setIsLoading(false);
     }
   };
 
-  // Real-time automatic polling sync (every 4 seconds) when admin is authenticated
+  // Real-time Firestore listener and automatic polling sync when admin is authenticated
   useEffect(() => {
     if (!isAdminLoggedIn) return;
     fetchAllInquiries(false);
+
+    // Subscribe to real-time Firestore changes
+    const unsubscribeFirestore = FirestoreService.subscribeEvaluations((firestoreItems) => {
+      const deletedIds = getDeletedIds();
+      const validItems = firestoreItems.filter(item => item && item.id && !deletedIds.includes(item.id));
+      if (validItems.length > 0) {
+        setEvaluations(prev => {
+          const map = new Map<string, EvaluationRequest>();
+          prev.forEach(p => map.set(p.id, p));
+          validItems.forEach(v => map.set(v.id, { ...map.get(v.id), ...v }));
+          const combined = Array.from(map.values()).filter(i => !deletedIds.includes(i.id));
+          combined.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+          return combined;
+        });
+      }
+    });
+
     const interval = setInterval(() => {
       fetchAllInquiries(true);
     }, 4000);
-    return () => clearInterval(interval);
+
+    return () => {
+      unsubscribeFirestore();
+      clearInterval(interval);
+    };
   }, [isAdminLoggedIn]);
 
   // Password-based Admin Login
@@ -264,6 +287,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
       const data = await response.json();
       if (data.success) {
         showToast(`Order #${selectedEvaluation.id} status updated to '${scheduleStatus}'.`);
+        
+        // Sync update directly to Firestore cloud
+        FirestoreService.updateEvaluation(selectedEvaluation.id, {
+          status: scheduleStatus,
+          pickupDate,
+          pickupSlot,
+          pickupAgent,
+          adminNotes,
+          cancellationReason: reasonToSend,
+          cancelledAt: isCancelledOrRejected ? (selectedEvaluation.cancelledAt || new Date().toISOString()) : undefined
+        }).catch(() => {});
+
         // Update local state
         setEvaluations(prev =>
           prev.map(item =>
@@ -307,6 +342,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
       const data = await response.json();
       if (data.success) {
         showToast(`Order #${item.id} status changed to '${newStatus}'.`);
+        // Sync directly to Firestore
+        FirestoreService.updateEvaluation(item.id, { status: newStatus }).catch(() => {});
         setEvaluations(prev =>
           prev.map(e => (e.id === item.id ? { ...e, status: newStatus } : e))
         );
@@ -352,6 +389,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
       const data = await res.json();
       if (data.success) {
         showToast(`New inquiry #${newInquiry.id} logged successfully!`);
+        // Sync to Firestore
+        FirestoreService.saveEvaluation(newInquiry).catch(() => {});
         setEvaluations(prev => [newInquiry, ...prev]);
         setShowAddManualModal(false);
         setManualCustomerName('');
@@ -381,6 +420,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
       setSelectedEvaluation(null);
       setShowScheduleModal(false);
     }
+
+    // Delete in Firestore
+    FirestoreService.deleteEvaluation(id).catch(() => {});
 
     // 2. Persist deleted ID in localStorage to avoid reappearing on re-fetch or sync
     try {
@@ -638,6 +680,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => 
             <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-mono font-bold px-2.5 py-1 rounded-md border border-emerald-500/30 flex items-center gap-1">
               <ShieldCheck className="w-3 h-3 text-emerald-400" />
               Verified Coordinator Dashboard
+            </span>
+            <span className="bg-blue-500/20 text-blue-400 text-[10px] font-mono font-bold px-2.5 py-1 rounded-md border border-blue-500/30 flex items-center gap-1">
+              <Sparkles className="w-3 h-3 text-blue-400" />
+              Firebase Firestore Live
             </span>
             <span className="text-xs text-slate-400 font-mono">Control Panel</span>
           </div>

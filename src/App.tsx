@@ -72,6 +72,7 @@ import {
   Brand 
 } from './types';
 import { AdminDashboard } from './components/AdminDashboard';
+import { FirestoreService } from './lib/firebase';
 
 const ADMIN_MOBILE_NUMBER = '7303319913';
 
@@ -374,6 +375,11 @@ export default function App() {
         } catch (e) {}
 
         showToast(`Inquiry #${cancelModalOrder.id} has been cancelled successfully.`);
+        FirestoreService.updateEvaluation(cancelModalOrder.id, {
+          status: 'Cancelled',
+          cancellationReason: finalReason,
+          cancelledAt: nowIso
+        }).catch(() => {});
         setCancelModalOrder(null);
       } else {
         setCancelModalError(data?.error || 'Failed to cancel inquiry. Please try again.');
@@ -1274,13 +1280,14 @@ export default function App() {
       console.error('[ScrapyGo] LocalStorage write error:', e);
     }
 
-    // Sync to backend database API
+    // Sync to backend database API & Firestore Cloud
     try {
       await fetch('/api/evaluations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newRequest)
       });
+      FirestoreService.saveEvaluation(newRequest).catch(() => {});
     } catch (err) {
       console.error('[ScrapyGo] DB sync failed:', err);
     }
@@ -1290,6 +1297,7 @@ export default function App() {
       const guestUser = { name: cleanName, phone: cleanPhone, email: '' };
       localStorage.setItem('scrapygo_user', JSON.stringify(guestUser));
       setCurrentUser(guestUser);
+      FirestoreService.saveUserProfile(guestUser).catch(() => {});
     }
 
     showToast('Doorstep Pickup Scheduled! Order ID: ' + currentEvalId);
@@ -1329,13 +1337,14 @@ export default function App() {
     localStorage.setItem('scrapygo_history', JSON.stringify(updatedHistory));
     setEvaluationHistory(updatedHistory);
 
-    // Save instantly to central database
+    // Save instantly to central database and Firestore
     try {
       await fetch('/api/evaluations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newRequest)
       });
+      FirestoreService.saveEvaluation(newRequest).catch(() => {});
     } catch (err) {
       console.error('[ScrapyGo] DB sync failed:', err);
     }
@@ -1381,12 +1390,13 @@ export default function App() {
       setEvaluationHistory(updatedHistory);
     } catch (e) {}
 
-    // Asynchronously sync to backend database API so admin sees inquiry in real-time
+    // Asynchronously sync to backend database API and Firestore cloud
     fetch('/api/evaluations', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(targetReq)
     }).catch((err) => console.error('[ScrapyGo] DB sync failed on WhatsApp checkout:', err));
+    FirestoreService.saveEvaluation(targetReq).catch(() => {});
 
     const isAcCategory = targetReq.category === 'AC';
 
@@ -3781,6 +3791,7 @@ export default function App() {
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify(newInquiry)
                     });
+                    FirestoreService.saveEvaluation(newInquiry).catch(() => {});
                   } catch (err) {}
 
                   showToast("Thank you! Your partnership inquiry has been registered in the database. Our heavy-scrap logistics manager will reach you on phone/WhatsApp within 2 hours. 🚀");
@@ -3993,6 +4004,7 @@ export default function App() {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(newTicket)
                       });
+                      FirestoreService.saveEvaluation(newTicket).catch(() => {});
                     } catch (err) {}
 
                     showToast("Your support ticket has been received and saved to the central database! Our hub coordinator will contact you on your registered number. 📑");

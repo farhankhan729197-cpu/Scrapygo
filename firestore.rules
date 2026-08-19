@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper Functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        (request.auth.token.email == 'farhankhan729197@gmail.com' && request.auth.token.email_verified == true)
+      );
+    }
+
+    function isValidEvaluation(data) {
+      return data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.category is string && data.category.size() > 0 && data.category.size() <= 100 &&
+             data.brand is string && data.brand.size() > 0 && data.brand.size() <= 100 &&
+             data.model is string && data.model.size() > 0 && data.model.size() <= 150 &&
+             data.phone is string && data.phone.size() > 0 && data.phone.size() <= 20 &&
+             data.status is string && data.status.size() > 0 && data.status.size() <= 50;
+    }
+
+    function isValidUserProfile(data) {
+      return data.phone is string && data.phone.size() > 0 && data.phone.size() <= 20 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100;
+    }
+
+    // Customer Inquiries / Evaluations
+    match /evaluations/{evaluationId} {
+      allow read: if true;
+      allow create: if isValidId(evaluationId) && isValidEvaluation(incoming());
+      allow update: if isValidId(evaluationId) && isValidEvaluation(incoming());
+      allow delete: if isAdmin();
+    }
+
+    // Customer Profiles
+    match /users/{userId} {
+      allow read: if true;
+      allow create, update: if isValidId(userId) && isValidUserProfile(incoming());
+      allow delete: if isAdmin();
+    }
+
+    // Admins Collection
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+  }
+}

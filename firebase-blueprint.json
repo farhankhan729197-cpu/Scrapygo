@@ -1,0 +1,71 @@
+{
+  "entities": {
+    "Evaluation": {
+      "title": "Evaluation",
+      "description": "Customer appliance valuation and doorstep scrap pickup inquiry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "category": { "type": "string", "maxLength": 100 },
+        "brand": { "type": "string", "maxLength": 100 },
+        "model": { "type": "string", "maxLength": 150 },
+        "condition": { "type": "string", "maxLength": 100 },
+        "capacity": { "type": "string", "maxLength": 50 },
+        "energyRating": { "type": "string", "maxLength": 50 },
+        "estimatedPrice": { "type": "number" },
+        "phone": { "type": "string", "maxLength": 20 },
+        "secondaryPhone": { "type": "string", "maxLength": 20 },
+        "customerName": { "type": "string", "maxLength": 100 },
+        "customerAddress": { "type": "string", "maxLength": 300 },
+        "pickupDate": { "type": "string", "maxLength": 50 },
+        "pickupTime": { "type": "string", "maxLength": 50 },
+        "pickupSlot": { "type": "string", "maxLength": 50 },
+        "pickupAgent": { "type": "string", "maxLength": 100 },
+        "adminNotes": { "type": "string", "maxLength": 500 },
+        "cancellationReason": { "type": "string", "maxLength": 500 },
+        "cancelledAt": { "type": "string", "maxLength": 50 },
+        "status": { "type": "string", "maxLength": 50 },
+        "createdAt": { "type": "string", "maxLength": 50 },
+        "updatedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "category", "brand", "model", "phone", "status"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Registered customer profile record",
+      "type": "object",
+      "properties": {
+        "phone": { "type": "string", "maxLength": 20 },
+        "name": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 100 },
+        "createdAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["phone", "name"]
+    },
+    "AdminRecord": {
+      "title": "AdminRecord",
+      "description": "Authorized administrator registry",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "phone": { "type": "string", "maxLength": 20 },
+        "role": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["phone", "role"]
+    }
+  },
+  "firestore": {
+    "/evaluations/{evaluationId}": {
+      "schema": "Evaluation",
+      "description": "Customer scrap pickup inquiries and valuations"
+    },
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profiles for registered customers"
+    },
+    "/admins/{adminId}": {
+      "schema": "AdminRecord",
+      "description": "Authorized administrators list"
+    }
+  }
+}
