@@ -1,0 +1,71 @@
+[
+  {
+    "id": "SG-782194",
+    "category": "AC",
+    "brand": "Voltas",
+    "model": "1.5 Ton Split AC (3 Star)",
+    "condition": "good",
+    "issues": [
+      "Minor cooling drop",
+      "Outdoor bracket rust"
+    ],
+    "estimatedPrice": 6200,
+    "phone": "+919876543210",
+    "secondaryPhone": "+919811223344",
+    "pickupDate": "2026-08-19",
+    "pickupTime": "10:00 AM - 01:00 PM",
+    "pickupSlot": "Morning (09:00 AM - 12:00 PM)",
+    "customerName": "Vikas Sharma",
+    "customerAddress": "Flat 402, Green Valley Apts, Sector 62, Noida",
+    "status": "Confirmed",
+    "pickupAgent": "Amit Kumar (Dispatch #14)",
+    "adminNotes": "Customer requested uninstallation assistance.",
+    "createdAt": "2026-08-19T11:42:53.322Z",
+    "updatedAt": "2026-08-19T11:42:53.322Z"
+  },
+  {
+    "id": "SG-549102",
+    "category": "Refrigerator",
+    "brand": "LG",
+    "model": "Double Door Frost Free 260L",
+    "condition": "average",
+    "issues": [
+      "Compressor humming",
+      "Door gasket wear"
+    ],
+    "estimatedPrice": 3800,
+    "phone": "+919812345678",
+    "pickupDate": "2026-08-20",
+    "pickupTime": "02:00 PM - 05:00 PM",
+    "pickupSlot": "Afternoon (12:00 PM - 03:00 PM)",
+    "customerName": "Pooja Malhotra",
+    "customerAddress": "House No. 12B, Lajpat Nagar 4, New Delhi",
+    "status": "Pending Pickup",
+    "adminNotes": "Ground floor pickup.",
+    "createdAt": "2026-08-19T08:42:53.322Z",
+    "updatedAt": "2026-08-19T08:42:53.322Z"
+  },
+  {
+    "id": "SG-912834",
+    "category": "InverterBattery",
+    "brand": "Luminous",
+    "model": "150 Ah Tall Tubular Battery",
+    "condition": "poor",
+    "issues": [
+      "Acid leakage",
+      "Dead backup power"
+    ],
+    "estimatedPrice": 3100,
+    "phone": "+919955443322",
+    "pickupDate": "2026-08-19",
+    "pickupTime": "11:00 AM - 02:00 PM",
+    "pickupSlot": "Morning (09:00 AM - 12:00 PM)",
+    "customerName": "Rajesh Verma",
+    "customerAddress": "Plot 88, Udyog Vihar Phase 4, Gurugram",
+    "status": "Completed",
+    "pickupAgent": "Sanjay Yadav",
+    "adminNotes": "Payout completed via UPI. Battery collected for lead extraction.",
+    "createdAt": "2026-08-18T13:42:53.322Z",
+    "updatedAt": "2026-08-18T13:42:53.322Z"
+  }
+]

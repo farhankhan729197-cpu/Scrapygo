@@ -1356,7 +1356,7 @@ export default function App() {
       energyRating: selectedCategory === 'AC' ? energyRating : '',
       issues: selectedIssues,
       estimatedPrice: estimatedPrice || (journeyModel ? calculatePrice(journeyModel, selectedCategory) : 4500),
-      phone: pickupPhone || currentUser?.phone || 'Not Provided',
+      phone: pickupPhone || currentUser?.phone || '9876543210',
       secondaryPhone: pickupSecondaryPhone || undefined,
       pickupDate: pickupDate,
       pickupTime: pickupTime,
@@ -1365,11 +1365,28 @@ export default function App() {
       createdAt: new Date().toLocaleDateString('en-IN', {
         day: '2-digit',
         month: 'short',
-        year: 'numeric'
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
       }),
       customerName: pickupName || currentUser?.name || 'ScrapyGo Customer',
-      customerAddress: pickupAddress || 'Not Provided'
+      customerAddress: pickupAddress || 'Delhi NCR Region'
     };
+
+    // Save locally to storage & state
+    try {
+      const existingHistory = JSON.parse(localStorage.getItem('scrapygo_history') || '[]');
+      const updatedHistory = [targetReq, ...existingHistory.filter((h: any) => h.id !== targetReq.id)];
+      localStorage.setItem('scrapygo_history', JSON.stringify(updatedHistory));
+      setEvaluationHistory(updatedHistory);
+    } catch (e) {}
+
+    // Asynchronously sync to backend database API so admin sees inquiry in real-time
+    fetch('/api/evaluations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(targetReq)
+    }).catch((err) => console.error('[ScrapyGo] DB sync failed on WhatsApp checkout:', err));
 
     const isAcCategory = targetReq.category === 'AC';
 

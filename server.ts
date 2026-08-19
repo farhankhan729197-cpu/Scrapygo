@@ -26,17 +26,181 @@ interface RegisteredUser {
 }
 const usersStore = new Map<string, RegisteredUser>();
 
-// In-memory Evaluations/Inquiries Storage: id -> evaluation object
+// Evaluations/Inquiries Storage: id -> evaluation object
 const evaluationsStore = new Map<string, any>();
 const deletedEvaluationsSet = new Set<string>();
 
-// Preseed testing user
-usersStore.set("9876543210", {
-  name: "ScrapyGo Tester",
-  phone: "9876543210",
-  email: "tester@gmail.com",
-  password: "1234"
-});
+// Persistent File Storage Configuration
+const DATA_DIR = path.join(process.cwd(), "data");
+if (!fs.existsSync(DATA_DIR)) {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  } catch (e) {
+    console.error("[Server] Could not create data directory:", e);
+  }
+}
+
+const EVALUATIONS_FILE = path.join(DATA_DIR, "evaluations.json");
+const DELETED_FILE = path.join(DATA_DIR, "deleted_evaluations.json");
+const USERS_FILE = path.join(DATA_DIR, "users.json");
+
+function saveEvaluationsToDisk() {
+  try {
+    const list = Array.from(evaluationsStore.values());
+    fs.writeFileSync(EVALUATIONS_FILE, JSON.stringify(list, null, 2), "utf-8");
+  } catch (e) {
+    console.error("[Server] Error saving evaluations to disk:", e);
+  }
+}
+
+function saveDeletedToDisk() {
+  try {
+    const list = Array.from(deletedEvaluationsSet);
+    fs.writeFileSync(DELETED_FILE, JSON.stringify(list, null, 2), "utf-8");
+  } catch (e) {
+    console.error("[Server] Error saving deleted evaluations to disk:", e);
+  }
+}
+
+function saveUsersToDisk() {
+  try {
+    const list = Array.from(usersStore.values());
+    fs.writeFileSync(USERS_FILE, JSON.stringify(list, null, 2), "utf-8");
+  } catch (e) {
+    console.error("[Server] Error saving users to disk:", e);
+  }
+}
+
+function loadDataFromDisk() {
+  // 1. Load deleted evaluations set
+  try {
+    if (fs.existsSync(DELETED_FILE)) {
+      const data = JSON.parse(fs.readFileSync(DELETED_FILE, "utf-8"));
+      if (Array.isArray(data)) {
+        data.forEach((id) => deletedEvaluationsSet.add(id));
+      }
+    }
+  } catch (e) {
+    console.error("[Server] Error loading deleted IDs:", e);
+  }
+
+  // 2. Load registered users
+  try {
+    if (fs.existsSync(USERS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(USERS_FILE, "utf-8"));
+      if (Array.isArray(data)) {
+        data.forEach((user) => {
+          if (user && user.phone) {
+            const cleanKey = user.phone.replace(/[^\d]/g, "");
+            usersStore.set(cleanKey, user);
+          }
+        });
+      }
+    }
+  } catch (e) {
+    console.error("[Server] Error loading users:", e);
+  }
+
+  // Always ensure default tester user exists
+  usersStore.set("9876543210", {
+    name: "ScrapyGo Tester",
+    phone: "9876543210",
+    email: "tester@gmail.com",
+    password: "1234"
+  });
+
+  // 3. Load evaluations/inquiries
+  try {
+    if (fs.existsSync(EVALUATIONS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(EVALUATIONS_FILE, "utf-8"));
+      if (Array.isArray(data)) {
+        data.forEach((item) => {
+          if (item && item.id && !deletedEvaluationsSet.has(item.id)) {
+            evaluationsStore.set(item.id, item);
+          }
+        });
+      }
+    }
+  } catch (e) {
+    console.error("[Server] Error loading evaluations:", e);
+  }
+
+  // 4. Preseed default initial customer inquiries if evaluationsStore is empty
+  if (evaluationsStore.size === 0) {
+    const sampleEvaluations = [
+      {
+        id: "SG-782194",
+        category: "AC",
+        brand: "Voltas",
+        model: "1.5 Ton Split AC (3 Star)",
+        condition: "good",
+        issues: ["Minor cooling drop", "Outdoor bracket rust"],
+        estimatedPrice: 6200,
+        phone: "+919876543210",
+        secondaryPhone: "+919811223344",
+        pickupDate: new Date().toISOString().split("T")[0],
+        pickupTime: "10:00 AM - 01:00 PM",
+        pickupSlot: "Morning (09:00 AM - 12:00 PM)",
+        customerName: "Vikas Sharma",
+        customerAddress: "Flat 402, Green Valley Apts, Sector 62, Noida",
+        status: "Confirmed",
+        pickupAgent: "Amit Kumar (Dispatch #14)",
+        adminNotes: "Customer requested uninstallation assistance.",
+        createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+        updatedAt: new Date(Date.now() - 3600000 * 2).toISOString()
+      },
+      {
+        id: "SG-549102",
+        category: "Refrigerator",
+        brand: "LG",
+        model: "Double Door Frost Free 260L",
+        condition: "average",
+        issues: ["Compressor humming", "Door gasket wear"],
+        estimatedPrice: 3800,
+        phone: "+919812345678",
+        pickupDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
+        pickupTime: "02:00 PM - 05:00 PM",
+        pickupSlot: "Afternoon (12:00 PM - 03:00 PM)",
+        customerName: "Pooja Malhotra",
+        customerAddress: "House No. 12B, Lajpat Nagar 4, New Delhi",
+        status: "Pending Pickup",
+        adminNotes: "Ground floor pickup.",
+        createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
+        updatedAt: new Date(Date.now() - 3600000 * 5).toISOString()
+      },
+      {
+        id: "SG-912834",
+        category: "InverterBattery",
+        brand: "Luminous",
+        model: "150 Ah Tall Tubular Battery",
+        condition: "poor",
+        issues: ["Acid leakage", "Dead backup power"],
+        estimatedPrice: 3100,
+        phone: "+919955443322",
+        pickupDate: new Date().toISOString().split("T")[0],
+        pickupTime: "11:00 AM - 02:00 PM",
+        pickupSlot: "Morning (09:00 AM - 12:00 PM)",
+        customerName: "Rajesh Verma",
+        customerAddress: "Plot 88, Udyog Vihar Phase 4, Gurugram",
+        status: "Completed",
+        pickupAgent: "Sanjay Yadav",
+        adminNotes: "Payout completed via UPI. Battery collected for lead extraction.",
+        createdAt: new Date(Date.now() - 86400000).toISOString(),
+        updatedAt: new Date(Date.now() - 86400000).toISOString()
+      }
+    ];
+
+    sampleEvaluations.forEach((item) => {
+      evaluationsStore.set(item.id, item);
+    });
+    saveEvaluationsToDisk();
+  }
+
+  console.log(`[Server Data] Loaded ${evaluationsStore.size} active evaluations, ${deletedEvaluationsSet.size} deleted IDs, ${usersStore.size} users.`);
+}
+
+// Initialize on boot
+loadDataFromDisk();
 
 async function startServer() {
   const app = express();
@@ -358,32 +522,40 @@ async function startServer() {
   // API Route: Get Evaluations
   app.get("/api/evaluations", async (req, res) => {
     try {
-      const { phone } = req.query;
-      if (!phone) {
-        return res.status(200).json({ success: false, error: "Phone number is required." });
-      }
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
 
-      const cleaned = (phone as string).replace(/[^\d+]/g, "");
+      const { phone } = req.query;
       const userEvaluations: any[] = [];
 
-      
-
-      // Merge with in-memory evaluationsStore
-      evaluationsStore.forEach((evalItem) => {
-        if (!deletedEvaluationsSet.has(evalItem.id)) {
-          if (evalItem.phone === cleaned || (evalItem.phone && evalItem.phone.includes(cleaned.slice(-10)))) {
-            if (!userEvaluations.some((item) => item.id === evalItem.id)) {
+      if (!phone) {
+        evaluationsStore.forEach((evalItem) => {
+          if (!deletedEvaluationsSet.has(evalItem.id)) {
+            userEvaluations.push(evalItem);
+          }
+        });
+      } else {
+        const cleaned = (phone as string).replace(/[^\d]/g, "");
+        evaluationsStore.forEach((evalItem) => {
+          if (!deletedEvaluationsSet.has(evalItem.id)) {
+            const itemPhoneClean = (evalItem.phone || "").replace(/[^\d]/g, "");
+            if (
+              itemPhoneClean === cleaned ||
+              (cleaned.length >= 10 && itemPhoneClean.endsWith(cleaned.slice(-10))) ||
+              (itemPhoneClean.length >= 10 && cleaned.endsWith(itemPhoneClean.slice(-10)))
+            ) {
               userEvaluations.push(evalItem);
             }
           }
-        }
-      });
+        });
+      }
 
       // Sort by createdAt descending
       userEvaluations.sort((a, b) => {
-        const dateA = new Date(a.createdAt || 0);
-        const dateB = new Date(b.createdAt || 0);
-        return dateB.getTime() - dateA.getTime();
+        const dateA = new Date(a.createdAt || a.updatedAt || 0).getTime();
+        const dateB = new Date(b.createdAt || b.updatedAt || 0).getTime();
+        return dateB - dateA;
       });
 
       return res.json({ success: true, evaluations: userEvaluations });
@@ -393,32 +565,68 @@ async function startServer() {
     }
   });
 
-  // API Route: Create/Sync Evaluation
+  // API Route: Create/Sync Customer Inquiry & Evaluation
   app.post("/api/evaluations", async (req, res) => {
     try {
       const evaluation = req.body;
-      if (!evaluation || !evaluation.id || !evaluation.phone) {
+      if (!evaluation || typeof evaluation !== "object") {
         return res.status(200).json({ success: false, error: "Invalid evaluation data." });
       }
 
-      // If evaluation was previously deleted by an admin, do not re-add
-      if (deletedEvaluationsSet.has(evaluation.id)) {
-        return res.json({ success: false, error: "Inquiry has been deleted by administrator." });
-      }
+      // Auto-assign ID if missing
+      const evalId = evaluation.id && typeof evaluation.id === "string" && evaluation.id.trim()
+        ? evaluation.id.trim()
+        : `SG-${Math.floor(100000 + Math.random() * 900000)}`;
 
-      const cleaned = evaluation.phone.replace(/[^\d+]/g, "");
+      // Normalize phone
+      let rawPhone = (evaluation.phone || "").toString().trim();
+      if (!rawPhone || rawPhone === "undefined" || rawPhone === "null") {
+        rawPhone = "9876543210";
+      }
+      const digitsOnly = rawPhone.replace(/[^\d]/g, "");
+      const formattedPhone = rawPhone.startsWith("+") 
+        ? rawPhone 
+        : (digitsOnly.length === 10 ? `+91${digitsOnly}` : (digitsOnly ? `+${digitsOnly}` : "+919876543210"));
+
+      // Un-delete if customer re-submits or updates
+      deletedEvaluationsSet.delete(evalId);
+      saveDeletedToDisk();
+
+      const existing = evaluationsStore.get(evalId) || {};
+      const nowIso = new Date().toISOString();
+
       const finalEvaluation = {
+        ...existing,
         ...evaluation,
-        phone: cleaned,
-        status: evaluation.status || "Pending Pickup",
-        updatedAt: new Date().toISOString(),
-        createdAt: evaluation.createdAt || new Date().toISOString()
+        id: evalId,
+        phone: formattedPhone,
+        customerName: (evaluation.customerName || existing.customerName || "ScrapyGo Customer").trim(),
+        customerAddress: (evaluation.customerAddress || existing.customerAddress || "Delhi NCR (Address on confirmation)").trim(),
+        category: evaluation.category || existing.category || "AC",
+        brand: evaluation.brand || existing.brand || "Generic",
+        model: evaluation.model || existing.model || "Appliance Scrap",
+        condition: evaluation.condition || existing.condition || "good",
+        issues: Array.isArray(evaluation.issues) ? evaluation.issues : (existing.issues || []),
+        estimatedPrice: typeof evaluation.estimatedPrice === "number" ? evaluation.estimatedPrice : (parseInt(evaluation.estimatedPrice) || existing.estimatedPrice || 3500),
+        status: evaluation.status || existing.status || "Pending",
+        pickupDate: evaluation.pickupDate || existing.pickupDate || new Date().toISOString().split("T")[0],
+        pickupTime: evaluation.pickupTime || existing.pickupTime || "10:00 AM - 01:00 PM",
+        pickupSlot: evaluation.pickupSlot || evaluation.pickupTime || existing.pickupSlot || "10:00 AM - 01:00 PM",
+        createdAt: existing.createdAt || evaluation.createdAt || nowIso,
+        updatedAt: nowIso
       };
 
-      // Always save to in-memory store
-      evaluationsStore.set(evaluation.id, finalEvaluation);
+      // Always save to in-memory store and persist to disk
+      evaluationsStore.set(evalId, finalEvaluation);
+      saveEvaluationsToDisk();
 
-      return res.json({ success: true, message: "Evaluation saved successfully.", evaluation: finalEvaluation });
+      console.log(`[Server] Inquiry Synced to DB: #${evalId} (${finalEvaluation.customerName} - ${finalEvaluation.phone})`);
+
+      return res.json({
+        success: true,
+        message: "Evaluation saved successfully.",
+        evaluation: finalEvaluation
+      });
     } catch (err) {
       console.error("[Server] Save evaluation error:", err);
       return res.status(200).json({ success: false, error: "An error occurred saving evaluation." });
@@ -448,6 +656,7 @@ async function startServer() {
       };
 
       evaluationsStore.set(id, updatedEvaluation);
+      saveEvaluationsToDisk();
 
       console.log(`[Server] Inquiry #${id} cancelled by customer. Reason: "${reason.trim()}"`);
 
@@ -514,25 +723,27 @@ async function startServer() {
     }
   });
 
-  // Admin Route: Get ALL Inquiries & Orders Across All Users
+  // Admin Route: Get ALL Inquiries & Orders Across All Users (Live Sync)
   app.get("/api/admin/evaluations", async (req, res) => {
     try {
-      const allEvaluationsMap = new Map<string, any>();
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
+
+      const allEvaluations: any[] = [];
 
       // Populate from in-memory evaluationsStore excluding deleted IDs
       evaluationsStore.forEach((value, key) => {
         if (!deletedEvaluationsSet.has(key)) {
-          allEvaluationsMap.set(key, value);
+          allEvaluations.push(value);
         }
       });
 
-      const allEvaluations = Array.from(allEvaluationsMap.values());
-
       // Sort newest first
       allEvaluations.sort((a, b) => {
-        const dateA = new Date(a.createdAt || a.updatedAt || 0);
-        const dateB = new Date(b.createdAt || b.updatedAt || 0);
-        return dateB.getTime() - dateA.getTime();
+        const dateA = new Date(a.createdAt || a.updatedAt || 0).getTime();
+        const dateB = new Date(b.createdAt || b.updatedAt || 0).getTime();
+        return dateB - dateA;
       });
 
       return res.json({
@@ -576,11 +787,9 @@ async function startServer() {
         updatedAt: new Date().toISOString()
       };
 
-      // Save in-memory
+      // Save in-memory and write to disk
       evaluationsStore.set(id, updatedEvaluation);
-
-      // Save to Firestore
-      
+      saveEvaluationsToDisk();
 
       console.log(`[Admin API] Updated evaluation ${id} status to '${updatedEvaluation.status}'`);
 
@@ -603,6 +812,8 @@ async function startServer() {
     if (!id) return false;
     deletedEvaluationsSet.add(id);
     evaluationsStore.delete(id);
+    saveEvaluationsToDisk();
+    saveDeletedToDisk();
     console.log(`[Admin API] Permanently deleted evaluation inquiry #${id}`);
     return true;
   };
