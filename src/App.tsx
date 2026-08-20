@@ -543,7 +543,13 @@ export default function App() {
   // Form fields for address/pickup details
   const [showPickupForm, setShowPickupForm] = useState(false);
   const [pickupName, setPickupName] = useState(() => currentUser?.name || '');
-  const [pickupPhone, setPickupPhone] = useState(() => currentUser?.phone || '');
+  const [pickupPhone, setPickupPhone] = useState(() => {
+    if (currentUser?.phone) {
+      const clean = currentUser.phone.replace(/[^\d]/g, '');
+      return clean.length >= 10 ? clean.slice(-10) : clean;
+    }
+    return '';
+  });
   const [pickupSecondaryPhone, setPickupSecondaryPhone] = useState('');
   const [pickupDate, setPickupDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [pickupTime, setPickupTime] = useState('10:00 AM - 01:00 PM');
@@ -555,7 +561,10 @@ export default function App() {
   useEffect(() => {
     if (currentUser) {
       if (!pickupName) setPickupName(currentUser.name || '');
-      if (!pickupPhone) setPickupPhone(currentUser.phone || '');
+      if (!pickupPhone) {
+        const clean = (currentUser.phone || '').replace(/[^\d]/g, '');
+        setPickupPhone(clean.length >= 10 ? clean.slice(-10) : clean);
+      }
     }
   }, [currentUser]);
   
@@ -3271,9 +3280,9 @@ export default function App() {
                         </div>
                         <div>
                           <span className="block text-slate-400 text-[10px] uppercase font-bold tracking-wider">Primary Phone</span>
-                          <span className="font-bold text-slate-900 font-mono">+91 {pickupPhone || currentUser?.phone || 'Not Provided'}</span>
+                          <span className="font-bold text-slate-900 font-mono">{pickupPhone || (currentUser?.phone ? currentUser.phone.replace(/[^\d]/g, '').slice(-10) : 'Not Provided')}</span>
                           {pickupSecondaryPhone && (
-                            <span className="block text-[10px] text-slate-500 font-mono mt-0.5">Alt: +91 {pickupSecondaryPhone}</span>
+                            <span className="block text-[10px] text-slate-500 font-mono mt-0.5">Alt: {pickupSecondaryPhone.replace(/[^\d]/g, '').slice(-10)}</span>
                           )}
                         </div>
                         <div>
