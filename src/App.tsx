@@ -4973,80 +4973,33 @@ export default function App() {
                   <X className="w-4 h-4" />
                 </button>
 
-                {/* Header with Logo */}
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center">
-                    <UserCheck className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-slate-900 leading-snug">
-                      {otpSent 
-                        ? 'Dual-Delivery OTP Verification' 
-                        : authMode === 'login' 
-                          ? 'Customer Log In' 
-                          : 'Create Customer Account'}
-                    </h3>
-                    <p className="text-[11px] text-slate-400 font-mono">
-                      {otpSent
-                        ? `OTP sent simultaneously via SMS & WhatsApp`
-                        : authMode === 'login'
-                          ? 'Instant dual-channel SMS & WhatsApp sign-in'
-                          : 'Register to manage valuations & pickups'}
-                    </p>
-                  </div>
+                {/* Header */}
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900">
+                    {otpSent 
+                      ? 'Verify OTP' 
+                      : authMode === 'login' 
+                        ? 'Log In' 
+                        : 'Create Account'}
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {otpSent
+                      ? `Enter the 4-digit code sent to ${countryCode} ${loginPhone}`
+                      : authMode === 'login'
+                        ? 'Enter your mobile number to receive an OTP'
+                        : 'Enter your details to create your ScrapyGo account'}
+                  </p>
                 </div>
 
                 {!otpSent ? (
                   <>
-                    {/* Dual-Delivery Feature Badge */}
-                    <div className="bg-emerald-50/70 border border-emerald-200/60 rounded-2xl p-2.5 flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-white text-emerald-600 flex items-center justify-center shrink-0 shadow-2xs">
-                        <MessageSquare className="w-4 h-4 text-[#25D366]" />
-                      </div>
-                      <div className="text-[11px] leading-tight text-slate-700">
-                        <span className="font-bold text-slate-900">Dual-Delivery Verification:</span> OTP is dispatched simultaneously to your cellular SMS and directly to your WhatsApp.
-                      </div>
-                    </div>
-
-                    {/* Tab Navigation: Log In vs Create Account */}
-                    <div className="flex bg-slate-100 p-1 rounded-2xl">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setAuthMode('login');
-                          setOtpError('');
-                        }}
-                        className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
-                          authMode === 'login'
-                            ? 'bg-white text-slate-900 shadow-xs'
-                            : 'text-slate-500 hover:text-slate-800'
-                        }`}
-                      >
-                        Log In
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setAuthMode('signup');
-                          setOtpError('');
-                        }}
-                        className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
-                          authMode === 'signup'
-                            ? 'bg-white text-slate-900 shadow-xs'
-                            : 'text-slate-500 hover:text-slate-800'
-                        }`}
-                      >
-                        Create Account
-                      </button>
-                    </div>
-
                     {/* Login / Sign Up Form */}
                     <form onSubmit={handleSendOtpForAuth} className="space-y-4">
-                      {/* Name input (Sign Up only) */}
+                      {/* Name input (Only shown when Sign Up is clicked) */}
                       {authMode === 'signup' && (
-                        <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">
-                            Full Name <span className="text-rose-500 font-bold">*</span>
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-semibold text-slate-700">
+                            Full Name
                           </label>
                           <div className="relative">
                             <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -5057,7 +5010,7 @@ export default function App() {
                                 setLoginName(e.target.value);
                                 setOtpError('');
                               }}
-                              placeholder="e.g. Rahul Sharma"
+                              placeholder="Your full name"
                               required
                               className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
                             />
@@ -5066,9 +5019,9 @@ export default function App() {
                       )}
 
                       {/* Mobile Number Input */}
-                      <div className="space-y-1">
-                        <label className="block text-xs font-bold text-slate-700">
-                          Mobile Number <span className="text-rose-500 font-bold">*</span>
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-semibold text-slate-700">
+                          Mobile Number
                         </label>
                         <div className="flex gap-2">
                           <select
@@ -5098,21 +5051,13 @@ export default function App() {
                             />
                           </div>
                         </div>
-
-                        {/* Live active line validator indicator */}
-                        {loginPhone.length === 10 && (
-                          <div className="text-[10px] font-mono text-emerald-700 bg-emerald-50/80 px-2.5 py-1 rounded-lg border border-emerald-200/60 flex items-center gap-1.5 mt-1">
-                            <CheckCircle className="w-3 h-3 text-emerald-600 shrink-0" />
-                            <span>Active cellular line verified for Cellular SMS &amp; WhatsApp OTP</span>
-                          </div>
-                        )}
                       </div>
 
                       {/* Email Input (Sign Up only) */}
                       {authMode === 'signup' && (
-                        <div className="space-y-1">
-                          <label className="block text-xs font-bold text-slate-700">
-                            Email Address <span className="text-slate-400 font-normal">(Optional for digital receipts)</span>
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-semibold text-slate-700">
+                            Email Address <span className="text-slate-400 font-normal">(Optional)</span>
                           </label>
                           <div className="relative">
                             <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -5123,15 +5068,15 @@ export default function App() {
                                 setSignupEmail(e.target.value);
                                 setOtpError('');
                               }}
-                              placeholder="e.g. rahul@example.com"
+                              placeholder="name@example.com"
                               className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
                             />
                           </div>
                         </div>
                       )}
 
-                      {/* Required Terms and Conditions Checkbox */}
-                      <div className="pt-1">
+                      {/* Terms and Conditions Checkbox */}
+                      <div className="pt-0.5">
                         <label className="flex items-start gap-2.5 text-xs text-slate-600 cursor-pointer select-none">
                           <input
                             type="checkbox"
@@ -5144,7 +5089,7 @@ export default function App() {
                             required
                           />
                           <span className="leading-tight text-[11px] text-slate-600">
-                            I agree to the <strong className="text-slate-900 font-bold">Terms of Service</strong> &amp; <strong className="text-slate-900 font-bold">Privacy Policy</strong>, and consent to receive dual-delivery verification OTPs and scrap pickup notifications via Cellular SMS &amp; WhatsApp. <span className="text-rose-500 font-bold">*</span>
+                            I agree to the <strong className="text-slate-900 font-semibold">Terms</strong> &amp; <strong className="text-slate-900 font-semibold">Privacy Policy</strong>.
                           </span>
                         </label>
                       </div>
@@ -5161,27 +5106,27 @@ export default function App() {
                       <button
                         type="submit"
                         disabled={isSendingOtp || loginPhone.length < 10 || !termsAccepted || (authMode === 'signup' && !loginName.trim())}
-                        className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold py-3 rounded-2xl transition-all shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed text-xs"
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-all shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed text-xs"
                       >
                         {isSendingOtp ? (
                           <>
                             <Loader2 className="w-4 h-4 animate-spin" />
-                            <span>Dispatching Dual OTP (SMS + WhatsApp)...</span>
+                            <span>Sending OTP...</span>
                           </>
                         ) : (
                           <>
-                            <span>{authMode === 'login' ? 'Send Verification OTP' : 'Register & Send Dual OTP'}</span>
+                            <span>{authMode === 'login' ? 'Log In' : 'Create Account'}</span>
                             <ArrowRight className="w-4 h-4" />
                           </>
                         )}
                       </button>
                     </form>
 
-                    {/* Don't Have an Account / Already Have an Account Toggle link */}
+                    {/* Switch between Log In and Sign Up */}
                     <div className="pt-2 text-center border-t border-slate-100">
                       {authMode === 'login' ? (
                         <p className="text-xs text-slate-600">
-                          Don't Have an Account?{' '}
+                          Don't have an account?{' '}
                           <button
                             type="button"
                             onClick={() => {
@@ -5195,7 +5140,7 @@ export default function App() {
                         </p>
                       ) : (
                         <p className="text-xs text-slate-600">
-                          Already Have an Account?{' '}
+                          Already have an account?{' '}
                           <button
                             type="button"
                             onClick={() => {
@@ -5211,56 +5156,21 @@ export default function App() {
                     </div>
                   </>
                 ) : (
-                  /* OTP Verification Screen with Dual-Delivery Indicators */
+                  /* OTP Verification Screen */
                   <form onSubmit={handleVerifyOtpForAuth} className="space-y-4">
-                    {/* Dual-Delivery Status Channels */}
-                    <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 space-y-2 text-left">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
-                          <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                          Dual-Delivery Transmitted
+                    {sandboxCode && (
+                      <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-mono px-3 py-1.5 rounded-xl">
+                        <span className="flex items-center gap-1 font-medium">
+                          <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Sandbox Test OTP:</span>
                         </span>
-                        <span className="text-[10px] font-mono text-slate-500 font-bold">
-                          {countryCode} {loginPhone}
-                        </span>
+                        <span className="font-bold tracking-widest text-emerald-900 bg-white px-2 py-0.5 rounded border border-emerald-200">{sandboxCode}</span>
                       </div>
-
-                      <div className="grid grid-cols-2 gap-2 pt-1">
-                        <div className="bg-white border border-emerald-200 rounded-xl p-2 flex items-center gap-2 shadow-2xs">
-                          <div className="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                            <Phone className="w-3 h-3 text-emerald-600" />
-                          </div>
-                          <div className="text-[10px] leading-tight">
-                            <p className="font-bold text-slate-900">Cellular SMS</p>
-                            <p className="text-emerald-700 text-[9px] font-medium">✓ Sent to Mobile</p>
-                          </div>
-                        </div>
-
-                        <div className="bg-white border border-emerald-200 rounded-xl p-2 flex items-center gap-2 shadow-2xs">
-                          <div className="w-6 h-6 rounded-lg bg-emerald-50 text-[#25D366] flex items-center justify-center shrink-0">
-                            <MessageSquare className="w-3 h-3 text-[#25D366]" />
-                          </div>
-                          <div className="text-[10px] leading-tight">
-                            <p className="font-bold text-slate-900">WhatsApp</p>
-                            <p className="text-emerald-700 text-[9px] font-medium">✓ Delivered Direct</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {sandboxCode && (
-                        <div className="flex items-center justify-between bg-emerald-600 text-white text-[10px] font-mono font-bold px-3 py-1 rounded-xl shadow-2xs mt-1">
-                          <span className="flex items-center gap-1">
-                            <Sparkles className="w-3 h-3" />
-                            <span>Sandbox Test Code:</span>
-                          </span>
-                          <span className="text-xs tracking-widest bg-white/20 px-2 py-0.5 rounded-md font-black">{sandboxCode}</span>
-                        </div>
-                      )}
-                    </div>
+                    )}
 
                     <div className="space-y-2">
-                      <label className="block text-xs font-bold text-slate-700 text-center">
-                        Enter 4-Digit Verification Code
+                      <label className="block text-xs font-semibold text-slate-700 text-center">
+                        Enter 4-Digit Code
                       </label>
                       <input
                         type="text"
@@ -5273,7 +5183,7 @@ export default function App() {
                           setOtpError('');
                         }}
                         placeholder="••••"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 text-center text-xl text-slate-900 font-mono font-black tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 text-center text-xl text-slate-900 font-mono font-bold tracking-[0.4em] focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       />
                     </div>
 
@@ -5293,7 +5203,7 @@ export default function App() {
 
                       {otpTimer > 0 ? (
                         <span className="text-slate-400 font-mono text-[11px]">
-                          Resend dual OTP in {otpTimer}s
+                          Resend in {otpTimer}s
                         </span>
                       ) : (
                         <button
@@ -5302,7 +5212,7 @@ export default function App() {
                           className="text-emerald-600 font-bold hover:underline cursor-pointer flex items-center gap-1"
                         >
                           <RefreshCw className="w-3 h-3" />
-                          <span>Resend via SMS &amp; WhatsApp</span>
+                          <span>Resend OTP</span>
                         </button>
                       )}
                     </div>
@@ -5319,17 +5229,17 @@ export default function App() {
                     <button
                       type="submit"
                       disabled={isVerifyingOtp || otpCode.length !== 4}
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold py-3 rounded-2xl transition-all shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed text-xs"
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-all shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed text-xs"
                     >
                       {isVerifyingOtp ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Verifying Code...</span>
+                          <span>Verifying...</span>
                         </>
                       ) : (
                         <>
                           <CheckCircle className="w-4 h-4" />
-                          <span>Verify OTP &amp; Proceed</span>
+                          <span>Verify &amp; Continue</span>
                         </>
                       )}
                     </button>
