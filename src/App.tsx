@@ -79,21 +79,11 @@ import { FirestoreService } from './lib/firebase';
 const ADMIN_MOBILE_NUMBER = '7303319913';
 
 export const isAdminUser = (_user: { phone: string; name?: string } | null): boolean => {
-  if (_user && _user.phone) {
-    const cleanPhone = _user.phone.replace(/[^\d]/g, '');
-    if (cleanPhone.endsWith(ADMIN_MOBILE_NUMBER) || cleanPhone === ADMIN_MOBILE_NUMBER) {
-      return true;
-    }
+  if (!_user || !_user.phone) {
+    return false;
   }
-  const session = typeof window !== 'undefined' && localStorage.getItem('scrapygo_admin_session') === 'true';
-  const savedPhone = typeof window !== 'undefined' ? localStorage.getItem('scrapygo_admin_phone') : null;
-  if (session && savedPhone) {
-    const cleanSaved = savedPhone.replace(/[^\d]/g, '');
-    if (cleanSaved.endsWith(ADMIN_MOBILE_NUMBER) || cleanSaved === ADMIN_MOBILE_NUMBER) {
-      return true;
-    }
-  }
-  return false;
+  const cleanPhone = _user.phone.replace(/[^\d]/g, '');
+  return cleanPhone.endsWith(ADMIN_MOBILE_NUMBER) || cleanPhone === ADMIN_MOBILE_NUMBER;
 };
 
 async function safeFetchJson(url: string, options?: RequestInit) {
@@ -1543,6 +1533,8 @@ export default function App() {
   // User Logout
   const handleLogout = () => {
     localStorage.removeItem('scrapygo_user');
+    localStorage.removeItem('scrapygo_admin_session');
+    localStorage.removeItem('scrapygo_admin_phone');
     setCurrentUser(null);
     setActiveTab('home');
     setJourneyStep(1);
@@ -4170,24 +4162,36 @@ export default function App() {
         {activeTab === 'admin-panel' && (
           <div id="admin-panel-container" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {isAdminUser(currentUser) ? (
-              <AdminDashboard showToast={showToast} />
+              <AdminDashboard showToast={showToast} currentUser={currentUser} />
             ) : (
               <div className="bg-white border border-slate-200 rounded-3xl p-8 sm:p-12 max-w-lg mx-auto text-center space-y-4 my-12 shadow-xl">
                 <div className="w-14 h-14 bg-rose-50 text-rose-600 rounded-2xl border border-rose-100 flex items-center justify-center mx-auto shadow-sm">
                   <ShieldAlert className="w-7 h-7" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">Access Restricted</h2>
+                  <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">Admin Access Restricted</h2>
                   <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-                    The Admin Control Panel is strictly restricted to authorized mobile number (+91 7303319913).
+                    The ScrapyGo Admin Control Panel is strictly restricted to authorized administrator mobile number (+91 7303319913). Please log in with this number to view the panel.
                   </p>
                 </div>
-                <button
-                  onClick={() => setActiveTab('home')}
-                  className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer"
-                >
-                  Return to Home
-                </button>
+                <div className="flex justify-center gap-3 pt-2">
+                  <button
+                    onClick={() => setActiveTab('home')}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2.5 rounded-xl transition-all cursor-pointer"
+                  >
+                    Return to Home
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveTab('home');
+                      setShowLoginModal(true);
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer flex items-center gap-1.5"
+                  >
+                    <LogIn className="w-3.5 h-3.5" />
+                    <span>Log In with Admin Number</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>

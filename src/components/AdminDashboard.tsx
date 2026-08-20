@@ -37,17 +37,22 @@ import { FirestoreService } from '../lib/firebase';
 interface AdminDashboardProps {
   onClose?: () => void;
   showToast: (msg: string) => void;
+  currentUser?: { phone: string; name?: string } | null;
 }
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast }) => {
-  // Authentication State
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast, currentUser, onClose }) => {
+  // Authentication State: auto-authenticated if logged in with 7303319913
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(() => {
-    const session = localStorage.getItem('scrapygo_admin_session') === 'true';
-    const adminPhone = localStorage.getItem('scrapygo_admin_phone');
-    if (session) {
-      if (!adminPhone || adminPhone.includes('7303319913')) {
+    if (currentUser?.phone) {
+      const clean = currentUser.phone.replace(/[^\d]/g, '');
+      if (clean.endsWith('7303319913') || clean === '7303319913') {
         return true;
       }
+    }
+    const session = localStorage.getItem('scrapygo_admin_session') === 'true';
+    const adminPhone = localStorage.getItem('scrapygo_admin_phone');
+    if (session && adminPhone && (adminPhone.endsWith('7303319913') || adminPhone === '7303319913')) {
+      return true;
     }
     return false;
   });
