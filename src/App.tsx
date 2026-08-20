@@ -59,7 +59,8 @@ import {
   Grid,
   Filter,
   ShieldAlert,
-  XCircle
+  XCircle,
+  LogIn
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -1026,6 +1027,11 @@ export default function App() {
     e.preventDefault();
     setOtpError('');
 
+    if (authMode === 'signup' && (!loginName || loginName.trim().length < 2)) {
+      setOtpError('Please enter your full name for account registration.');
+      return;
+    }
+
     const inputVal = loginPhone.trim();
     if (!inputVal) {
       setOtpError('Please enter your 10-digit mobile number.');
@@ -1039,7 +1045,7 @@ export default function App() {
     }
 
     if (!termsAccepted) {
-      setOtpError('You must agree to the Terms & Privacy Policy to proceed.');
+      setOtpError('You must agree to the Terms of Service & Privacy Policy to proceed.');
       return;
     }
 
@@ -1056,7 +1062,9 @@ export default function App() {
           body: JSON.stringify({
             phone: fullPhone,
             identifier: fullPhone,
-            authMode: 'login'
+            name: loginName.trim(),
+            email: signupEmail.trim(),
+            authMode: authMode
           })
         });
         data = res.data;
@@ -1070,6 +1078,7 @@ export default function App() {
         setOtpSent(true);
         setSandboxCode(data.code || '1234');
         setOtpCode('');
+        setOtpTimer(30);
         showToast(`Verification code sent to ${countryCode} ${cleanedDigits}`);
       } else {
         setOtpError(data?.error || 'Unable to send OTP. Please check your mobile number.');
@@ -1122,13 +1131,19 @@ export default function App() {
         return;
       }
 
-      // Execute login API call
+      // Execute login or signup API call
       let authData: any;
+      const apiEndpoint = authMode === 'signup' ? '/api/signup' : '/api/login';
       try {
-        const res = await safeFetchJson('/api/login', {
+        const res = await safeFetchJson(apiEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: fullPhone, identifier: fullPhone })
+          body: JSON.stringify({
+            phone: fullPhone,
+            identifier: fullPhone,
+            name: loginName.trim() || 'ScrapyGo Customer',
+            email: signupEmail.trim()
+          })
         });
         authData = res.data;
       } catch (err) {
@@ -1142,11 +1157,11 @@ export default function App() {
           authData = {
             success: true,
             user: {
-              name: 'ScrapyGo Customer',
+              name: loginName.trim() || 'ScrapyGo Customer',
               phone: fullPhone,
-              email: ''
+              email: signupEmail.trim() || ''
             },
-            message: 'Account verified!'
+            message: authMode === 'signup' ? 'Account created successfully!' : 'Account verified!'
           };
         }
       }
@@ -1154,8 +1169,8 @@ export default function App() {
       if (authData && authData.success) {
         const userData = {
           phone: authData.user?.phone || fullPhone || loginPhone,
-          name: authData.user?.name || 'ScrapyGo Customer',
-          email: authData.user?.email || ''
+          name: authData.user?.name || loginName.trim() || 'ScrapyGo Customer',
+          email: authData.user?.email || signupEmail.trim() || ''
         };
 
         localStorage.setItem('scrapygo_user', JSON.stringify(userData));
@@ -1163,12 +1178,17 @@ export default function App() {
         offlineUsers[userData.phone] = userData;
         localStorage.setItem('scrapygo_offline_users', JSON.stringify(offlineUsers));
 
+        // Sync user profile to Firestore
+        FirestoreService.saveUserProfile(userData).catch((err) => {
+          console.warn('[Firebase] User profile sync warning:', err);
+        });
+
         setCurrentUser(userData);
         setOtpSent(false);
         setOtpCode('');
         setSandboxCode('');
         setOtpError('');
-        showToast(authData.message || 'Successfully Logged In!');
+        showToast(authData.message || (authMode === 'signup' ? 'Welcome to ScrapyGo!' : 'Successfully Logged In!'));
 
         if (activeTab === 'sell-journey') {
           setJourneyStep(3);
@@ -1217,7 +1237,44 @@ export default function App() {
     setJourneyStep(5); // Move to Final Quote & Doorstep Pickup Form
   };
 
-  // Complete Booking & Schedule Instant Pickup
+  // Helper: Build comprehensive WhatsApp summary message for Coordinator (+91 7303319913)
+  const buildWhatsAppSummaryMessage = (req: EvaluationRequest): string => {
+    const isAcCategory = req.category === 'AC';
+    let msg = `*ScrapyGo Doorstep Pickup Order Confirmed* 🚚\n\n`;
+    msg += `📋 *Evaluation / Order ID:* ${req.id}\n`;
+    msg += `👤 *Customer Name:* ${req.customerName || 'ScrapyGo Customer'}\n`;
+    msg += `📞 *Primary Contact Phone:* ${req.phone.startsWith('+') ? req.phone : `+91 ${req.phone}`}\n`;
+    if (req.secondaryPhone) {
+      msg += `📱 *Alternate Contact:* +91 ${req.secondaryPhone}\n`;
+    }
+    msg += `📅 *Scheduled Pickup Date:* ${req.pickupDate || 'Immediate / Preferred Slot'}\n`;
+    msg += `⏰ *Scheduled Time Slot:* ${req.pickupTime || req.pickupSlot || '10:00 AM - 01:00 PM'}\n`;
+    msg += `📍 *Pickup Address:* ${req.customerAddress || 'Delhi NCR Region'}\n\n`;
+    
+    msg += `*Appliance Valuation & Condition Summary:*\n`;
+    msg += `🏷️ *Category:* ${isAcCategory ? 'Air Conditioner (AC)' : req.category}\n`;
+    msg += `🏢 *Brand:* ${req.brand}\n`;
+    msg += `📦 *Model / Type:* ${req.model}\n`;
+    if (req.capacity) {
+      msg += `⚡ *Capacity / Specs:* ${req.capacity}\n`;
+    }
+    if (req.energyRating) {
+      msg += `⭐ *Energy Star Rating:* ${req.energyRating}\n`;
+    }
+    msg += `🛠️ *Assessed Condition:* ${req.condition}\n`;
+    if (req.issues && req.issues.length > 0) {
+      msg += `⚠️ *Reported Flaws:* ${req.issues.join(', ')}\n`;
+    } else {
+      msg += `⚠️ *Reported Flaws:* None (Fully Functional)\n`;
+    }
+    msg += `💰 *Guaranteed Cash Quote:* ₹${req.estimatedPrice.toLocaleString('en-IN')}\n\n`;
+    
+    msg += `📸 *Verification Note:* Please confirm the assigned dispatch executive for this schedule. I will share appliance photos in this chat for fast spot payment verification!`;
+    
+    return msg;
+  };
+
+  // Complete Booking & Schedule Instant Pickup with automatic WhatsApp dispatch
   const handleCompleteBooking = async (
     name: string,
     phone: string,
@@ -1300,7 +1357,25 @@ export default function App() {
       FirestoreService.saveUserProfile(guestUser).catch(() => {});
     }
 
-    showToast('Doorstep Pickup Scheduled! Order ID: ' + currentEvalId);
+    // Automatically send full scheduled summary directly to WhatsApp Coordinator (+91 7303319913)
+    const whatsappCoordinatorNumber = '917303319913';
+    const textMessage = buildWhatsAppSummaryMessage(newRequest);
+
+    // Copy to clipboard for easy manual paste fallback
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(textMessage).catch(() => {});
+    }
+
+    const whatsappUrl = `https://wa.me/${whatsappCoordinatorNumber}?text=${encodeURIComponent(textMessage)}`;
+    
+    // Automatically open WhatsApp with pre-filled summary
+    try {
+      window.open(whatsappUrl, '_blank');
+    } catch (e) {
+      console.warn('[WhatsApp] Popup open warning:', e);
+    }
+
+    showToast('Pickup Scheduled! Summary sent directly to WhatsApp coordinator (+91 7303319913).');
     setJourneyStep(6);
   };
 
@@ -1398,50 +1473,7 @@ export default function App() {
     }).catch((err) => console.error('[ScrapyGo] DB sync failed on WhatsApp checkout:', err));
     FirestoreService.saveEvaluation(targetReq).catch(() => {});
 
-    const isAcCategory = targetReq.category === 'AC';
-
-    let textMessage = `*ScrapyGo Evaluation & Pickup Order*\n\n`;
-    textMessage += `📋 *Evaluation ID:* ${targetReq.id}\n`;
-    textMessage += `🏷️ *Category:* ${isAcCategory ? 'Air Conditioner (AC)' : targetReq.category}\n`;
-    textMessage += `🏢 *Brand:* ${targetReq.brand}\n`;
-    textMessage += `📦 *Model/Type:* ${targetReq.model}\n`;
-    
-    if (isAcCategory) {
-      textMessage += `❄️ *AC Type:* ${acType}\n`;
-      if (targetReq.capacity) textMessage += `⚡ *Capacity Size:* ${targetReq.capacity}\n`;
-      if (targetReq.energyRating) textMessage += `⭐ *BEE Star Rating:* ${targetReq.energyRating}\n`;
-    } else {
-      if (targetReq.capacity) textMessage += `⚡ *Capacity/Specs:* ${targetReq.capacity}\n`;
-      if (targetReq.energyRating) textMessage += `⭐ *Rating:* ${targetReq.energyRating}\n`;
-    }
-
-    textMessage += `🛠️ *Assessed Condition:* ${targetReq.condition}\n`;
-    
-    if (targetReq.issues && targetReq.issues.length > 0) {
-      textMessage += `⚠️ *Flaws/Issues:* ${targetReq.issues.join(', ')}\n`;
-    } else {
-      textMessage += `⚠️ *Flaws/Issues:* None (Fully Functional)\n`;
-    }
-
-    textMessage += `💰 *Estimated Price Quote:* ₹${targetReq.estimatedPrice.toLocaleString('en-IN')}\n\n`;
-    textMessage += `👤 *Customer Name:* ${targetReq.customerName}\n`;
-    textMessage += `📞 *Primary Contact:* ${targetReq.phone.includes('+') ? targetReq.phone : `+91 ${targetReq.phone}`}\n`;
-    if (targetReq.secondaryPhone) {
-      textMessage += `📱 *Secondary Contact:* +91 ${targetReq.secondaryPhone}\n`;
-    }
-    if (targetReq.pickupDate) {
-      textMessage += `📅 *Preferred Date:* ${targetReq.pickupDate}\n`;
-    }
-    if (targetReq.pickupTime || targetReq.pickupSlot) {
-      textMessage += `⏰ *Preferred Time:* ${targetReq.pickupTime || targetReq.pickupSlot}\n`;
-    }
-    textMessage += `📍 *Pickup Address:* ${targetReq.customerAddress}\n\n`;
-
-    if (isAcCategory) {
-      textMessage += `📸 *AC PHOTO UPLOAD:* I am attaching photo(s) of my AC unit (Indoor unit, Outdoor compressor, or Serial label) in this chat for spot verification and payout confirmation!`;
-    } else {
-      textMessage += `Please confirm my pickup slot! I can share photos in this chat if required.`;
-    }
+    const textMessage = buildWhatsAppSummaryMessage(targetReq);
 
     // Copy user information to clipboard for effortless pasting
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -1565,6 +1597,29 @@ export default function App() {
 
             {/* Right side actions */}
             <div className="flex items-center space-x-1 sm:space-x-2">
+              {!currentUser ? (
+                <button
+                  onClick={() => {
+                    setAuthMode('login');
+                    setOtpSent(false);
+                    setOtpError('');
+                    setShowLoginModal(true);
+                  }}
+                  className="text-[11px] font-bold px-2 sm:px-2.5 py-1 rounded-md transition-all flex items-center space-x-1 text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300/80 cursor-pointer shadow-2xs"
+                  title="Customer Login / Sign Up"
+                >
+                  <LogIn className="w-3 h-3 text-emerald-600" />
+                  <span>Log In</span>
+                </button>
+              ) : (
+                <button 
+                  onClick={() => setActiveTab('dashboard')}
+                  className={`text-[11px] font-medium px-2 py-1 rounded-md transition-colors ${activeTab === 'dashboard' ? 'text-emerald-600 bg-emerald-50' : 'text-slate-600 hover:text-slate-900'}`}
+                >
+                  Dashboard
+                </button>
+              )}
+
               <button 
                 onClick={() => setActiveTab('admin-panel')}
                 className={`text-[11px] font-bold px-2 py-1 rounded-md transition-all flex items-center space-x-1 ${
@@ -1576,15 +1631,6 @@ export default function App() {
                 <ShieldCheck className="w-3 h-3 text-emerald-500" />
                 <span className="hidden sm:inline">Admin</span>
               </button>
-              
-              {currentUser && (
-                <button 
-                  onClick={() => setActiveTab('dashboard')}
-                  className={`text-[11px] font-medium px-2 py-1 rounded-md transition-colors ${activeTab === 'dashboard' ? 'text-emerald-600 bg-emerald-50' : 'text-slate-600 hover:text-slate-900'}`}
-                >
-                  Dashboard
-                </button>
-              )}
 
               <button 
                 onClick={() => setShowCityModal(true)}
@@ -3124,10 +3170,16 @@ export default function App() {
                         type="button"
                         disabled={!pickupName.trim() || !pickupPhone.trim() || !pickupAddress.trim() || pickupPhone.length !== 10 || !pickupDate}
                         onClick={() => handleCompleteBooking(pickupName, pickupPhone, pickupAddress, pickupSecondaryPhone, pickupDate, pickupTime)}
-                        className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+                        className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-600/20 flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-[0.98]"
                       >
-                        <CheckCircle className="w-5 h-5" />
-                        <span>Confirm & Schedule Doorstep Pickup</span>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="w-5 h-5" />
+                          <span>Confirm & Schedule Doorstep Pickup</span>
+                        </div>
+                        <span className="text-[10px] font-normal text-emerald-100/90 flex items-center gap-1">
+                          <MessageSquare className="w-3 h-3 text-[#25D366]" />
+                          <span>Auto-sends scheduled summary &amp; address to WhatsApp coordinator (+91 7303319913)</span>
+                        </span>
                       </button>
 
                       <button
@@ -3213,7 +3265,7 @@ export default function App() {
                             </span>
                           </div>
                           <p className="text-xs text-slate-300 leading-relaxed">
-                            Click below to open WhatsApp chat. Attach photo(s) of your appliance for instant spot verification and cash payout confirmation!
+                            Your pickup summary has been generated for our coordinator. Click below to chat, confirm slot, and attach photo(s) of your appliance for instant verification!
                           </p>
                         </div>
                       </div>
@@ -3225,21 +3277,41 @@ export default function App() {
                           className="w-full sm:flex-1 bg-[#25D366] hover:bg-[#20ba5a] text-white text-sm font-bold py-3.5 px-6 rounded-xl transition-all shadow-lg shadow-emerald-950/50 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
                         >
                           <Camera className="w-5 h-5" />
-                          <span>Upload Photos on WhatsApp (+91 7303319913)</span>
+                          <span>Open Coordinator WhatsApp (+91 7303319913)</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => {
-                            const info = `*ScrapyGo Order Details*\n\n📋 ID: ${evaluationId}\n🏷️ Appliance: ${journeyBrand?.name || ''} ${selectedCategory}\n💰 Quote: ₹${estimatedPrice.toLocaleString('en-IN')}\n👤 Customer: ${pickupName}\n📞 Phone: +91 ${pickupPhone}\n📍 Address: ${pickupAddress}`;
+                            const summaryReq: EvaluationRequest = {
+                              id: evaluationId,
+                              category: selectedCategory,
+                              brand: journeyBrand?.name || 'Generic',
+                              model: journeyModel?.name || (selectedCategory === 'AC' ? `${acType} (${capacity})` : 'Unknown Appliance'),
+                              condition: condition,
+                              capacity: selectedCategory === 'AC' ? capacity : selectedCategory === 'Refrigerator' ? fridgeCapacity : selectedCategory === 'InverterBattery' ? batteryCapacity : undefined,
+                              energyRating: selectedCategory === 'AC' ? energyRating : undefined,
+                              issues: [...selectedIssues],
+                              estimatedPrice: estimatedPrice,
+                              phone: pickupPhone || currentUser?.phone || '9876543210',
+                              secondaryPhone: pickupSecondaryPhone || undefined,
+                              pickupDate: pickupDate,
+                              pickupTime: pickupTime,
+                              pickupSlot: pickupTime,
+                              status: 'Pending Pickup',
+                              createdAt: new Date().toISOString(),
+                              customerName: pickupName || currentUser?.name || 'ScrapyGo Customer',
+                              customerAddress: pickupAddress || 'Delhi NCR Region'
+                            };
+                            const info = buildWhatsAppSummaryMessage(summaryReq);
                             if (navigator.clipboard && navigator.clipboard.writeText) {
                               navigator.clipboard.writeText(info).catch(() => {});
                             }
-                            showToast('Order info copied to clipboard!');
+                            showToast('Full scheduled summary copied to clipboard!');
                           }}
                           className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold py-3.5 px-4 rounded-xl border border-slate-700 transition-all flex items-center justify-center gap-2 cursor-pointer"
                         >
                           <Copy className="w-4 h-4 text-emerald-400" />
-                          <span>Copy Details</span>
+                          <span>Copy Full Summary</span>
                         </button>
                       </div>
                     </div>
@@ -4643,21 +4715,60 @@ export default function App() {
                   </button>
                 )}
 
-                {currentUser && (
-                  <button
-                    onClick={() => {
-                      setActiveTab('dashboard');
-                      setShowSidebar(false);
-                    }}
-                    className={`w-full text-left flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${
-                      activeTab === 'dashboard'
-                        ? 'bg-emerald-600 text-white font-bold shadow-md shadow-emerald-900/10'
-                        : 'text-slate-300 hover:text-white hover:bg-slate-800'
-                    }`}
-                  >
-                    <User className="w-4.5 h-4.5" />
-                    <span className="text-xs">My Dashboard</span>
-                  </button>
+                {/* Customer Account / Login Button */}
+                {currentUser ? (
+                  <div className="pt-2 border-t border-slate-800/80 space-y-1">
+                    <button
+                      onClick={() => {
+                        setActiveTab('dashboard');
+                        setShowSidebar(false);
+                      }}
+                      className={`w-full text-left flex items-center justify-between px-4 py-3 rounded-xl transition-all ${
+                        activeTab === 'dashboard'
+                          ? 'bg-emerald-600 text-white font-bold shadow-md shadow-emerald-900/10'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <User className="w-4.5 h-4.5 text-emerald-400" />
+                        <div>
+                          <span className="text-xs font-bold block">{currentUser.name || 'My Account'}</span>
+                          <span className="text-[10px] text-slate-400 font-mono">{currentUser.phone}</span>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-slate-500" />
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setShowSidebar(false);
+                      }}
+                      className="w-full text-left flex items-center space-x-3 px-4 py-2.5 rounded-xl text-rose-400 hover:text-rose-300 hover:bg-rose-950/30 transition-all text-xs font-medium"
+                    >
+                      <LogOut className="w-4 h-4 text-rose-400" />
+                      <span>Log Out Account</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="pt-2 border-t border-slate-800/80">
+                    <button
+                      onClick={() => {
+                        setShowSidebar(false);
+                        setAuthMode('login');
+                        setOtpSent(false);
+                        setOtpError('');
+                        setShowLoginModal(true);
+                      }}
+                      className="w-full text-left flex items-center space-x-3 px-4 py-3 rounded-xl bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-600/30 hover:text-white transition-all font-bold"
+                    >
+                      <LogIn className="w-4.5 h-4.5 text-emerald-400" />
+                      <div>
+                        <span className="text-xs font-bold block">Customer Log In / Sign Up</span>
+                        <span className="text-[10px] text-emerald-400/80 font-normal">Track orders & OTP verification</span>
+                      </div>
+                    </button>
+                  </div>
                 )}
 
               </div>
@@ -4757,6 +4868,376 @@ export default function App() {
 
                 <div className="bg-slate-50 rounded-2xl p-4 text-[10px] text-slate-400 leading-normal border border-slate-100 text-center font-mono">
                   💡 Payouts are instant via UPI/Cash upon on-site verification.
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* CUSTOMER LOGIN & SIGN UP OTP MODAL */}
+      <AnimatePresence>
+        {showLoginModal && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => {
+                  if (!isSendingOtp && !isVerifyingOtp) {
+                    setShowLoginModal(false);
+                    setOtpSent(false);
+                    setOtpError('');
+                  }
+                }}
+                className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm cursor-pointer"
+              />
+
+              {/* Modal Card */}
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0, y: 15 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 15 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+                className="relative w-full max-w-md transform overflow-hidden rounded-3xl bg-white p-6 sm:p-8 text-left align-middle shadow-2xl transition-all border border-slate-100 space-y-5 z-10"
+              >
+                {/* Close button */}
+                <button
+                  onClick={() => {
+                    setShowLoginModal(false);
+                    setOtpSent(false);
+                    setOtpError('');
+                  }}
+                  disabled={isSendingOtp || isVerifyingOtp}
+                  className="absolute right-4 top-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                  title="Close login modal"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                {/* Header with Logo */}
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center">
+                    <UserCheck className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 leading-snug">
+                      {otpSent 
+                        ? 'Verify Mobile Number' 
+                        : authMode === 'login' 
+                          ? 'Customer Log In' 
+                          : 'Create Customer Account'}
+                    </h3>
+                    <p className="text-[11px] text-slate-400 font-mono">
+                      {otpSent
+                        ? `4-digit code sent to ${countryCode} ${loginPhone}`
+                        : authMode === 'login'
+                          ? 'Enter mobile number for instant OTP sign-in'
+                          : 'Register to manage valuations & pickups'}
+                    </p>
+                  </div>
+                </div>
+
+                {!otpSent ? (
+                  <>
+                    {/* Tab Navigation: Log In vs Create Account */}
+                    <div className="flex bg-slate-100 p-1 rounded-2xl">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAuthMode('login');
+                          setOtpError('');
+                        }}
+                        className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
+                          authMode === 'login'
+                            ? 'bg-white text-slate-900 shadow-xs'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        Log In
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAuthMode('signup');
+                          setOtpError('');
+                        }}
+                        className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
+                          authMode === 'signup'
+                            ? 'bg-white text-slate-900 shadow-xs'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        Create Account
+                      </button>
+                    </div>
+
+                    {/* Login / Sign Up Form */}
+                    <form onSubmit={handleSendOtpForAuth} className="space-y-4">
+                      {/* Name input (Sign Up only) */}
+                      {authMode === 'signup' && (
+                        <div className="space-y-1">
+                          <label className="block text-xs font-bold text-slate-700">
+                            Full Name <span className="text-rose-500 font-bold">*</span>
+                          </label>
+                          <div className="relative">
+                            <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            <input
+                              type="text"
+                              value={loginName}
+                              onChange={(e) => {
+                                setLoginName(e.target.value);
+                                setOtpError('');
+                              }}
+                              placeholder="e.g. Rahul Sharma"
+                              required
+                              className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Mobile Number Input */}
+                      <div className="space-y-1">
+                        <label className="block text-xs font-bold text-slate-700">
+                          Mobile Number <span className="text-rose-500 font-bold">*</span>
+                        </label>
+                        <div className="flex gap-2">
+                          <select
+                            value={countryCode}
+                            onChange={(e) => setCountryCode(e.target.value)}
+                            className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2.5 text-xs text-slate-800 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          >
+                            <option value="+91">🇮🇳 +91</option>
+                            <option value="+1">🇺🇸 +1</option>
+                            <option value="+44">🇬🇧 +44</option>
+                            <option value="+971">🇦🇪 +971</option>
+                          </select>
+                          <div className="relative flex-1">
+                            <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            <input
+                              type="tel"
+                              maxLength={10}
+                              value={loginPhone}
+                              onChange={(e) => {
+                                const val = e.target.value.replace(/[^\d]/g, '').slice(0, 10);
+                                setLoginPhone(val);
+                                setOtpError('');
+                              }}
+                              placeholder="10-digit mobile number"
+                              required
+                              className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono font-bold tracking-wider"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Live active line validator indicator */}
+                        {loginPhone.length === 10 && (
+                          <div className="text-[10px] font-mono text-emerald-700 bg-emerald-50/80 px-2.5 py-1 rounded-lg border border-emerald-200/60 flex items-center gap-1.5 mt-1">
+                            <CheckCircle className="w-3 h-3 text-emerald-600 shrink-0" />
+                            <span>Active cellular line verified for SMS/WhatsApp OTP</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Email Input (Sign Up only) */}
+                      {authMode === 'signup' && (
+                        <div className="space-y-1">
+                          <label className="block text-xs font-bold text-slate-700">
+                            Email Address <span className="text-slate-400 font-normal">(Optional for digital receipts)</span>
+                          </label>
+                          <div className="relative">
+                            <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            <input
+                              type="email"
+                              value={signupEmail}
+                              onChange={(e) => {
+                                setSignupEmail(e.target.value);
+                                setOtpError('');
+                              }}
+                              placeholder="e.g. rahul@example.com"
+                              className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Required Terms and Conditions Checkbox */}
+                      <div className="pt-1">
+                        <label className="flex items-start gap-2.5 text-xs text-slate-600 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={termsAccepted}
+                            onChange={(e) => {
+                              setTermsAccepted(e.target.checked);
+                              setOtpError('');
+                            }}
+                            className="mt-0.5 w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 cursor-pointer accent-emerald-600"
+                            required
+                          />
+                          <span className="leading-tight text-[11px] text-slate-600">
+                            I agree to the <strong className="text-slate-900 font-bold">Terms of Service</strong> &amp; <strong className="text-slate-900 font-bold">Privacy Policy</strong>, and consent to receive scrap pickup notifications via SMS / WhatsApp. <span className="text-rose-500 font-bold">*</span>
+                          </span>
+                        </label>
+                      </div>
+
+                      {/* Error message banner */}
+                      {otpError && (
+                        <div className="bg-rose-50 border border-rose-200 text-rose-700 px-3.5 py-2 rounded-xl text-xs font-medium flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                          <span>{otpError}</span>
+                        </div>
+                      )}
+
+                      {/* Submit CTA button */}
+                      <button
+                        type="submit"
+                        disabled={isSendingOtp || loginPhone.length < 10 || !termsAccepted || (authMode === 'signup' && !loginName.trim())}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold py-3 rounded-2xl transition-all shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed text-xs"
+                      >
+                        {isSendingOtp ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Sending OTP Code...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>{authMode === 'login' ? 'Send Verification Code' : 'Register & Send OTP'}</span>
+                            <ArrowRight className="w-4 h-4" />
+                          </>
+                        )}
+                      </button>
+                    </form>
+
+                    {/* Don't Have an Account / Already Have an Account Toggle link */}
+                    <div className="pt-2 text-center border-t border-slate-100">
+                      {authMode === 'login' ? (
+                        <p className="text-xs text-slate-600">
+                          Don't Have an Account?{' '}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAuthMode('signup');
+                              setOtpError('');
+                            }}
+                            className="text-emerald-600 font-bold hover:underline cursor-pointer ml-1"
+                          >
+                            Sign Up
+                          </button>
+                        </p>
+                      ) : (
+                        <p className="text-xs text-slate-600">
+                          Already Have an Account?{' '}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAuthMode('login');
+                              setOtpError('');
+                            }}
+                            className="text-emerald-600 font-bold hover:underline cursor-pointer ml-1"
+                          >
+                            Log In
+                          </button>
+                        </p>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  /* OTP Verification Screen */
+                  <form onSubmit={handleVerifyOtpForAuth} className="space-y-4">
+                    <div className="bg-emerald-50/70 border border-emerald-100 rounded-2xl p-3.5 text-center space-y-1">
+                      <p className="text-xs text-emerald-900 font-medium">
+                        Verification code sent to <span className="font-bold">{countryCode} {loginPhone}</span>
+                      </p>
+                      {sandboxCode && (
+                        <div className="inline-flex items-center gap-1 bg-emerald-600 text-white text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full mt-1 shadow-2xs">
+                          <span>⚡ Sandbox Code:</span>
+                          <span className="tracking-widest">{sandboxCode}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold text-slate-700 text-center">
+                        Enter 4-Digit Verification Code
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={4}
+                        value={otpCode}
+                        autoFocus
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^\d]/g, '').slice(0, 4);
+                          setOtpCode(val);
+                          setOtpError('');
+                        }}
+                        placeholder="••••"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 text-center text-xl text-slate-900 font-mono font-black tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+
+                    {/* Resend OTP & Edit Number links */}
+                    <div className="flex items-center justify-between text-xs pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOtpSent(false);
+                          setOtpCode('');
+                          setOtpError('');
+                        }}
+                        className="text-slate-500 hover:text-slate-800 font-medium cursor-pointer"
+                      >
+                        Change Number
+                      </button>
+
+                      {otpTimer > 0 ? (
+                        <span className="text-slate-400 font-mono text-[11px]">
+                          Resend in {otpTimer}s
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={(e) => handleSendOtpForAuth(e)}
+                          className="text-emerald-600 font-bold hover:underline cursor-pointer"
+                        >
+                          Resend OTP
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Error message banner */}
+                    {otpError && (
+                      <div className="bg-rose-50 border border-rose-200 text-rose-700 px-3.5 py-2 rounded-xl text-xs font-medium flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                        <span>{otpError}</span>
+                      </div>
+                    )}
+
+                    {/* Verify CTA button */}
+                    <button
+                      type="submit"
+                      disabled={isVerifyingOtp || otpCode.length !== 4}
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold py-3 rounded-2xl transition-all shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed text-xs"
+                    >
+                      {isVerifyingOtp ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Verifying Code...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-4 h-4" />
+                          <span>Verify OTP &amp; Proceed</span>
+                        </>
+                      )}
+                    </button>
+                  </form>
+                )}
+
+                <div className="text-center text-[10px] text-slate-400 font-mono">
+                  🔒 Secure 256-bit SSL encrypted verification
                 </div>
               </motion.div>
             </div>
