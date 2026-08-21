@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { 
+  initializeFirestore,
   getFirestore, 
   doc, 
   getDocFromServer,
@@ -14,7 +15,8 @@ import {
   orderBy,
   QuerySnapshot,
   DocumentData,
-  Unsubscribe
+  Unsubscribe,
+  Firestore
 } from 'firebase/firestore';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import firebaseConfig from '../../firebase-applet-config.json';
@@ -23,8 +25,20 @@ import { EvaluationRequest } from '../types';
 // Initialize Firebase App instance
 export const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// Initialize Firestore with specific database ID from config
-export const db = getFirestore(app, (firebaseConfig as any).firestoreDatabaseId);
+// Initialize Firestore with specific database ID and robust connection settings for iframe/web sandbox
+const firestoreDbId = (firebaseConfig as any).firestoreDatabaseId;
+
+function createFirestoreInstance(): Firestore {
+  try {
+    return initializeFirestore(app, {
+      experimentalAutoDetectLongPolling: true,
+    }, firestoreDbId);
+  } catch {
+    return getFirestore(app, firestoreDbId);
+  }
+}
+
+export const db: Firestore = createFirestoreInstance();
 
 // Initialize Auth
 export const auth = getAuth(app);
@@ -81,7 +95,13 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 // Test connection to Firestore as mandated by skill
 export async function testFirestoreConnection(): Promise<boolean> {
   try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
+    const timeout = new Promise<never>((_, reject) => 
+      setTimeout(() => reject(new Error('Connection check timeout')), 4000)
+    );
+    await Promise.race([
+      getDocFromServer(doc(db, 'test', 'connection')),
+      timeout
+    ]);
     console.log('[Firebase] Connection verified successfully.');
     return true;
   } catch (error) {
@@ -93,8 +113,12 @@ export async function testFirestoreConnection(): Promise<boolean> {
   }
 }
 
-// Run connectivity test on import
-testFirestoreConnection().catch(() => {});
+// Run connectivity test on import with debounce
+if (typeof window !== 'undefined') {
+  setTimeout(() => {
+    testFirestoreConnection().catch(() => {});
+  }, 1000);
+}
 
 // Firestore Database Service for ScrapyGo
 export const FirestoreService = {
