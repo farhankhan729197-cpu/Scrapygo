@@ -674,7 +674,7 @@ export default function App() {
   // Dynamic Price Calculator Engine
   const calculatePrice = (model: DeviceModel, cat: CategoryType) => {
     if (cat === 'AC') {
-      let finalPrice = 5300; // default for 1.5 Ton, Good condition (+₹500)
+      let finalPrice = 7000; // Default for 1.5 Ton Copper Good
 
       // Detect capacity from capacity state or model name
       let detectedCapacity = capacity || '1.5 Ton';
@@ -693,47 +693,73 @@ export default function App() {
         }
       }
 
-      if (detectedCapacity.includes('0.8')) {
-        if (condition === 'excellent') finalPrice = 3800;
-        else if (condition === 'good') finalPrice = 3500;
-        else if (condition === 'average') finalPrice = 3100;
-        else if (condition === 'poor') finalPrice = 2700;
-        else finalPrice = 3500;
-      } else if (detectedCapacity.includes('1.0') || detectedCapacity === '1 Ton' || detectedCapacity === '1.0 Ton') {
-        if (condition === 'excellent') finalPrice = 4500;
-        else if (condition === 'good') finalPrice = 4200;
-        else if (condition === 'average') finalPrice = 4000;
-        else if (condition === 'poor') finalPrice = 3800;
-        else finalPrice = 4200;
-      } else if (detectedCapacity.includes('2.0+') || detectedCapacity.includes('2+') || detectedCapacity.includes('2.5') || detectedCapacity.includes('3.0')) {
-        if (condition === 'excellent') finalPrice = 8100;
-        else if (condition === 'good') finalPrice = 7500;
-        else if (condition === 'average') finalPrice = 6900;
-        else if (condition === 'poor') finalPrice = 6300;
-        else finalPrice = 8100;
-      } else if (detectedCapacity.includes('2.0') || detectedCapacity === '2 Ton' || detectedCapacity === '2.0 Ton') {
-        if (condition === 'excellent') finalPrice = 8100;
-        else if (condition === 'good') finalPrice = 7300;
-        else if (condition === 'average') finalPrice = 6700;
-        else if (condition === 'poor') finalPrice = 6000;
-        else finalPrice = 8100;
-      } else {
-        // Default to 1.5 Ton (+₹500 applied)
-        if (condition === 'excellent') finalPrice = 6000;
-        else if (condition === 'good') finalPrice = 5300;
-        else if (condition === 'average') finalPrice = 4800;
-        else if (condition === 'poor') finalPrice = 4500;
-        else finalPrice = 5300;
-      }
+      const isSilver = coilType === 'Silver';
 
-      // If model has a specific basePrice, use model.basePrice if higher
-      if (model && model.basePrice && model.basePrice > 0) {
-        let factor = 1.0;
-        if (condition === 'good') factor = 0.9;
-        else if (condition === 'average') factor = 0.8;
-        else if (condition === 'poor') factor = 0.7;
-        const modelCalc = Math.round(model.basePrice * factor);
-        finalPrice = Math.max(finalPrice, modelCalc);
+      if (detectedCapacity.includes('0.8')) {
+        if (!isSilver) {
+          // 0.8 Ton - Copper coil
+          if (condition === 'excellent') finalPrice = 4200;
+          else if (condition === 'good') finalPrice = 3800;
+          else if (condition === 'poor') finalPrice = 3400;
+          else if (condition === 'average') finalPrice = 3000;
+          else finalPrice = 3800;
+        } else {
+          // 0.8 Ton - Silver coil
+          if (condition === 'excellent') finalPrice = 3000;
+          else if (condition === 'good') finalPrice = 2800;
+          else if (condition === 'poor') finalPrice = 2600;
+          else if (condition === 'average') finalPrice = 2500;
+          else finalPrice = 2800;
+        }
+      } else if (detectedCapacity.includes('1.0') || detectedCapacity === '1 Ton' || detectedCapacity === '1.0 Ton') {
+        if (!isSilver) {
+          // 1 Ton - Copper coil: (excellent-5000) (Good-4500) (poor-4000) (average-3600)
+          if (condition === 'excellent') finalPrice = 5000;
+          else if (condition === 'good') finalPrice = 4500;
+          else if (condition === 'poor') finalPrice = 4000;
+          else if (condition === 'average') finalPrice = 3600;
+          else finalPrice = 4500;
+        } else {
+          // 1 Ton - Silver coil: (excellent-3500) (Good-3200) (poor-3000) (average-2900)
+          if (condition === 'excellent') finalPrice = 3500;
+          else if (condition === 'good') finalPrice = 3200;
+          else if (condition === 'poor') finalPrice = 3000;
+          else if (condition === 'average') finalPrice = 2900;
+          else finalPrice = 3200;
+        }
+      } else if (detectedCapacity.includes('2.0') || detectedCapacity.includes('2 Ton') || detectedCapacity.includes('2.0 Ton') || detectedCapacity.includes('2.0+') || detectedCapacity.includes('2+')) {
+        if (!isSilver) {
+          // 2 Ton - Copper coil: (excellent-8800) (Good-7850) (poor-7100) (average-7400)
+          if (condition === 'excellent') finalPrice = 8800;
+          else if (condition === 'good') finalPrice = 7850;
+          else if (condition === 'average') finalPrice = 7400;
+          else if (condition === 'poor') finalPrice = 7100;
+          else finalPrice = 7850;
+        } else {
+          // 2 Ton - Silver coil: (excellent-5000) (Good-4800) (poor-4200) (average-4400)
+          if (condition === 'excellent') finalPrice = 5000;
+          else if (condition === 'good') finalPrice = 4800;
+          else if (condition === 'average') finalPrice = 4400;
+          else if (condition === 'poor') finalPrice = 4200;
+          else finalPrice = 4800;
+        }
+      } else {
+        // 1.5 Ton (Default)
+        if (!isSilver) {
+          // 1.5 Ton - Copper coil: (excellent-7900) (Good-7000) (poor-6200) (average-5500)
+          if (condition === 'excellent') finalPrice = 7900;
+          else if (condition === 'good') finalPrice = 7000;
+          else if (condition === 'poor') finalPrice = 6200;
+          else if (condition === 'average') finalPrice = 5500;
+          else finalPrice = 7000;
+        } else {
+          // 1.5 Ton - Silver coil: (excellent-4000) (Good-3600) (poor-3200) (average-3000)
+          if (condition === 'excellent') finalPrice = 4000;
+          else if (condition === 'good') finalPrice = 3600;
+          else if (condition === 'poor') finalPrice = 3200;
+          else if (condition === 'average') finalPrice = 3000;
+          else finalPrice = 3600;
+        }
       }
 
       // Deduct ₹500 if 'Not cooling properly' flaw is selected
@@ -747,7 +773,7 @@ export default function App() {
         finalPrice -= otherIssues.length * 100;
       }
 
-      return Math.max(2000, finalPrice);
+      return Math.max(1500, finalPrice);
     }
 
     if (cat === 'Refrigerator') {
@@ -924,7 +950,52 @@ export default function App() {
   // Helper for initial estimated valuation before detailed device questions
   const getInitialEstimatePrice = (cat: CategoryType) => {
     if (cat === 'AC') {
-      return acType === 'AC Window' ? 6500 : 8000;
+      const isSilver = coilType === 'Silver';
+      const cap = capacity || '1.5 Ton';
+      if (cap.includes('1.0') || cap.includes('1 Ton') || cap.includes('1.0 Ton')) {
+        if (!isSilver) {
+          if (condition === 'excellent') return 5000;
+          if (condition === 'good') return 4500;
+          if (condition === 'poor') return 4000;
+          if (condition === 'average') return 3600;
+          return 4500;
+        } else {
+          if (condition === 'excellent') return 3500;
+          if (condition === 'good') return 3200;
+          if (condition === 'poor') return 3000;
+          if (condition === 'average') return 2900;
+          return 3200;
+        }
+      } else if (cap.includes('2.0') || cap.includes('2 Ton') || cap.includes('2.0 Ton') || cap.includes('2.0+') || cap.includes('2+')) {
+        if (!isSilver) {
+          if (condition === 'excellent') return 8800;
+          if (condition === 'good') return 7850;
+          if (condition === 'average') return 7400;
+          if (condition === 'poor') return 7100;
+          return 7850;
+        } else {
+          if (condition === 'excellent') return 5000;
+          if (condition === 'good') return 4800;
+          if (condition === 'average') return 4400;
+          if (condition === 'poor') return 4200;
+          return 4800;
+        }
+      } else {
+        // 1.5 Ton default
+        if (!isSilver) {
+          if (condition === 'excellent') return 7900;
+          if (condition === 'good') return 7000;
+          if (condition === 'poor') return 6200;
+          if (condition === 'average') return 5500;
+          return 7000;
+        } else {
+          if (condition === 'excellent') return 4000;
+          if (condition === 'good') return 3600;
+          if (condition === 'poor') return 3200;
+          if (condition === 'average') return 3000;
+          return 3600;
+        }
+      }
     }
     if (cat === 'Refrigerator') {
       if (fridgeType === 'Single Door') return 4500;
@@ -1262,7 +1333,7 @@ export default function App() {
     if (!modelToUse && selectedCategory === 'AC') {
       const defaultModel = MODELS.AC?.find(m => 
         acType === 'AC Split' ? m.name.toLowerCase().includes('split') : m.name.toLowerCase().includes('window')
-      ) || MODELS.AC?.[0] || { id: 'ac-default', name: `${acType} (${capacity})`, basePrice: 4500, category: 'AC' };
+      ) || MODELS.AC?.[0] || { id: 'ac-default', name: `${acType} (${capacity})`, basePrice: 9000, category: 'AC' };
       modelToUse = {
         ...defaultModel,
         name: `${journeyBrand ? journeyBrand.name : 'Voltas'} ${acType} (${capacity}, ${coilType} Coil, ${energyRating})`
@@ -2086,7 +2157,7 @@ export default function App() {
                       Average recycling scrap value returned is highly favorable depending on coil condition and gas level.
                     </p>
                     <div className="flex items-baseline space-x-2 pt-1">
-                      <span className="text-2xl sm:text-3xl font-extrabold text-emerald-400">₹8,000</span>
+                      <span className="text-2xl sm:text-3xl font-extrabold text-emerald-400">₹9,000</span>
                       <span className="text-xs text-slate-400">Avg Quote</span>
                     </div>
                     <button 
@@ -2298,7 +2369,7 @@ export default function App() {
                             className="group relative bg-white border-2 border-slate-100 hover:border-emerald-500 rounded-3xl p-6 text-center cursor-pointer transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/10 flex flex-col items-center justify-between min-h-[260px] active:scale-[0.98]"
                           >
                             <div className="w-full flex justify-between items-center">
-                              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">Estimated ~ ₹8,000</span>
+                              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">Estimated ~ Up to ₹8,800</span>
                               <span className="bg-sky-50 text-sky-700 text-[10px] font-bold px-3 py-1 rounded-full border border-sky-100">Split AC</span>
                             </div>
 
@@ -2327,7 +2398,7 @@ export default function App() {
                             className="group relative bg-white border-2 border-slate-100 hover:border-emerald-500 rounded-3xl p-6 text-center cursor-pointer transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/10 flex flex-col items-center justify-between min-h-[260px] active:scale-[0.98]"
                           >
                             <div className="w-full flex justify-between items-center">
-                              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">Estimated ~ ₹6,500</span>
+                              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">Estimated ~ Up to ₹8,800</span>
                               <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-3 py-1 rounded-full border border-indigo-100">Window AC</span>
                             </div>
 
