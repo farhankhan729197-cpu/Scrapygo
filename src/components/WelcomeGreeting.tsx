@@ -1,15 +1,61 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, X, ArrowRight, ShieldCheck, Zap, Heart } from 'lucide-react';
+import { Sparkles, X, ArrowRight, ShieldCheck, Zap, Heart, AirVent, WashingMachine, Refrigerator, ChevronRight } from 'lucide-react';
+import { CategoryType } from '../types';
 
 interface WelcomeGreetingProps {
-  onStartJourney?: () => void;
+  onStartJourney?: (category?: CategoryType) => void;
+  onSelectCategory?: (category: CategoryType) => void;
 }
 
-export const WelcomeGreeting: React.FC<WelcomeGreetingProps> = ({ onStartJourney }) => {
+interface QuickCategoryItem {
+  id: CategoryType;
+  title: string;
+  shortDesc: string;
+  icon: React.ComponentType<{ className?: string }>;
+  image: string;
+  tag: string;
+  accentBg: string;
+  borderColor: string;
+}
+
+const QUICK_CATEGORIES: QuickCategoryItem[] = [
+  {
+    id: 'AC',
+    title: 'AC',
+    shortDesc: 'Split & Window',
+    icon: AirVent,
+    image: 'https://i.pinimg.com/1200x/44/7f/84/447f84d557a05888931325a7cc2c9ec4.jpg',
+    tag: 'Top Value',
+    accentBg: 'bg-sky-50 text-sky-700',
+    borderColor: 'hover:border-sky-500 hover:bg-sky-50/30'
+  },
+  {
+    id: 'WashingMachine',
+    title: 'Washing Machine',
+    shortDesc: 'Front & Top Load',
+    icon: WashingMachine,
+    image: 'https://i.pinimg.com/1200x/ce/ef/9f/ceef9ffbcf7cbbfbfe4a2d21eba9e88a.jpg',
+    tag: 'Popular',
+    accentBg: 'bg-pink-50 text-pink-700',
+    borderColor: 'hover:border-pink-500 hover:bg-pink-50/30'
+  },
+  {
+    id: 'Refrigerator',
+    title: 'Refrigerator',
+    shortDesc: 'Single & Double Door',
+    icon: Refrigerator,
+    image: 'https://i.pinimg.com/736x/a9/fd/48/a9fd48857f02f519c4c8133796e1993a.jpg',
+    tag: 'High Scrap',
+    accentBg: 'bg-teal-50 text-teal-700',
+    borderColor: 'hover:border-teal-500 hover:bg-teal-50/30'
+  }
+];
+
+export const WelcomeGreeting: React.FC<WelcomeGreetingProps> = ({ onStartJourney, onSelectCategory }) => {
   const [isVisible, setIsVisible] = useState(true);
 
-  // Auto-dismiss after 6 seconds if user doesn't interact, but allow instant close
+  // Auto-dismiss after 6.5 seconds if user doesn't interact, but allow instant close
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(false);
@@ -21,10 +67,19 @@ export const WelcomeGreeting: React.FC<WelcomeGreetingProps> = ({ onStartJourney
     setIsVisible(false);
   };
 
+  const handleCategoryClick = (category: CategoryType) => {
+    setIsVisible(false);
+    if (onSelectCategory) {
+      onSelectCategory(category);
+    } else if (onStartJourney) {
+      onStartJourney(category);
+    }
+  };
+
   const handleStart = () => {
     setIsVisible(false);
     if (onStartJourney) {
-      onStartJourney();
+      onStartJourney('AC');
     }
   };
 
@@ -289,9 +344,9 @@ export const WelcomeGreeting: React.FC<WelcomeGreetingProps> = ({ onStartJourney
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15, duration: 0.4 }}
-              className="space-y-2 mt-2"
+              className="space-y-1.5 mt-1.5"
             >
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100/90 border border-emerald-200 text-emerald-800 text-xs font-bold uppercase tracking-wider shadow-sm">
+              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-emerald-100/90 border border-emerald-200 text-emerald-800 text-[11px] font-bold uppercase tracking-wider shadow-xs">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 Namaste & Welcome!
               </div>
@@ -300,33 +355,97 @@ export const WelcomeGreeting: React.FC<WelcomeGreetingProps> = ({ onStartJourney
                 Welcome to <span className="text-emerald-600">ScrapyGo</span>
               </h2>
 
-              <p className="text-xs sm:text-sm text-slate-600 max-w-sm mx-auto leading-relaxed">
-                India’s trusted doorstep recycling & scrap valuation platform. Get guaranteed instant quotes and doorstep pickup for your old appliances!
+              <p className="text-xs sm:text-[13px] text-slate-600 max-w-sm mx-auto leading-snug">
+                India’s trusted doorstep recycling & scrap valuation platform. Click a category below to evaluate instant scrap cash value!
               </p>
             </motion.div>
 
-            {/* Key Value Badges */}
+            {/* Clickable Quick Categories: AC, Washing Machine, Refrigerator */}
             <motion.div
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25, duration: 0.4 }}
-              className="grid grid-cols-3 gap-2 my-4 pt-1"
+              className="my-3 text-left"
             >
-              <div className="bg-white border border-emerald-100 rounded-2xl p-2.5 shadow-sm text-center">
-                <Zap className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
-                <span className="block text-[11px] font-bold text-slate-800">60-Sec Quote</span>
-                <span className="text-[9.5px] text-slate-400">Accurate AI pricing</span>
+              <div className="flex items-center justify-between px-1 mb-2">
+                <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-emerald-500" />
+                  Select Category to Sell:
+                </span>
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full border border-emerald-200/60">
+                  Instant Quote
+                </span>
               </div>
-              <div className="bg-white border border-emerald-100 rounded-2xl p-2.5 shadow-sm text-center">
-                <Sparkles className="w-4 h-4 text-teal-600 mx-auto mb-1" />
-                <span className="block text-[11px] font-bold text-slate-800">Doorstep Pickup</span>
-                <span className="text-[9.5px] text-slate-400">Zero physical effort</span>
+
+              <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
+                {QUICK_CATEGORIES.map((cat) => {
+                  const IconComponent = cat.icon;
+                  return (
+                    <motion.button
+                      key={cat.id}
+                      type="button"
+                      whileHover={{ scale: 1.03, y: -2 }}
+                      whileTap={{ scale: 0.96 }}
+                      onClick={() => handleCategoryClick(cat.id)}
+                      className={`relative bg-white border border-slate-200/90 ${cat.borderColor} rounded-2xl p-2 sm:p-2.5 flex flex-col items-center justify-between text-center transition-all shadow-xs hover:shadow-md cursor-pointer group`}
+                    >
+                      {/* Top Tag */}
+                      <span className="absolute -top-1.5 right-2 text-[8px] font-extrabold px-1.5 py-0.5 rounded-full bg-slate-900 text-white shadow-xs">
+                        {cat.tag}
+                      </span>
+
+                      {/* Icon & Thumbnail */}
+                      <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl overflow-hidden mb-1.5 border border-slate-100 shadow-xs group-hover:scale-105 transition-transform">
+                        <img
+                          src={cat.image}
+                          alt={cat.title}
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-transparent transition-colors" />
+                        <div className={`absolute bottom-0.5 right-0.5 p-1 rounded-md ${cat.accentBg} shadow-xs`}>
+                          <IconComponent className="w-3 h-3" />
+                        </div>
+                      </div>
+
+                      {/* Title & Description */}
+                      <div className="w-full">
+                        <h4 className="text-[11px] sm:text-xs font-bold text-slate-800 group-hover:text-emerald-700 leading-tight truncate">
+                          {cat.title}
+                        </h4>
+                        <span className="text-[9px] text-slate-400 block truncate mt-0.5">
+                          {cat.shortDesc}
+                        </span>
+                      </div>
+
+                      <div className="mt-1.5 w-full pt-1 border-t border-slate-100 flex items-center justify-center gap-0.5 text-[9.5px] font-bold text-emerald-600 group-hover:text-emerald-700">
+                        <span>Sell {cat.id === 'WashingMachine' ? 'WM' : cat.title}</span>
+                        <ChevronRight className="w-2.5 h-2.5 transition-transform group-hover:translate-x-0.5" />
+                      </div>
+                    </motion.button>
+                  );
+                })}
               </div>
-              <div className="bg-white border border-emerald-100 rounded-2xl p-2.5 shadow-sm text-center">
-                <ShieldCheck className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
-                <span className="block text-[11px] font-bold text-slate-800">Instant Cash</span>
-                <span className="text-[9.5px] text-slate-400">UPI / Cash on spot</span>
-              </div>
+            </motion.div>
+
+            {/* Trust Indicator Pills */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.4 }}
+              className="flex items-center justify-center flex-wrap gap-x-3 gap-y-1 my-2 text-[10.5px] text-slate-500"
+            >
+              <span className="flex items-center gap-1 font-semibold text-slate-600">
+                <Zap className="w-3 h-3 text-amber-500" /> 60-Sec AI Quote
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1 font-semibold text-slate-600">
+                <ShieldCheck className="w-3 h-3 text-emerald-600" /> Doorstep Pickup
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1 font-semibold text-slate-600">
+                <Sparkles className="w-3 h-3 text-teal-600" /> Instant Cash
+              </span>
             </motion.div>
 
             {/* Action Buttons */}
@@ -334,19 +453,19 @@ export const WelcomeGreeting: React.FC<WelcomeGreetingProps> = ({ onStartJourney
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.35, duration: 0.4 }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-2"
+              className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-1.5"
             >
               <button
                 onClick={handleStart}
-                className="w-full sm:w-auto flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm px-6 py-3.5 rounded-2xl shadow-lg shadow-emerald-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                className="w-full sm:w-auto flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm px-5 py-3 rounded-2xl shadow-lg shadow-emerald-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
               >
-                <span>Sell Old Appliance & Scrap</span>
+                <span>View All Appliances & Scrap</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
               <button
                 onClick={handleDismiss}
-                className="w-full sm:w-auto px-5 py-3.5 rounded-2xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs font-bold transition-all cursor-pointer"
+                className="w-full sm:w-auto px-4 py-3 rounded-2xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs font-bold transition-all cursor-pointer"
               >
                 Explore Website
               </button>

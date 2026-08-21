@@ -5521,7 +5521,10 @@ export default function App() {
       </AnimatePresence>
 
       {/* WELCOME ENTRY ANIMATION */}
-      <WelcomeGreeting onStartJourney={() => startJourney('AC')} />
+      <WelcomeGreeting 
+        onStartJourney={(category) => startJourney(category || 'AC')}
+        onSelectCategory={(category) => startJourney(category)}
+      />
 
       {/* TOAST BANNER */}
       <AnimatePresence>
