@@ -32,6 +32,8 @@ export interface EvaluationRequest {
   condition: 'excellent' | 'good' | 'average' | 'poor' | string;
   capacity?: string; // For ACs & Fridges (e.g. 1 Ton, 1.5 Ton, 250L, 350L)
   energyRating?: string; // For ACs & Fridges (e.g. 3 Star, 5 Star)
+  coilType?: 'Copper' | 'Silver' | string; // For ACs (Copper or Silver)
+  stabilizerOption?: string; // For ACs (e.g. Non-stabilizer Inverter, With Stabilizer, Without Stabilizer)
   issues: string[];
   estimatedPrice: number;
   phone: string;
@@ -110,35 +112,35 @@ export const BRANDS: Record<CategoryType, Brand[]> = {
 
 export const MODELS: Record<CategoryType, DeviceModel[]> = {
   AC: [
-    { id: 'ac-m1', brandId: 'ac-daikin', name: 'Daikin 1.5 Ton Split AC', basePrice: 5500 },
+    { id: 'ac-m1', brandId: 'ac-daikin', name: 'Daikin 1.5 Ton Split AC', basePrice: 6000 },
     { id: 'ac-m2', brandId: 'ac-daikin', name: 'Daikin 1.0 Ton Split AC', basePrice: 4500 },
-    { id: 'ac-m3', brandId: 'ac-daikin', name: 'Daikin 2.0 Ton Inverter AC', basePrice: 7500 },
-    { id: 'ac-m4', brandId: 'ac-voltas', name: 'Voltas 1.5 Ton 3 Star Split AC', basePrice: 8000 },
-    { id: 'ac-m5', brandId: 'ac-voltas', name: 'Voltas 1.5 Ton 5 Star Split AC', basePrice: 5500 },
+    { id: 'ac-m3', brandId: 'ac-daikin', name: 'Daikin 2.0 Ton Inverter AC', basePrice: 8000 },
+    { id: 'ac-m4', brandId: 'ac-voltas', name: 'Voltas 1.5 Ton 3 Star Split AC', basePrice: 8500 },
+    { id: 'ac-m5', brandId: 'ac-voltas', name: 'Voltas 1.5 Ton 5 Star Split AC', basePrice: 6000 },
     { id: 'ac-m6', brandId: 'ac-voltas', name: 'Voltas 1.0 Ton Window AC', basePrice: 4500 },
-    { id: 'ac-m7', brandId: 'ac-lg', name: 'LG Dual Inverter 1.5 Ton AC', basePrice: 5500 },
-    { id: 'ac-m8', brandId: 'ac-lg', name: 'LG Dual Inverter 2.0 Ton AC', basePrice: 7500 },
-    { id: 'ac-m9', brandId: 'ac-samsung', name: 'Samsung WindFree 1.5 Ton AC', basePrice: 5500 },
-    { id: 'ac-m10', brandId: 'ac-blue-star', name: 'Blue Star 1.5 Ton Split AC', basePrice: 5500 },
-    { id: 'ac-m11', brandId: 'ac-ogneral', name: 'O General 1.5 Ton Hyper Tropical AC', basePrice: 5500 },
-    { id: 'ac-m12', brandId: 'ac-godrej', name: 'Godrej 5 Star 1.5 Ton Split AC', basePrice: 5200 },
+    { id: 'ac-m7', brandId: 'ac-lg', name: 'LG Dual Inverter 1.5 Ton AC', basePrice: 6000 },
+    { id: 'ac-m8', brandId: 'ac-lg', name: 'LG Dual Inverter 2.0 Ton AC', basePrice: 8000 },
+    { id: 'ac-m9', brandId: 'ac-samsung', name: 'Samsung WindFree 1.5 Ton AC', basePrice: 6000 },
+    { id: 'ac-m10', brandId: 'ac-blue-star', name: 'Blue Star 1.5 Ton Split AC', basePrice: 6000 },
+    { id: 'ac-m11', brandId: 'ac-ogneral', name: 'O General 1.5 Ton Hyper Tropical AC', basePrice: 6000 },
+    { id: 'ac-m12', brandId: 'ac-godrej', name: 'Godrej 5 Star 1.5 Ton Split AC', basePrice: 5700 },
     { id: 'ac-m13', brandId: 'ac-godrej', name: 'Godrej 3 Star 1.0 Ton Split AC', basePrice: 4200 },
-    { id: 'ac-m14', brandId: 'ac-panasonic', name: 'Panasonic 1.5 Ton Smart Inverter AC', basePrice: 5600 },
-    { id: 'ac-m15', brandId: 'ac-panasonic', name: 'Panasonic 2.0 Ton Shield Series AC', basePrice: 7600 },
-    { id: 'ac-m16', brandId: 'ac-hitachi', name: 'Hitachi 1.5 Ton Yoshi Split AC', basePrice: 5700 },
+    { id: 'ac-m14', brandId: 'ac-panasonic', name: 'Panasonic 1.5 Ton Smart Inverter AC', basePrice: 6100 },
+    { id: 'ac-m15', brandId: 'ac-panasonic', name: 'Panasonic 2.0 Ton Shield Series AC', basePrice: 8100 },
+    { id: 'ac-m16', brandId: 'ac-hitachi', name: 'Hitachi 1.5 Ton Yoshi Split AC', basePrice: 6200 },
     { id: 'ac-m17', brandId: 'ac-hitachi', name: 'Hitachi 1.0 Ton Shizuka Window AC', basePrice: 4400 },
-    { id: 'ac-m18', brandId: 'ac-carrier', name: 'Carrier 1.5 Ton Octa Inverter AC', basePrice: 5400 },
-    { id: 'ac-m19', brandId: 'ac-carrier', name: 'Carrier 1.5 Ton 3 Star Split AC', basePrice: 5200 },
-    { id: 'ac-m20', brandId: 'ac-lloyd', name: 'Lloyd 1.5 Ton 5 Star Inverter Split AC', basePrice: 5300 },
+    { id: 'ac-m18', brandId: 'ac-carrier', name: 'Carrier 1.5 Ton Octa Inverter AC', basePrice: 5900 },
+    { id: 'ac-m19', brandId: 'ac-carrier', name: 'Carrier 1.5 Ton 3 Star Split AC', basePrice: 5700 },
+    { id: 'ac-m20', brandId: 'ac-lloyd', name: 'Lloyd 1.5 Ton 5 Star Inverter Split AC', basePrice: 5800 },
     { id: 'ac-m21', brandId: 'ac-lloyd', name: 'Lloyd 1.0 Ton 3 Star Split AC', basePrice: 4200 },
-    { id: 'ac-m22', brandId: 'ac-haier', name: 'Haier 1.5 Ton 5 Star Kinouchi Inverter AC', basePrice: 5400 },
+    { id: 'ac-m22', brandId: 'ac-haier', name: 'Haier 1.5 Ton 5 Star Kinouchi Inverter AC', basePrice: 5900 },
     { id: 'ac-m23', brandId: 'ac-haier', name: 'Haier 1.0 Ton Inverter Split AC', basePrice: 4300 },
-    { id: 'ac-m24', brandId: 'ac-whirlpool', name: 'Whirlpool 1.5 Ton Magicool Inverter Split AC', basePrice: 5200 },
+    { id: 'ac-m24', brandId: 'ac-whirlpool', name: 'Whirlpool 1.5 Ton Magicool Inverter Split AC', basePrice: 5700 },
     { id: 'ac-m25', brandId: 'ac-whirlpool', name: 'Whirlpool 1.0 Ton 3 Star Split AC', basePrice: 4100 },
-    { id: 'ac-m26', brandId: 'ac-mitsubishi', name: 'Mitsubishi Electric 1.5 Ton 5 Star Inverter AC', basePrice: 7800 },
-    { id: 'ac-m27', brandId: 'ac-mitsubishi', name: 'Mitsubishi Electric 2.0 Ton Split AC', basePrice: 9500 },
-    { id: 'ac-m28', brandId: 'ac-cruise', name: 'Cruise 1.5 Ton 3 Star Inverter Split AC', basePrice: 4900 },
-    { id: 'ac-m29', brandId: 'ac-cruise', name: 'Cruise 1.5 Ton 5 Star Inverter AC', basePrice: 5300 },
+    { id: 'ac-m26', brandId: 'ac-mitsubishi', name: 'Mitsubishi Electric 1.5 Ton 5 Star Inverter AC', basePrice: 8300 },
+    { id: 'ac-m27', brandId: 'ac-mitsubishi', name: 'Mitsubishi Electric 2.0 Ton Split AC', basePrice: 10000 },
+    { id: 'ac-m28', brandId: 'ac-cruise', name: 'Cruise 1.5 Ton 3 Star Inverter Split AC', basePrice: 5400 },
+    { id: 'ac-m29', brandId: 'ac-cruise', name: 'Cruise 1.5 Ton 5 Star Inverter AC', basePrice: 5800 },
   ],
   Refrigerator: [
     { id: 'ref-m1', brandId: 'ref-samsung', name: 'Samsung 253L Double Door Refrigerator', basePrice: 1700 },

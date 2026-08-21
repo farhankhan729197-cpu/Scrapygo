@@ -962,6 +962,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast, curre
                         <span className="font-bold text-slate-800">{item.energyRating}</span>
                       </div>
                     )}
+                    {item.coilType && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500">Coil Type:</span>
+                        <span className="font-bold text-slate-800">{item.coilType} Coil</span>
+                      </div>
+                    )}
+                    {item.stabilizerOption && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500">Stabilizer:</span>
+                        <span className="font-bold text-slate-800">{item.stabilizerOption}</span>
+                      </div>
+                    )}
                     <div className="pt-1 flex items-center justify-between border-t border-slate-200">
                       <span className="font-bold text-slate-700">Estimated Cash:</span>
                       <span className="font-black text-emerald-600 text-sm font-mono">₹{item.estimatedPrice}</span>

@@ -525,6 +525,8 @@ export default function App() {
   const [condition, setCondition] = useState<'excellent' | 'good' | 'average' | 'poor'>('good');
   const [capacity, setCapacity] = useState('1.5 Ton');
   const [energyRating, setEnergyRating] = useState('3 Star');
+  const [coilType, setCoilType] = useState<'Copper' | 'Silver'>('Copper');
+  const [stabilizerOption, setStabilizerOption] = useState<string>('Non-stabilizer Inverter');
   const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
   
   // Custom specifications based on active category
@@ -671,7 +673,7 @@ export default function App() {
   // Dynamic Price Calculator Engine
   const calculatePrice = (model: DeviceModel, cat: CategoryType) => {
     if (cat === 'AC') {
-      let finalPrice = 4800; // default for 1.5 Ton, Good condition
+      let finalPrice = 5300; // default for 1.5 Ton, Good condition (+₹500)
 
       // Detect capacity from capacity state or model name
       let detectedCapacity = capacity || '1.5 Ton';
@@ -703,24 +705,24 @@ export default function App() {
         else if (condition === 'poor') finalPrice = 3800;
         else finalPrice = 4200;
       } else if (detectedCapacity.includes('2.0+') || detectedCapacity.includes('2+') || detectedCapacity.includes('2.5') || detectedCapacity.includes('3.0')) {
-        if (condition === 'excellent') finalPrice = 7600;
-        else if (condition === 'good') finalPrice = 7000;
-        else if (condition === 'average') finalPrice = 6400;
-        else if (condition === 'poor') finalPrice = 5800;
-        else finalPrice = 7600;
+        if (condition === 'excellent') finalPrice = 8100;
+        else if (condition === 'good') finalPrice = 7500;
+        else if (condition === 'average') finalPrice = 6900;
+        else if (condition === 'poor') finalPrice = 6300;
+        else finalPrice = 8100;
       } else if (detectedCapacity.includes('2.0') || detectedCapacity === '2 Ton' || detectedCapacity === '2.0 Ton') {
-        if (condition === 'excellent') finalPrice = 7600;
-        else if (condition === 'good') finalPrice = 6800;
-        else if (condition === 'average') finalPrice = 6200;
-        else if (condition === 'poor') finalPrice = 5500;
-        else finalPrice = 7600;
+        if (condition === 'excellent') finalPrice = 8100;
+        else if (condition === 'good') finalPrice = 7300;
+        else if (condition === 'average') finalPrice = 6700;
+        else if (condition === 'poor') finalPrice = 6000;
+        else finalPrice = 8100;
       } else {
-        // Default to 1.5 Ton
-        if (condition === 'excellent') finalPrice = 5500;
-        else if (condition === 'good') finalPrice = 4800;
-        else if (condition === 'average') finalPrice = 4300;
-        else if (condition === 'poor') finalPrice = 4000;
-        else finalPrice = 4800;
+        // Default to 1.5 Ton (+₹500 applied)
+        if (condition === 'excellent') finalPrice = 6000;
+        else if (condition === 'good') finalPrice = 5300;
+        else if (condition === 'average') finalPrice = 4800;
+        else if (condition === 'poor') finalPrice = 4500;
+        else finalPrice = 5300;
       }
 
       // If model has a specific basePrice, use model.basePrice if higher
@@ -965,6 +967,8 @@ export default function App() {
     setBrandSearchQuery('');
     setSelectedIssues([]);
     setCondition('good');
+    setCoilType('Copper');
+    setStabilizerOption('Non-stabilizer Inverter');
     setJourneyStep(1); // Step 1: Category & Type Selection
     setShowPickupForm(false);
     setPickupAddress('');
@@ -1260,7 +1264,7 @@ export default function App() {
       ) || MODELS.AC?.[0] || { id: 'ac-default', name: `${acType} (${capacity})`, basePrice: 4500, category: 'AC' };
       modelToUse = {
         ...defaultModel,
-        name: `${journeyBrand ? journeyBrand.name : 'Voltas'} ${acType} (${capacity}, ${energyRating})`
+        name: `${journeyBrand ? journeyBrand.name : 'Voltas'} ${acType} (${capacity}, ${coilType} Coil, ${energyRating})`
       };
       setJourneyModel(modelToUse);
     } else if (!modelToUse && selectedCategory && MODELS[selectedCategory] && MODELS[selectedCategory].length > 0) {
@@ -1306,6 +1310,12 @@ export default function App() {
     }
     if (req.energyRating) {
       msg += `⭐ *Energy Star Rating:* ${req.energyRating}\n`;
+    }
+    if (req.coilType) {
+      msg += `🌀 *Condenser Coil:* ${req.coilType} Coil\n`;
+    }
+    if (req.stabilizerOption) {
+      msg += `🔌 *Stabilizer / Inverter:* ${req.stabilizerOption}\n`;
     }
     msg += `🛠️ *Assessed Condition:* ${req.condition}\n`;
     if (req.issues && req.issues.length > 0) {
@@ -1354,6 +1364,8 @@ export default function App() {
       condition: condition,
       capacity: selectedCategory === 'AC' ? capacity : selectedCategory === 'Refrigerator' ? fridgeCapacity : selectedCategory === 'InverterBattery' ? batteryCapacity : undefined,
       energyRating: selectedCategory === 'AC' ? energyRating : undefined,
+      coilType: selectedCategory === 'AC' ? coilType : undefined,
+      stabilizerOption: selectedCategory === 'AC' ? stabilizerOption : undefined,
       issues: [...selectedIssues],
       estimatedPrice: estimatedPrice || (journeyModel ? calculatePrice(journeyModel, selectedCategory) : 4500),
       phone: cleanPhone,
@@ -1443,6 +1455,8 @@ export default function App() {
       condition: condition,
       capacity: selectedCategory === 'AC' ? capacity : selectedCategory === 'Refrigerator' ? fridgeCapacity : selectedCategory === 'InverterBattery' ? batteryCapacity : undefined,
       energyRating: selectedCategory === 'AC' ? energyRating : undefined,
+      coilType: selectedCategory === 'AC' ? coilType : undefined,
+      stabilizerOption: selectedCategory === 'AC' ? stabilizerOption : undefined,
       issues: [...selectedIssues],
       estimatedPrice: estimatedPrice,
       phone: currentUser.phone,
@@ -1490,6 +1504,8 @@ export default function App() {
       condition: condition,
       capacity: selectedCategory === 'AC' ? capacity : selectedCategory === 'Refrigerator' ? fridgeCapacity : selectedCategory === 'InverterBattery' ? batteryCapacity : '',
       energyRating: selectedCategory === 'AC' ? energyRating : '',
+      coilType: selectedCategory === 'AC' ? coilType : undefined,
+      stabilizerOption: selectedCategory === 'AC' ? stabilizerOption : undefined,
       issues: selectedIssues,
       estimatedPrice: estimatedPrice || (journeyModel ? calculatePrice(journeyModel, selectedCategory) : 4500),
       phone: pickupPhone || currentUser?.phone || '9876543210',
@@ -2722,6 +2738,60 @@ export default function App() {
                               </div>
                             </div>
 
+                            {/* Condenser Coil Type */}
+                            <div>
+                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
+                                Condenser Coil Type
+                              </label>
+                              <div className="grid grid-cols-2 gap-2.5">
+                                {[
+                                  { id: 'Copper', label: 'Copper Coil', sub: 'High Durability & Fast Heat Transfer' },
+                                  { id: 'Silver', label: 'Silver Coil', sub: 'Corrosion Resistant & Standard' }
+                                ].map((coil) => (
+                                  <button
+                                    type="button"
+                                    key={coil.id}
+                                    onClick={() => setCoilType(coil.id as 'Copper' | 'Silver')}
+                                    className={`p-3 rounded-xl border text-left transition-all ${
+                                      coilType === coil.id
+                                        ? 'bg-slate-900 border-slate-900 text-white shadow-md'
+                                        : 'bg-slate-50 border-slate-100 text-slate-700 hover:bg-slate-100'
+                                    }`}
+                                  >
+                                    <strong className="block text-xs font-bold">{coil.label}</strong>
+                                    <span className={`block text-[10px] mt-0.5 ${coilType === coil.id ? 'text-slate-300' : 'text-slate-400'}`}>{coil.sub}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Stabilizer & Inverter Option */}
+                            <div>
+                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
+                                Voltage Stabilizer & Inverter Option
+                              </label>
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                {[
+                                  'Non-stabilizer Inverter',
+                                  'With Stabilizer',
+                                  'Without Stabilizer'
+                                ].map((stab) => (
+                                  <button
+                                    type="button"
+                                    key={stab}
+                                    onClick={() => setStabilizerOption(stab)}
+                                    className={`py-2 px-2 text-center text-xs rounded-xl border font-semibold transition-all ${
+                                      stabilizerOption === stab
+                                        ? 'bg-slate-900 border-slate-900 text-white shadow-sm'
+                                        : 'bg-slate-50 border-slate-100 hover:bg-slate-100 text-slate-700'
+                                    }`}
+                                  >
+                                    {stab}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
                             {/* BEE Energy Efficiency Star Rating */}
                             <div>
                               <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
@@ -3347,6 +3417,8 @@ export default function App() {
                               condition: condition,
                               capacity: selectedCategory === 'AC' ? capacity : selectedCategory === 'Refrigerator' ? fridgeCapacity : selectedCategory === 'InverterBattery' ? batteryCapacity : undefined,
                               energyRating: selectedCategory === 'AC' ? energyRating : undefined,
+                              coilType: selectedCategory === 'AC' ? coilType : undefined,
+                              stabilizerOption: selectedCategory === 'AC' ? stabilizerOption : undefined,
                               issues: [...selectedIssues],
                               estimatedPrice: estimatedPrice,
                               phone: pickupPhone || currentUser?.phone || '9876543210',
@@ -3622,6 +3694,16 @@ export default function App() {
                           {req.energyRating && (
                             <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded">
                               Rating: {req.energyRating}
+                            </span>
+                          )}
+                          {req.coilType && (
+                            <span className="bg-amber-50 text-amber-800 px-2 py-0.5 rounded">
+                              Coil: {req.coilType}
+                            </span>
+                          )}
+                          {req.stabilizerOption && (
+                            <span className="bg-blue-50 text-blue-800 px-2 py-0.5 rounded">
+                              {req.stabilizerOption}
                             </span>
                           )}
                         </div>
