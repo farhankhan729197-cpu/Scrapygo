@@ -74,6 +74,7 @@ import {
   Brand 
 } from './types';
 import { AdminDashboard } from './components/AdminDashboard';
+import { WelcomeGreeting } from './components/WelcomeGreeting';
 import { FirestoreService } from './lib/firebase';
 
 const ADMIN_MOBILE_NUMBER = '7303319913';
@@ -5518,6 +5519,9 @@ export default function App() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* WELCOME ENTRY ANIMATION */}
+      <WelcomeGreeting onStartJourney={() => startJourney('AC')} />
 
       {/* TOAST BANNER */}
       <AnimatePresence>
