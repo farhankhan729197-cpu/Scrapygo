@@ -2377,7 +2377,7 @@ export default function App() {
 
                             <div className="relative w-28 h-28 my-2 rounded-2xl bg-sky-50 p-2 flex items-center justify-center border border-sky-100 shadow-sm group-hover:scale-105 group-hover:bg-emerald-50 transition-all duration-300 overflow-hidden">
                               <img 
-                                src="https://i.pinimg.com/1200x/44/7f/84/447f84d557a05888931325a7cc2c9ec4.jpg" 
+                                src="https://i.pinimg.com/736x/bf/38/1c/bf381cd522515b2daf22d78503969132.jpg" 
                                 alt="AC Split Icon" 
                                 className="w-full h-full object-cover rounded-xl" 
                                 referrerPolicy="no-referrer" 
