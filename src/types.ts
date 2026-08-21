@@ -33,7 +33,7 @@ export interface EvaluationRequest {
   capacity?: string; // For ACs & Fridges (e.g. 1 Ton, 1.5 Ton, 250L, 350L)
   energyRating?: string; // For ACs & Fridges (e.g. 3 Star, 5 Star)
   coilType?: 'Copper' | 'Silver' | string; // For ACs (Copper or Silver)
-  stabilizerOption?: string; // For ACs (e.g. Non-stabilizer Inverter, With Stabilizer, Without Stabilizer)
+  stabilizerOption?: string; // For ACs (e.g. Inverter model, Non-inverter model)
   issues: string[];
   estimatedPrice: number;
   phone: string;

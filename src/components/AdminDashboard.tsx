@@ -970,7 +970,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ showToast, curre
                     )}
                     {item.stabilizerOption && (
                       <div className="flex items-center justify-between">
-                        <span className="text-slate-500">Stabilizer:</span>
+                        <span className="text-slate-500">Model:</span>
                         <span className="font-bold text-slate-800">{item.stabilizerOption}</span>
                       </div>
                     )}

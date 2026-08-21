@@ -527,7 +527,7 @@ export default function App() {
   const [capacity, setCapacity] = useState('1.5 Ton');
   const [energyRating, setEnergyRating] = useState('3 Star');
   const [coilType, setCoilType] = useState<'Copper' | 'Silver'>('Copper');
-  const [stabilizerOption, setStabilizerOption] = useState<string>('Non-stabilizer Inverter');
+  const [stabilizerOption, setStabilizerOption] = useState<string>('Inverter model');
   const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
   
   // Custom specifications based on active category
@@ -1040,7 +1040,7 @@ export default function App() {
     setSelectedIssues([]);
     setCondition('good');
     setCoilType('Copper');
-    setStabilizerOption('Non-stabilizer Inverter');
+    setStabilizerOption('Inverter model');
     setJourneyStep(1); // Step 1: Category & Type Selection
     setShowPickupForm(false);
     setPickupAddress('');
@@ -1387,7 +1387,7 @@ export default function App() {
       msg += `🌀 *Condenser Coil:* ${req.coilType} Coil\n`;
     }
     if (req.stabilizerOption) {
-      msg += `🔌 *Stabilizer / Inverter:* ${req.stabilizerOption}\n`;
+      msg += `❄️ *AC Model:* ${req.stabilizerOption}\n`;
     }
     msg += `🛠️ *Assessed Condition:* ${req.condition}\n`;
     if (req.issues && req.issues.length > 0) {
@@ -2644,7 +2644,9 @@ export default function App() {
                       <div className="my-2">
                         <span className="block text-xs text-slate-300 font-medium">Estimated Handover Price</span>
                         <div className="text-5xl font-black font-display text-white mt-1">
-                          ₹{getInitialEstimatePrice(selectedCategory).toLocaleString('en-IN')}
+                          {selectedCategory === 'AC' 
+                            ? 'Up to ₹10,000' 
+                            : `₹${getInitialEstimatePrice(selectedCategory).toLocaleString('en-IN')}`}
                         </div>
                       </div>
 
@@ -2837,28 +2839,27 @@ export default function App() {
                               </div>
                             </div>
 
-                            {/* Stabilizer & Inverter Option */}
+                            {/* Model: Inverter model & Non-inverter model */}
                             <div>
                               <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
-                                Voltage Stabilizer & Inverter Option
+                                Model
                               </label>
-                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                              <div className="grid grid-cols-2 gap-2">
                                 {[
-                                  'Non-stabilizer Inverter',
-                                  'With Stabilizer',
-                                  'Without Stabilizer'
-                                ].map((stab) => (
+                                  'Inverter model',
+                                  'Non-inverter model'
+                                ].map((mOption) => (
                                   <button
                                     type="button"
-                                    key={stab}
-                                    onClick={() => setStabilizerOption(stab)}
-                                    className={`py-2 px-2 text-center text-xs rounded-xl border font-semibold transition-all ${
-                                      stabilizerOption === stab
+                                    key={mOption}
+                                    onClick={() => setStabilizerOption(mOption)}
+                                    className={`py-2.5 px-3 text-center text-xs rounded-xl border font-semibold transition-all cursor-pointer ${
+                                      stabilizerOption === mOption
                                         ? 'bg-slate-900 border-slate-900 text-white shadow-sm'
                                         : 'bg-slate-50 border-slate-100 hover:bg-slate-100 text-slate-700'
                                     }`}
                                   >
-                                    {stab}
+                                    {mOption}
                                   </button>
                                 ))}
                               </div>
