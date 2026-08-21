@@ -26,7 +26,7 @@ const QUICK_CATEGORIES: QuickCategoryItem[] = [
     shortDesc: 'Split & Window',
     icon: AirVent,
     image: 'https://i.pinimg.com/1200x/44/7f/84/447f84d557a05888931325a7cc2c9ec4.jpg',
-    tag: 'Top Value',
+    tag: 'Up to ₹10,000',
     accentBg: 'bg-sky-50 text-sky-700',
     borderColor: 'hover:border-sky-500 hover:bg-sky-50/30'
   },

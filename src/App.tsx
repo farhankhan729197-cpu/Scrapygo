@@ -1841,7 +1841,7 @@ export default function App() {
                         <p className="text-[11px] text-slate-400 font-medium">{category} Appliance</p>
                       </div>
                       <div className="flex items-center text-xs text-emerald-600 font-bold bg-emerald-50 px-2.5 py-1 rounded-lg group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-                        Evaluate <ArrowRight className="w-3 h-3 ml-1" />
+                        Extract Price <ArrowRight className="w-3 h-3 ml-1" />
                       </div>
                     </button>
                   );
@@ -2157,7 +2157,7 @@ export default function App() {
                       Average recycling scrap value returned is highly favorable depending on coil condition and gas level.
                     </p>
                     <div className="flex items-baseline space-x-2 pt-1">
-                      <span className="text-2xl sm:text-3xl font-extrabold text-emerald-400">₹9,000</span>
+                      <span className="text-2xl sm:text-3xl font-extrabold text-emerald-400">Up to ₹10,000</span>
                       <span className="text-xs text-slate-400">Avg Quote</span>
                     </div>
                     <button 
@@ -2167,7 +2167,7 @@ export default function App() {
                       }}
                       className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition-all flex items-center space-x-1 cursor-pointer"
                     >
-                      <span>Appraise This Model</span>
+                      <span>Extract Price</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -2369,7 +2369,7 @@ export default function App() {
                             className="group relative bg-white border-2 border-slate-100 hover:border-emerald-500 rounded-3xl p-6 text-center cursor-pointer transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/10 flex flex-col items-center justify-between min-h-[260px] active:scale-[0.98]"
                           >
                             <div className="w-full flex justify-between items-center">
-                              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">Estimated ~ Up to ₹8,800</span>
+                              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">Estimated ~ Up to ₹10,000</span>
                               <span className="bg-sky-50 text-sky-700 text-[10px] font-bold px-3 py-1 rounded-full border border-sky-100">Split AC</span>
                             </div>
 
@@ -2398,7 +2398,7 @@ export default function App() {
                             className="group relative bg-white border-2 border-slate-100 hover:border-emerald-500 rounded-3xl p-6 text-center cursor-pointer transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/10 flex flex-col items-center justify-between min-h-[260px] active:scale-[0.98]"
                           >
                             <div className="w-full flex justify-between items-center">
-                              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">Estimated ~ Up to ₹8,800</span>
+                              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">Estimated ~ Up to ₹10,000</span>
                               <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-3 py-1 rounded-full border border-indigo-100">Window AC</span>
                             </div>
 
@@ -2678,7 +2678,7 @@ export default function App() {
                         onClick={() => setJourneyStep(4)}
                         className="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold py-4 rounded-xl transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
                       >
-                        <span>Proceed to Detailed Device Evaluation</span>
+                        <span>Get Exact Price</span>
                         <ArrowRight className="w-4 h-4" />
                       </button>
 
@@ -3097,7 +3097,7 @@ export default function App() {
                         onClick={handleSubmitAppraisal}
                         className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold px-8 py-3.5 rounded-xl transition-all shadow-md shadow-emerald-100 flex items-center gap-2 cursor-pointer"
                       >
-                        <span>Calculate Final Valuation Quote</span>
+                        <span>Extract Price</span>
                         <ArrowRight className="w-4 h-4" />
                       </button>
                     </div>
@@ -4533,7 +4533,7 @@ export default function App() {
                         }}
                         className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 rounded-xl transition-all flex items-center justify-center space-x-1 cursor-pointer shadow-sm"
                       >
-                        <span>Evaluate</span>
+                        <span>Extract Price</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
