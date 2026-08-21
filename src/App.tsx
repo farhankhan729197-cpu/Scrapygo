@@ -672,25 +672,28 @@ export default function App() {
   }, [otpTimer]);
 
   // Dynamic Price Calculator Engine
-  const calculatePrice = (model: DeviceModel, cat: CategoryType) => {
+  const calculatePrice = (model: DeviceModel | null | undefined, cat: CategoryType) => {
     if (cat === 'AC') {
       let finalPrice = 7000; // Default for 1.5 Ton Copper Good
 
-      // Detect capacity from capacity state or model name
-      let detectedCapacity = capacity || '1.5 Ton';
-      if (model && model.name) {
+      // Detect capacity prioritizing user selection state
+      let detectedCapacity = (capacity || '').trim().toLowerCase();
+      if (!detectedCapacity && model && model.name) {
         const nameLower = model.name.toLowerCase();
         if (nameLower.includes('0.8')) {
-          detectedCapacity = '0.8 Ton';
+          detectedCapacity = '0.8 ton';
         } else if (nameLower.includes('1.0') || nameLower.includes('1 ton')) {
-          detectedCapacity = '1.0 Ton';
+          detectedCapacity = '1.0 ton';
         } else if (nameLower.includes('2.0+') || nameLower.includes('2+ ton') || nameLower.includes('2.5') || nameLower.includes('3.0')) {
-          detectedCapacity = '2.0+ Ton';
+          detectedCapacity = '2.0+ ton';
         } else if (nameLower.includes('2.0') || nameLower.includes('2 ton')) {
-          detectedCapacity = '2.0 Ton';
+          detectedCapacity = '2.0 ton';
         } else if (nameLower.includes('1.5')) {
-          detectedCapacity = '1.5 Ton';
+          detectedCapacity = '1.5 ton';
         }
+      }
+      if (!detectedCapacity) {
+        detectedCapacity = '1.5 ton';
       }
 
       const isSilver = coilType === 'Silver';
@@ -711,32 +714,32 @@ export default function App() {
           else if (condition === 'average') finalPrice = 2500;
           else finalPrice = 2800;
         }
-      } else if (detectedCapacity.includes('1.0') || detectedCapacity === '1 Ton' || detectedCapacity === '1.0 Ton') {
+      } else if (detectedCapacity.includes('1.0') || detectedCapacity === '1 ton' || detectedCapacity === '1.0 ton') {
         if (!isSilver) {
-          // 1 Ton - Copper coil: (excellent-5000) (Good-4500) (poor-4000) (average-3600)
+          // 1.0 Ton - Copper coil: Excellent: ₹5,000 | Good: ₹4,500 | Average: ₹3,600 | Poor: ₹4,000
           if (condition === 'excellent') finalPrice = 5000;
           else if (condition === 'good') finalPrice = 4500;
           else if (condition === 'poor') finalPrice = 4000;
           else if (condition === 'average') finalPrice = 3600;
           else finalPrice = 4500;
         } else {
-          // 1 Ton - Silver coil: (excellent-3500) (Good-3200) (poor-3000) (average-2900)
+          // 1.0 Ton - Silver coil: Excellent: ₹3,500 | Good: ₹3,200 | Average: ₹2,900 | Poor: ₹3,000
           if (condition === 'excellent') finalPrice = 3500;
           else if (condition === 'good') finalPrice = 3200;
           else if (condition === 'poor') finalPrice = 3000;
           else if (condition === 'average') finalPrice = 2900;
           else finalPrice = 3200;
         }
-      } else if (detectedCapacity.includes('2.0') || detectedCapacity.includes('2 Ton') || detectedCapacity.includes('2.0 Ton') || detectedCapacity.includes('2.0+') || detectedCapacity.includes('2+')) {
+      } else if (detectedCapacity.includes('2.0') || detectedCapacity.includes('2 ton') || detectedCapacity.includes('2.0 ton') || detectedCapacity.includes('2.0+') || detectedCapacity.includes('2+') || detectedCapacity.includes('2.5') || detectedCapacity.includes('3.0')) {
         if (!isSilver) {
-          // 2 Ton - Copper coil: (excellent-8800) (Good-7850) (poor-7100) (average-7400)
+          // 2.0 Ton & 2.0+ Ton - Copper coil: Excellent: ₹8,800 | Good: ₹7,850 | Average: ₹7,400 | Poor: ₹7,100
           if (condition === 'excellent') finalPrice = 8800;
           else if (condition === 'good') finalPrice = 7850;
           else if (condition === 'average') finalPrice = 7400;
           else if (condition === 'poor') finalPrice = 7100;
           else finalPrice = 7850;
         } else {
-          // 2 Ton - Silver coil: (excellent-5000) (Good-4800) (poor-4200) (average-4400)
+          // 2.0 Ton & 2.0+ Ton - Silver coil: Excellent: ₹5,000 | Good: ₹4,800 | Average: ₹4,400 | Poor: ₹4,200
           if (condition === 'excellent') finalPrice = 5000;
           else if (condition === 'good') finalPrice = 4800;
           else if (condition === 'average') finalPrice = 4400;
@@ -744,16 +747,15 @@ export default function App() {
           else finalPrice = 4800;
         }
       } else {
-        // 1.5 Ton (Default)
+        // 1.5 Ton AC: Copper Coil: Excellent: ₹7,900 | Good: ₹7,000 | Average: ₹5,500 | Poor: ₹6,200
+        // Silver Coil: Excellent: ₹4,000 | Good: ₹3,600 | Average: ₹3,000 | Poor: ₹3,200
         if (!isSilver) {
-          // 1.5 Ton - Copper coil: (excellent-7900) (Good-7000) (poor-6200) (average-5500)
           if (condition === 'excellent') finalPrice = 7900;
           else if (condition === 'good') finalPrice = 7000;
           else if (condition === 'poor') finalPrice = 6200;
           else if (condition === 'average') finalPrice = 5500;
           else finalPrice = 7000;
         } else {
-          // 1.5 Ton - Silver coil: (excellent-4000) (Good-3600) (poor-3200) (average-3000)
           if (condition === 'excellent') finalPrice = 4000;
           else if (condition === 'good') finalPrice = 3600;
           else if (condition === 'poor') finalPrice = 3200;
@@ -3084,6 +3086,34 @@ export default function App() {
 
                     </div>
 
+                    {/* Live Real-time Dynamic Price Calculation Banner */}
+                    <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-950 border border-emerald-800/80 rounded-2xl p-4 sm:p-5 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg shadow-emerald-950/20">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                          <span className="text-[10px] font-mono tracking-widest text-emerald-400 font-bold uppercase">
+                            Live Dynamic Valuation
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-300">
+                          {selectedCategory === 'AC' 
+                            ? `${capacity || '1.5 Ton'} • ${coilType} Coil • ${condition.toUpperCase()} Condition` 
+                            : `${condition.toUpperCase()} Condition`}
+                          {selectedIssues.length > 0 && ` (${selectedIssues.length} flaw${selectedIssues.length > 1 ? 's' : ''} deducted)`}
+                        </p>
+                      </div>
+
+                      <div className="flex items-baseline sm:items-end justify-between sm:justify-start gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-emerald-800/60">
+                        <span className="text-xs text-emerald-300 font-medium sm:hidden">Current Quote:</span>
+                        <div className="text-right">
+                          <div className="text-3xl sm:text-4xl font-black font-display text-emerald-400 tracking-tight">
+                            ₹{calculatePrice(journeyModel, selectedCategory).toLocaleString('en-IN')}
+                          </div>
+                          <span className="text-[9px] text-slate-400 block font-mono">Updates instantly with inputs</span>
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="flex justify-between items-center pt-8 border-t border-slate-100">
                       <button
                         type="button"
@@ -3599,7 +3629,7 @@ export default function App() {
                     )}
 
                     {/* Current Estimated Price (real-time) */}
-                    {journeyModel && (
+                    {(journeyModel || selectedCategory) && journeyStep >= 3 && (
                       <div className="border-t border-slate-800/80 pt-4 mt-2">
                         <div className="flex justify-between items-baseline">
                           <span className="text-xs text-slate-400">Estimated Value</span>
