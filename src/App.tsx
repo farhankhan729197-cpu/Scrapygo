@@ -570,6 +570,13 @@ export default function App() {
       }
     }
   }, [currentUser]);
+
+  // Prevent automatic viewport cutoffs and keep top header visible when step changes
+  useEffect(() => {
+    if (activeTab === 'sell-journey') {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, [journeyStep, activeTab]);
   
   const handleGetCurrentLocation = () => {
     setIsLocating(true);
@@ -2260,36 +2267,36 @@ export default function App() {
 
         {/* 2. SELLING JOURNEY TAB */}
         {activeTab === 'sell-journey' && (
-          <div id="journey-flow-container" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div id="journey-flow-container" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
             
             {/* PROGRESS TIMELINE HEADER */}
-            <div className="mb-10 text-center">
-              <span className="text-xs font-mono font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full uppercase tracking-wider">
+            <div className="mb-4 sm:mb-6 text-center">
+              <span className="text-[10px] font-mono font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                 Active Assessment
               </span>
-              <h1 className="text-3xl font-extrabold text-slate-900 font-display tracking-tight mt-2">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 font-display tracking-tight mt-1">
                 Sell Your Used {selectedCategory === 'WashingMachine' ? 'Washing Machine' : selectedCategory === 'InverterBattery' ? 'Inverter Battery' : selectedCategory}
               </h1>
               
               {/* Stepper HUD */}
-              <div className="flex items-center justify-center max-w-xl mx-auto mt-8 relative">
+              <div className="flex items-center justify-center max-w-lg mx-auto mt-3 sm:mt-4 relative">
                 <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-0.5 bg-slate-100 z-0" />
                 
                 {[
-                  { step: 1, label: '1. Category & Type' },
-                  { step: 2, label: '2. Select Brand' },
-                  { step: 3, label: '3. Initial Quote' },
+                  { step: 1, label: '1. Category' },
+                  { step: 2, label: '2. Brand' },
+                  { step: 3, label: '3. Quote' },
                   { step: 4, label: '4. Evaluation' },
-                  { step: 5, label: '5. Pickup & Payout' }
+                  { step: 5, label: '5. Pickup' }
                 ].map((item) => (
                   <div key={item.step} className="flex-1 relative z-10 flex flex-col items-center">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                    <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold transition-all ${
                       journeyStep > item.step ? 'bg-emerald-600 text-white' : 
-                      journeyStep === item.step ? 'bg-slate-900 text-white ring-4 ring-slate-100' : 'bg-slate-100 text-slate-400'
+                      journeyStep === item.step ? 'bg-slate-900 text-white ring-2 ring-slate-100' : 'bg-slate-100 text-slate-400'
                     }`}>
-                      {journeyStep > item.step ? <Check className="w-4 h-4" /> : item.step}
+                      {journeyStep > item.step ? <Check className="w-3.5 h-3.5" /> : item.step}
                     </div>
-                    <span className="text-[10px] font-semibold text-slate-400 mt-2 hidden sm:block">
+                    <span className="text-[9px] sm:text-[10px] font-semibold text-slate-400 mt-1 hidden sm:block">
                       {item.label}
                     </span>
                   </div>
@@ -2298,10 +2305,10 @@ export default function App() {
             </div>
 
             {/* GRID LAYOUT FOR SELLING JOURNEY */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 items-start">
               
               {/* Left Column: Form Steps */}
-              <div className="lg:col-span-2 bg-white border border-slate-100 rounded-3xl shadow-xl p-6 sm:p-8">
+              <div className="lg:col-span-2 bg-white border border-slate-100 rounded-2xl shadow-md p-4 sm:p-5">
                 <AnimatePresence mode="wait">
                 
                 {/* STEP 1: CATEGORY & SPECIFIC APPLIANCE TYPE SELECTION */}
@@ -2311,20 +2318,20 @@ export default function App() {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="space-y-8"
+                    className="space-y-4"
                   >
                     {/* Category Selector Tabs */}
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       <div className="text-center max-w-md mx-auto">
-                        <span className="inline-block text-[11px] font-bold font-mono tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full uppercase mb-2">
+                        <span className="inline-block text-[10px] font-bold font-mono tracking-widest text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase mb-1">
                           Step 1 of 5
                         </span>
-                        <h3 className="text-2xl font-extrabold text-slate-900 font-display">Select Appliance Category & Type</h3>
-                        <p className="text-xs text-slate-400 mt-1">Choose your appliance category and specific type to initiate valuation.</p>
+                        <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 font-display">Select Category & Appliance Type</h3>
+                        <p className="text-xs text-slate-400">Choose your appliance category and specific type to initiate valuation.</p>
                       </div>
 
                       {/* Top Category Buttons */}
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
                         {[
                           { id: 'AC', name: 'Air Conditioner', icon: Wind },
                           { id: 'Refrigerator', name: 'Refrigerator', icon: Snowflake },
@@ -2342,13 +2349,13 @@ export default function App() {
                                 setJourneyBrand(null);
                                 setJourneyModel(null);
                               }}
-                              className={`p-3.5 rounded-2xl border text-xs font-bold transition-all flex flex-col items-center gap-2 cursor-pointer ${
+                              className={`p-2.5 rounded-xl border text-xs font-bold transition-all flex flex-col items-center gap-1.5 cursor-pointer ${
                                 isSelected
-                                  ? 'bg-slate-900 border-slate-900 text-white shadow-md'
+                                  ? 'bg-slate-900 border-slate-900 text-white shadow-xs'
                                   : 'bg-slate-50 border-slate-100 text-slate-700 hover:bg-slate-100'
                               }`}
                             >
-                              <IconComp className={`w-5 h-5 ${isSelected ? 'text-emerald-400' : 'text-slate-500'}`} />
+                              <IconComp className={`w-4 h-4 ${isSelected ? 'text-emerald-400' : 'text-slate-500'}`} />
                               <span className="text-[11px] font-bold text-center leading-tight">{cat.name}</span>
                             </button>
                           );
@@ -2356,40 +2363,40 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Specific Appliance Type Cards */}
-                    <div className="space-y-4 pt-4 border-t border-slate-100">
-                      <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider text-center">
+                    {/* Specific Appliance Type Cards - Side-by-side layout */}
+                    <div className="space-y-3 pt-3 border-t border-slate-100">
+                      <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">
                         Select Specific {selectedCategory === 'WashingMachine' ? 'Washing Machine' : selectedCategory === 'InverterBattery' ? 'Battery' : selectedCategory} Type
                       </h4>
 
-                      {/* AC Specific Types */}
+                      {/* AC Specific Types: Side-by-Side */}
                       {selectedCategory === 'AC' && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                        <div className="grid grid-cols-2 gap-3 max-w-xl mx-auto">
                           {/* Split AC */}
                           <div 
                             onClick={() => selectAcTypeAndNavigate('AC Split')}
-                            className="group relative bg-white border-2 border-slate-100 hover:border-emerald-500 rounded-3xl p-6 text-center cursor-pointer transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/10 flex flex-col items-center justify-between min-h-[260px] active:scale-[0.98]"
+                            className="group relative bg-white border-2 border-slate-100 hover:border-emerald-500 rounded-2xl p-3 sm:p-4 text-center cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/10 flex flex-col items-center justify-between min-h-[170px] sm:min-h-[190px] active:scale-[0.98]"
                           >
                             <div className="w-full flex justify-between items-center">
-                              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">Estimated ~ Up to ₹10,000</span>
-                              <span className="bg-sky-50 text-sky-700 text-[10px] font-bold px-3 py-1 rounded-full border border-sky-100">Split AC</span>
+                              <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Up to ₹10k</span>
+                              <span className="bg-sky-50 text-sky-700 text-[9px] font-bold px-2 py-0.5 rounded-full border border-sky-100">Split AC</span>
                             </div>
 
-                            <div className="relative w-28 h-28 my-2 rounded-2xl bg-sky-50 p-2 flex items-center justify-center border border-sky-100 shadow-sm group-hover:scale-105 group-hover:bg-emerald-50 transition-all duration-300 overflow-hidden">
+                            <div className="relative w-14 h-14 sm:w-16 sm:h-16 my-1.5 rounded-xl bg-sky-50 p-1.5 flex items-center justify-center border border-sky-100 shadow-2xs group-hover:scale-105 group-hover:bg-emerald-50 transition-all duration-300 overflow-hidden">
                               <img 
                                 src="https://i.pinimg.com/736x/bf/38/1c/bf381cd522515b2daf22d78503969132.jpg" 
                                 alt="AC Split Icon" 
-                                className="w-full h-full object-cover rounded-xl" 
+                                className="w-full h-full object-cover rounded-lg" 
                                 referrerPolicy="no-referrer" 
                               />
                             </div>
 
-                            <div className="space-y-1">
-                              <h4 className="text-xl font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">AC Split</h4>
-                              <p className="text-xs text-slate-500">Wall-Mounted Indoor & Outdoor Condenser Unit</p>
+                            <div className="space-y-0.5">
+                              <h4 className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">AC Split</h4>
+                              <p className="text-[10px] text-slate-500 line-clamp-1">Indoor + Outdoor Unit</p>
                             </div>
 
-                            <div className="mt-4 w-full bg-slate-900 text-white font-bold text-xs py-3 rounded-2xl group-hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2 shadow-sm">
+                            <div className="mt-2 w-full bg-slate-900 text-white font-bold text-[11px] py-1.5 rounded-xl group-hover:bg-emerald-600 transition-colors flex items-center justify-center gap-1 shadow-2xs">
                               <span>Select AC Split →</span>
                             </div>
                           </div>
@@ -2397,14 +2404,14 @@ export default function App() {
                           {/* Window AC */}
                           <div 
                             onClick={() => selectAcTypeAndNavigate('AC Window')}
-                            className="group relative bg-white border-2 border-slate-100 hover:border-emerald-500 rounded-3xl p-6 text-center cursor-pointer transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/10 flex flex-col items-center justify-between min-h-[260px] active:scale-[0.98]"
+                            className="group relative bg-white border-2 border-slate-100 hover:border-emerald-500 rounded-2xl p-3 sm:p-4 text-center cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/10 flex flex-col items-center justify-between min-h-[170px] sm:min-h-[190px] active:scale-[0.98]"
                           >
                             <div className="w-full flex justify-between items-center">
-                              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">Estimated ~ Up to ₹10,000</span>
-                              <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-3 py-1 rounded-full border border-indigo-100">Window AC</span>
+                              <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Up to ₹10k</span>
+                              <span className="bg-indigo-50 text-indigo-700 text-[9px] font-bold px-2 py-0.5 rounded-full border border-indigo-100">Window AC</span>
                             </div>
 
-                            <div className="relative w-28 h-28 my-2 rounded-2xl bg-indigo-50 p-2 flex items-center justify-center border border-indigo-100 shadow-sm group-hover:scale-105 group-hover:bg-emerald-50 transition-all duration-300 overflow-hidden">
+                            <div className="relative w-14 h-14 sm:w-16 sm:h-16 my-1.5 rounded-xl bg-indigo-50 p-1.5 flex items-center justify-center border border-indigo-100 shadow-2xs group-hover:scale-105 group-hover:bg-emerald-50 transition-all duration-300 overflow-hidden">
                               <img 
                                 src="https://i.pinimg.com/1200x/44/7f/84/447f84d557a05888931325a7cc2c9ec4.jpg" 
                                 alt="AC Window Icon" 
@@ -2413,25 +2420,25 @@ export default function App() {
                               />
                             </div>
 
-                            <div className="space-y-1">
-                              <h4 className="text-xl font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">AC Window</h4>
-                              <p className="text-xs text-slate-500">Single Compact Self-Contained Window Unit</p>
+                            <div className="space-y-0.5">
+                              <h4 className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">AC Window</h4>
+                              <p className="text-[10px] text-slate-500 line-clamp-1">Single Compact Unit</p>
                             </div>
 
-                            <div className="mt-4 w-full bg-slate-900 text-white font-bold text-xs py-3 rounded-2xl group-hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2 shadow-sm">
+                            <div className="mt-2 w-full bg-slate-900 text-white font-bold text-[11px] py-1.5 rounded-xl group-hover:bg-emerald-600 transition-colors flex items-center justify-center gap-1 shadow-2xs">
                               <span>Select AC Window →</span>
                             </div>
                           </div>
                         </div>
                       )}
 
-                      {/* Refrigerator Specific Types */}
+                      {/* Refrigerator Specific Types - Side-by-Side */}
                       {selectedCategory === 'Refrigerator' && (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-3 gap-2 sm:gap-3">
                           {[
-                            { type: 'Single Door', est: '₹4,500', desc: 'Compact Single Door Direct Cool' },
-                            { type: 'Double Door', est: '₹6,500', desc: 'Frost-Free Dual Door Freezer' },
-                            { type: 'Side-by-Side', est: '₹9,500', desc: 'Multi-Door Premium Side-by-Side' }
+                            { type: 'Single Door', est: '₹4,500', desc: 'Compact Single Door' },
+                            { type: 'Double Door', est: '₹6,500', desc: 'Frost-Free Dual Door' },
+                            { type: 'Side-by-Side', est: '₹9,500', desc: 'Multi-Door Premium' }
                           ].map((item) => (
                             <button
                               key={item.type}
@@ -2440,31 +2447,31 @@ export default function App() {
                                 setFridgeType(item.type);
                                 setJourneyStep(2);
                               }}
-                              className="bg-slate-50 hover:bg-emerald-50 border border-slate-100 hover:border-emerald-500 rounded-2xl p-5 text-left transition-all duration-200 group flex flex-col justify-between min-h-[160px]"
+                              className="bg-slate-50 hover:bg-emerald-50 border border-slate-100 hover:border-emerald-500 rounded-xl p-3 text-left transition-all duration-200 group flex flex-col justify-between min-h-[110px]"
                             >
                               <div>
-                                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full inline-block mb-2">
+                                <span className="text-[9px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-full inline-block mb-1">
                                   Est. {item.est}
                                 </span>
-                                <h5 className="font-bold text-slate-900 text-base group-hover:text-emerald-700">{item.type}</h5>
-                                <p className="text-xs text-slate-400 mt-1 leading-snug">{item.desc}</p>
+                                <h5 className="font-bold text-slate-900 text-xs sm:text-sm group-hover:text-emerald-700 leading-tight">{item.type}</h5>
+                                <p className="text-[10px] text-slate-400 mt-0.5 leading-snug line-clamp-1">{item.desc}</p>
                               </div>
-                              <div className="mt-4 flex items-center justify-between text-xs font-bold text-emerald-600">
-                                <span>Select & Next</span>
-                                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                              <div className="mt-2 flex items-center justify-between text-[11px] font-bold text-emerald-600">
+                                <span>Next</span>
+                                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                               </div>
                             </button>
                           ))}
                         </div>
                       )}
 
-                      {/* Washing Machine Specific Types */}
+                      {/* Washing Machine Specific Types - Side-by-Side */}
                       {selectedCategory === 'WashingMachine' && (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-3 gap-2 sm:gap-3">
                           {[
-                            { type: 'Fully Automatic Front Load', est: '₹7,000', desc: 'Front Door Tumble Washer' },
-                            { type: 'Fully Automatic Top Load', est: '₹5,000', desc: 'Single Drum Top Load Auto' },
-                            { type: 'Semi-Automatic', est: '₹3,500', desc: 'Twin Tub Washer & Dryer' }
+                            { type: 'Fully Automatic Front Load', label: 'Front Load Auto', est: '₹7,000', desc: 'Front Door Drum' },
+                            { type: 'Fully Automatic Top Load', label: 'Top Load Auto', est: '₹5,000', desc: 'Single Drum Top' },
+                            { type: 'Semi-Automatic', label: 'Semi-Automatic', est: '₹3,500', desc: 'Twin Tub Washer' }
                           ].map((item) => (
                             <button
                               key={item.type}
@@ -2473,31 +2480,31 @@ export default function App() {
                                 setWmType(item.type);
                                 setJourneyStep(2);
                               }}
-                              className="bg-slate-50 hover:bg-emerald-50 border border-slate-100 hover:border-emerald-500 rounded-2xl p-5 text-left transition-all duration-200 group flex flex-col justify-between min-h-[160px]"
+                              className="bg-slate-50 hover:bg-emerald-50 border border-slate-100 hover:border-emerald-500 rounded-xl p-3 text-left transition-all duration-200 group flex flex-col justify-between min-h-[110px]"
                             >
                               <div>
-                                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full inline-block mb-2">
+                                <span className="text-[9px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-full inline-block mb-1">
                                   Est. {item.est}
                                 </span>
-                                <h5 className="font-bold text-slate-900 text-sm group-hover:text-emerald-700">{item.type}</h5>
-                                <p className="text-xs text-slate-400 mt-1 leading-snug">{item.desc}</p>
+                                <h5 className="font-bold text-slate-900 text-xs sm:text-sm group-hover:text-emerald-700 leading-tight">{item.label}</h5>
+                                <p className="text-[10px] text-slate-400 mt-0.5 leading-snug line-clamp-1">{item.desc}</p>
                               </div>
-                              <div className="mt-4 flex items-center justify-between text-xs font-bold text-emerald-600">
-                                <span>Select & Next</span>
-                                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                              <div className="mt-2 flex items-center justify-between text-[11px] font-bold text-emerald-600">
+                                <span>Next</span>
+                                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                               </div>
                             </button>
                           ))}
                         </div>
                       )}
 
-                      {/* Inverter Battery Specific Types */}
+                      {/* Inverter Battery Specific Types - Side-by-Side */}
                       {selectedCategory === 'InverterBattery' && (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-3 gap-2 sm:gap-3">
                           {[
-                            { type: 'Tall Tubular', est: '₹4,500', desc: 'Heavy Duty Deep Cycle Battery' },
-                            { type: 'Short Tubular', est: '₹3,500', desc: 'Compact Tubular Inverter Battery' },
-                            { type: 'Flat Plate', est: '₹3,000', desc: 'Standard Lead-Acid Flat Battery' }
+                            { type: 'Tall Tubular', est: '₹4,500', desc: 'Heavy Duty Deep Cycle' },
+                            { type: 'Short Tubular', est: '₹3,500', desc: 'Compact Tubular' },
+                            { type: 'Flat Plate', est: '₹3,000', desc: 'Standard Lead-Acid' }
                           ].map((item) => (
                             <button
                               key={item.type}
@@ -2506,18 +2513,18 @@ export default function App() {
                                 setBatteryType(item.type);
                                 setJourneyStep(2);
                               }}
-                              className="bg-slate-50 hover:bg-emerald-50 border border-slate-100 hover:border-emerald-500 rounded-2xl p-5 text-left transition-all duration-200 group flex flex-col justify-between min-h-[160px]"
+                              className="bg-slate-50 hover:bg-emerald-50 border border-slate-100 hover:border-emerald-500 rounded-xl p-3 text-left transition-all duration-200 group flex flex-col justify-between min-h-[110px]"
                             >
                               <div>
-                                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full inline-block mb-2">
+                                <span className="text-[9px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-full inline-block mb-1">
                                   Est. {item.est}
                                 </span>
-                                <h5 className="font-bold text-slate-900 text-sm group-hover:text-emerald-700">{item.type}</h5>
-                                <p className="text-xs text-slate-400 mt-1 leading-snug">{item.desc}</p>
+                                <h5 className="font-bold text-slate-900 text-xs sm:text-sm group-hover:text-emerald-700 leading-tight">{item.type}</h5>
+                                <p className="text-[10px] text-slate-400 mt-0.5 leading-snug line-clamp-1">{item.desc}</p>
                               </div>
-                              <div className="mt-4 flex items-center justify-between text-xs font-bold text-emerald-600">
-                                <span>Select & Next</span>
-                                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                              <div className="mt-2 flex items-center justify-between text-[11px] font-bold text-emerald-600">
+                                <span>Next</span>
+                                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                               </div>
                             </button>
                           ))}
@@ -2527,54 +2534,54 @@ export default function App() {
                   </motion.div>
                 )}
 
-                {/* STEP 2: SEARCHABLE BRAND SELECTION */}
+                {/* STEP 2: SEARCHABLE BRAND SELECTION (4 to 5 brands per row) */}
                 {journeyStep === 2 && (
                   <motion.div 
                     key="step-2"
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="space-y-6"
+                    className="space-y-4"
                   >
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                       <button 
                         onClick={() => setJourneyStep(1)}
                         className="text-xs font-semibold text-slate-500 hover:text-slate-900 flex items-center gap-1"
                       >
-                        <ArrowLeft className="w-3.5 h-3.5" /> Back to Category & Type
+                        <ArrowLeft className="w-3.5 h-3.5" /> Back to Category
                       </button>
-                      <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full font-bold uppercase">
+                      <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-bold uppercase">
                         Step 2 of 5
                       </span>
                     </div>
 
                     <div className="text-center max-w-md mx-auto">
-                      <h3 className="text-2xl font-extrabold text-slate-900 font-display">Select Appliance Brand</h3>
-                      <p className="text-xs text-slate-400 mt-1">Search or choose the manufacturer brand for your device.</p>
+                      <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 font-display">Select Appliance Brand</h3>
+                      <p className="text-xs text-slate-400 mt-0.5">Search or select the manufacturer brand for your device.</p>
                     </div>
 
                     {/* Search Bar Input */}
                     <div className="relative max-w-md mx-auto">
-                      <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
+                      <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
                       <input 
                         type="text"
                         value={brandSearchQuery}
                         onChange={(e) => setBrandSearchQuery(e.target.value)}
-                        placeholder="Search brand e.g., Voltas, Daikin, LG, Samsung, Blue Star, Whirlpool..."
-                        className="w-full bg-slate-50 border border-slate-200 text-xs sm:text-sm rounded-xl pl-10 pr-10 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 font-medium"
+                        placeholder="Search brand: Voltas, Daikin, LG, Samsung, Blue Star, Lloyd..."
+                        className="w-full bg-slate-50 border border-slate-200 text-xs sm:text-sm rounded-xl pl-9 pr-9 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 font-medium"
                       />
                       {brandSearchQuery && (
                         <button 
                           onClick={() => setBrandSearchQuery('')}
-                          className="absolute right-3 top-3 text-xs text-slate-400 hover:text-slate-700 bg-slate-200 w-5 h-5 rounded-full flex items-center justify-center font-bold"
+                          className="absolute right-2.5 top-2.5 text-xs text-slate-400 hover:text-slate-700 bg-slate-200 w-4 h-4 rounded-full flex items-center justify-center font-bold"
                         >
                           ✕
                         </button>
                       )}
                     </div>
 
-                    {/* Filtered Brand Cards Grid */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[360px] overflow-y-auto p-1">
+                    {/* Filtered Brand Cards Grid: 4 to 5 brands per row */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-2.5 max-h-[300px] overflow-y-auto p-1">
                       {BRANDS[selectedCategory]
                         .filter(brand => brand.name.toLowerCase().includes(brandSearchQuery.toLowerCase().trim()))
                         .map((brand) => (
@@ -2587,20 +2594,20 @@ export default function App() {
                               setJourneyModel(defaultModel);
                               setJourneyStep(3); // Advance to Step 3: Initial Estimated Valuation
                             }}
-                            className="bg-slate-50 hover:bg-emerald-50 border border-slate-100 hover:border-emerald-500 rounded-2xl p-4 text-center transition-all duration-200 group flex flex-col items-center justify-center min-h-[90px] shadow-sm hover:shadow-md cursor-pointer"
+                            className="bg-slate-50 hover:bg-emerald-50 border border-slate-100 hover:border-emerald-500 rounded-xl p-2.5 sm:p-3 text-center transition-all duration-200 group flex flex-col items-center justify-center min-h-[60px] sm:min-h-[66px] shadow-2xs hover:shadow-xs cursor-pointer active:scale-95"
                           >
-                            <span className="block text-sm font-bold text-slate-800 group-hover:text-emerald-700 font-display uppercase tracking-wider">
+                            <span className="block text-xs sm:text-sm font-bold text-slate-800 group-hover:text-emerald-700 font-display uppercase tracking-wider leading-tight">
                               {brand.name}
                             </span>
-                            <span className="text-[10px] text-slate-400 mt-1 font-medium group-hover:text-emerald-600">
-                              Tap to select →
+                            <span className="text-[9px] text-slate-400 mt-0.5 font-medium group-hover:text-emerald-600">
+                              Select →
                             </span>
                           </button>
                         ))}
                     </div>
 
                     {BRANDS[selectedCategory].filter(brand => brand.name.toLowerCase().includes(brandSearchQuery.toLowerCase().trim())).length === 0 && (
-                      <div className="text-center py-8 bg-slate-50 rounded-2xl border border-slate-100">
+                      <div className="text-center py-5 bg-slate-50 rounded-xl border border-slate-100">
                         <p className="text-xs text-slate-500">No brand matching "{brandSearchQuery}".</p>
                         <button 
                           type="button"
@@ -2609,7 +2616,7 @@ export default function App() {
                             setJourneyBrand(customBrand as any);
                             setJourneyStep(3);
                           }}
-                          className="mt-3 text-xs font-bold text-emerald-600 hover:underline"
+                          className="mt-2 text-xs font-bold text-emerald-600 hover:underline"
                         >
                           Proceed with "{brandSearchQuery || 'Generic Brand'}" →
                         </button>
@@ -2625,34 +2632,34 @@ export default function App() {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="max-w-md mx-auto space-y-6"
+                    className="max-w-md mx-auto space-y-4"
                   >
-                    <div className="text-center space-y-1">
-                      <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full font-bold uppercase tracking-wider">
+                    <div className="text-center space-y-0.5">
+                      <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
                         Step 3 of 5 • Initial Estimate
                       </span>
-                      <h3 className="text-2xl font-extrabold text-slate-900 font-display mt-2">Initial Estimated Valuation</h3>
+                      <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 font-display mt-1">Initial Estimated Valuation</h3>
                       <p className="text-xs text-slate-400">Pre-evaluation estimated market quote before detailed condition checks.</p>
                     </div>
 
-                    {/* Large Initial Quote Card */}
-                    <div className="bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white rounded-3xl p-8 text-center relative overflow-hidden shadow-2xl border border-emerald-800">
-                      <div className="absolute -top-10 -right-10 w-36 h-36 bg-emerald-500/20 rounded-full blur-3xl" />
+                    {/* Compact Initial Quote Card */}
+                    <div className="bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white rounded-2xl p-4 sm:p-5 text-center relative overflow-hidden shadow-lg border border-emerald-800">
+                      <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/20 rounded-full blur-3xl" />
                       
-                      <div className="inline-flex items-center gap-1.5 bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-4">
-                        <Zap className="w-3.5 h-3.5" /> Initial Market Base Value
+                      <div className="inline-flex items-center gap-1 bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[9px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider mb-2">
+                        <Zap className="w-3 h-3" /> Initial Market Base Value
                       </div>
 
-                      <div className="my-2">
-                        <span className="block text-xs text-slate-300 font-medium">Estimated Handover Price</span>
-                        <div className="text-5xl font-black font-display text-white mt-1">
+                      <div className="my-1">
+                        <span className="block text-[11px] text-slate-300 font-medium">Estimated Handover Price</span>
+                        <div className="text-3xl sm:text-4xl font-black font-display text-white mt-0.5">
                           {selectedCategory === 'AC' 
                             ? 'Up to ₹10,000' 
                             : `₹${getInitialEstimatePrice(selectedCategory).toLocaleString('en-IN')}`}
                         </div>
                       </div>
 
-                      <div className="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-300">
+                      <div className="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-300">
                         <div>
                           <span className="text-[10px] text-slate-400 block">Brand</span>
                           <strong className="text-white font-bold">{journeyBrand?.name || 'Standard'}</strong>
@@ -2666,21 +2673,21 @@ export default function App() {
                       </div>
                     </div>
 
-                    <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 text-xs text-emerald-900 flex items-start gap-3">
-                      <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                    <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 text-xs text-emerald-900 flex items-start gap-2.5">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                       <div>
-                        <strong className="block font-bold">What happens next?</strong>
-                        <p className="text-[11px] text-emerald-800 mt-0.5 leading-relaxed">
-                          Proceed to the detailed evaluation step where you specify working condition, capacity size, star rating, and functional defects for your final guaranteed payout quote.
+                        <strong className="block text-[11px] font-bold">Next: Detailed Condition Evaluation</strong>
+                        <p className="text-[10px] text-emerald-800 mt-0.5 leading-normal">
+                          Specify working condition, capacity size, star rating, and functional flaws for your instant guaranteed payout quote.
                         </p>
                       </div>
                     </div>
 
-                    <div className="space-y-3 pt-2">
+                    <div className="space-y-2 pt-1">
                       <button
                         type="button"
                         onClick={() => setJourneyStep(4)}
-                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold py-4 rounded-xl transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold py-2.5 sm:py-3 rounded-xl transition-all shadow-md shadow-emerald-600/20 flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98]"
                       >
                         <span>Get Exact Price</span>
                         <ArrowRight className="w-4 h-4" />
@@ -2689,7 +2696,7 @@ export default function App() {
                       <button
                         type="button"
                         onClick={() => setJourneyStep(2)}
-                        className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold py-2.5 rounded-xl transition-all"
+                        className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold py-2 rounded-xl transition-all"
                       >
                         ← Change Brand or Appliance Type
                       </button>
@@ -2704,54 +2711,54 @@ export default function App() {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="space-y-8"
+                    className="space-y-4 sm:space-y-5"
                   >
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                       <button 
                         onClick={() => setJourneyStep(3)}
                         className="text-xs font-semibold text-slate-500 hover:text-slate-900 flex items-center gap-1"
                       >
-                        <ArrowLeft className="w-3.5 h-3.5" /> Back to Initial Estimate
+                        <ArrowLeft className="w-3.5 h-3.5" /> Back to Quote
                       </button>
-                      <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full font-bold uppercase">
+                      <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-bold uppercase">
                         Step 4 of 5
                       </span>
                     </div>
 
                     <div className="text-center max-w-md mx-auto">
-                      <h3 className="text-2xl font-extrabold text-slate-900 font-display">Detailed Device Evaluation</h3>
-                      <p className="text-xs text-slate-400 mt-1">Specify condition, capacity size, star rating, and functional flaws for accurate payout calculation.</p>
+                      <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 font-display">Detailed Device Evaluation</h3>
+                      <p className="text-xs text-slate-400 mt-0.5">Specify condition, capacity size, star rating, and functional flaws for instant calculation.</p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                       
                       {/* Left Block: Basic condition & configuration */}
-                      <div className="space-y-6">
+                      <div className="space-y-4">
                         
                         {/* Overall Working Condition */}
                         <div>
-                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
+                          <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
                             Overall Condition Status
                           </label>
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className="grid grid-cols-2 gap-1.5">
                             {[
-                              { id: 'excellent', name: 'Excellent', desc: 'No flaws, feels like brand new' },
-                              { id: 'good', name: 'Good', desc: 'Minor scratches, fully working' },
-                              { id: 'average', name: 'Average', desc: 'Moderate wear, working okay' },
-                              { id: 'poor', name: 'Poor / Scrap', desc: 'Dead/Damaged, structural scrap' }
+                              { id: 'excellent', name: 'Excellent', desc: 'Like new' },
+                              { id: 'good', name: 'Good', desc: 'Working fully' },
+                              { id: 'average', name: 'Average', desc: 'Moderate wear' },
+                              { id: 'poor', name: 'Poor / Scrap', desc: 'Dead/Damaged' }
                             ].map((cond) => (
                               <button
                                 type="button"
                                 key={cond.id}
                                 onClick={() => setCondition(cond.id as any)}
-                                className={`p-3.5 text-left rounded-xl border text-xs transition-all ${
+                                className={`p-2.5 text-left rounded-xl border text-xs transition-all cursor-pointer ${
                                   condition === cond.id 
-                                    ? 'bg-emerald-50 border-emerald-500 text-emerald-900 shadow-md ring-1 ring-emerald-500' 
+                                    ? 'bg-emerald-50 border-emerald-500 text-emerald-900 shadow-xs ring-1 ring-emerald-500' 
                                     : 'bg-slate-50 border-slate-100 hover:bg-slate-100 text-slate-700'
                                 }`}
                               >
                                 <strong className="block text-xs font-bold">{cond.name}</strong>
-                                <span className="block text-[10px] text-slate-400 mt-0.5 leading-snug">{cond.desc}</span>
+                                <span className="block text-[10px] text-slate-400 leading-tight">{cond.desc}</span>
                               </button>
                             ))}
                           </div>
@@ -2762,32 +2769,32 @@ export default function App() {
                           <>
                             {/* AC Type Variant Switcher */}
                             <div>
-                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
-                                Air Conditioner Type
+                              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                                AC Type
                               </label>
-                              <div className="grid grid-cols-2 gap-2.5">
+                              <div className="grid grid-cols-2 gap-2">
                                 <button
                                   type="button"
                                   onClick={() => setAcType('AC Split')}
-                                  className={`p-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                                  className={`p-2 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                                     acType === 'AC Split'
-                                      ? 'bg-slate-900 border-slate-900 text-white shadow-md'
+                                      ? 'bg-slate-900 border-slate-900 text-white shadow-xs'
                                       : 'bg-slate-50 border-slate-100 text-slate-700 hover:bg-slate-100'
                                   }`}
                                 >
-                                  <Wind className="w-4 h-4 text-emerald-400" />
+                                  <Wind className="w-3.5 h-3.5 text-emerald-400" />
                                   <span>AC Split</span>
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => setAcType('AC Window')}
-                                  className={`p-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                                  className={`p-2 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                                     acType === 'AC Window'
-                                      ? 'bg-slate-900 border-slate-900 text-white shadow-md'
+                                      ? 'bg-slate-900 border-slate-900 text-white shadow-xs'
                                       : 'bg-slate-50 border-slate-100 text-slate-700 hover:bg-slate-100'
                                   }`}
                                 >
-                                  <Snowflake className="w-4 h-4 text-emerald-400" />
+                                  <Snowflake className="w-3.5 h-3.5 text-emerald-400" />
                                   <span>AC Window</span>
                                 </button>
                               </div>
@@ -2795,17 +2802,17 @@ export default function App() {
 
                             {/* AC Capacity Size */}
                             <div>
-                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
+                              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
                                 AC Capacity Size
                               </label>
-                              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                              <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
                                 {['0.8 Ton', '1.0 Ton', '1.5 Ton', '2.0 Ton', '2.0+ Ton'].map((cap) => (
                                   <button
                                     type="button"
                                     key={cap}
                                     onClick={() => setCapacity(cap)}
-                                    className={`py-2 px-2 text-center text-xs rounded-xl border font-semibold transition-all ${
-                                      capacity === cap ? 'bg-slate-900 border-slate-900 text-white shadow-sm' : 'bg-slate-50 border-slate-100 hover:bg-slate-100 text-slate-700'
+                                    className={`py-1.5 px-1.5 text-center text-xs rounded-xl border font-semibold transition-all cursor-pointer ${
+                                      capacity === cap ? 'bg-slate-900 border-slate-900 text-white shadow-2xs' : 'bg-slate-50 border-slate-100 hover:bg-slate-100 text-slate-700'
                                     }`}
                                   >
                                     {cap}
@@ -2816,26 +2823,26 @@ export default function App() {
 
                             {/* Condenser Coil Type */}
                             <div>
-                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
+                              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
                                 Condenser Coil Type
                               </label>
-                              <div className="grid grid-cols-2 gap-2.5">
+                              <div className="grid grid-cols-2 gap-2">
                                 {[
-                                  { id: 'Copper', label: 'Copper Coil', sub: 'High Durability & Fast Heat Transfer' },
-                                  { id: 'Silver', label: 'Silver Coil', sub: 'Corrosion Resistant & Standard' }
+                                  { id: 'Copper', label: 'Copper Coil', sub: 'High Durability' },
+                                  { id: 'Silver', label: 'Silver Coil', sub: 'Standard Alloy' }
                                 ].map((coil) => (
                                   <button
                                     type="button"
                                     key={coil.id}
                                     onClick={() => setCoilType(coil.id as 'Copper' | 'Silver')}
-                                    className={`p-3 rounded-xl border text-left transition-all ${
+                                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
                                       coilType === coil.id
-                                        ? 'bg-slate-900 border-slate-900 text-white shadow-md'
+                                        ? 'bg-slate-900 border-slate-900 text-white shadow-xs'
                                         : 'bg-slate-50 border-slate-100 text-slate-700 hover:bg-slate-100'
                                     }`}
                                   >
                                     <strong className="block text-xs font-bold">{coil.label}</strong>
-                                    <span className={`block text-[10px] mt-0.5 ${coilType === coil.id ? 'text-slate-300' : 'text-slate-400'}`}>{coil.sub}</span>
+                                    <span className={`block text-[10px] ${coilType === coil.id ? 'text-slate-300' : 'text-slate-400'}`}>{coil.sub}</span>
                                   </button>
                                 ))}
                               </div>
@@ -2843,8 +2850,8 @@ export default function App() {
 
                             {/* Model: Inverter model & Non-inverter model */}
                             <div>
-                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
-                                Model
+                              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                                Model Type
                               </label>
                               <div className="grid grid-cols-2 gap-2">
                                 {[
@@ -2855,9 +2862,9 @@ export default function App() {
                                     type="button"
                                     key={mOption}
                                     onClick={() => setStabilizerOption(mOption)}
-                                    className={`py-2.5 px-3 text-center text-xs rounded-xl border font-semibold transition-all cursor-pointer ${
+                                    className={`py-2 px-2.5 text-center text-xs rounded-xl border font-semibold transition-all cursor-pointer ${
                                       stabilizerOption === mOption
-                                        ? 'bg-slate-900 border-slate-900 text-white shadow-sm'
+                                        ? 'bg-slate-900 border-slate-900 text-white shadow-2xs'
                                         : 'bg-slate-50 border-slate-100 hover:bg-slate-100 text-slate-700'
                                     }`}
                                   >
@@ -2869,17 +2876,17 @@ export default function App() {
 
                             {/* BEE Energy Efficiency Star Rating */}
                             <div>
-                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
-                                BEE Star Rating & Technology
+                              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                                BEE Star Rating
                               </label>
-                              <div className="grid grid-cols-3 gap-2">
+                              <div className="grid grid-cols-3 gap-1.5">
                                 {['1 Star', '2 Star', '3 Star', '4 Star', '5 Star', 'Inverter AC'].map((star) => (
                                   <button
                                     type="button"
                                     key={star}
                                     onClick={() => setEnergyRating(star)}
-                                    className={`py-2 px-2.5 text-center text-xs rounded-xl border font-semibold transition-all ${
-                                      energyRating === star ? 'bg-slate-900 border-slate-900 text-white shadow-sm' : 'bg-slate-50 border-slate-100 hover:bg-slate-100 text-slate-700'
+                                    className={`py-1.5 px-2 text-center text-xs rounded-xl border font-semibold transition-all cursor-pointer ${
+                                      energyRating === star ? 'bg-slate-900 border-slate-900 text-white shadow-2xs' : 'bg-slate-50 border-slate-100 hover:bg-slate-100 text-slate-700'
                                     }`}
                                   >
                                     {star}
@@ -2894,16 +2901,16 @@ export default function App() {
                         {selectedCategory === 'Refrigerator' && (
                           <>
                             <div>
-                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
+                              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
                                 Refrigerator Volume
                               </label>
-                              <div className="grid grid-cols-3 gap-2">
+                              <div className="grid grid-cols-3 gap-1.5">
                                 {['190L', '250L', '350L+'].map((cap) => (
                                   <button
                                     type="button"
                                     key={cap}
                                     onClick={() => setFridgeCapacity(cap)}
-                                    className={`py-2 px-3 text-center text-xs rounded-xl border font-semibold ${
+                                    className={`py-1.5 px-2.5 text-center text-xs rounded-xl border font-semibold cursor-pointer ${
                                       fridgeCapacity === cap ? 'bg-slate-900 border-slate-900 text-white' : 'bg-slate-50 border-slate-100 hover:bg-slate-100 text-slate-700'
                                     }`}
                                   >
@@ -2914,16 +2921,16 @@ export default function App() {
                             </div>
 
                             <div>
-                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
+                              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
                                 Door Configuration
                               </label>
-                              <div className="grid grid-cols-2 gap-2">
+                              <div className="grid grid-cols-3 gap-1.5">
                                 {['Single Door', 'Double Door', 'Side-by-Side'].map((type) => (
                                   <button
                                     type="button"
                                     key={type}
                                     onClick={() => setFridgeType(type)}
-                                    className={`py-2 px-3 text-center text-xs rounded-xl border font-semibold ${
+                                    className={`py-1.5 px-2 text-center text-xs rounded-xl border font-semibold cursor-pointer ${
                                       fridgeType === type ? 'bg-slate-900 border-slate-900 text-white' : 'bg-slate-50 border-slate-100 hover:bg-slate-100 text-slate-700'
                                     }`}
                                   >
@@ -2939,16 +2946,16 @@ export default function App() {
                         {selectedCategory === 'WashingMachine' && (
                           <>
                             <div>
-                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
+                              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
                                 Washing Capacity Load
                               </label>
-                              <div className="grid grid-cols-3 gap-2">
+                              <div className="grid grid-cols-3 gap-1.5">
                                 {['6.5 kg', '7 kg', '8 kg+'].map((cap) => (
                                   <button
                                     type="button"
                                     key={cap}
                                     onClick={() => setWmCapacity(cap)}
-                                    className={`py-2 px-3 text-center text-xs rounded-xl border font-semibold ${
+                                    className={`py-1.5 px-2.5 text-center text-xs rounded-xl border font-semibold cursor-pointer ${
                                       wmCapacity === cap ? 'bg-slate-900 border-slate-900 text-white' : 'bg-slate-50 border-slate-100 hover:bg-slate-100 text-slate-700'
                                     }`}
                                   >
@@ -2959,16 +2966,16 @@ export default function App() {
                             </div>
 
                             <div>
-                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
+                              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
                                 Automation Type
                               </label>
-                              <div className="grid grid-cols-1 gap-2">
+                              <div className="grid grid-cols-1 gap-1.5">
                                 {['Fully Automatic Top Load', 'Fully Automatic Front Load', 'Semi-Automatic'].map((type) => (
                                   <button
                                     type="button"
                                     key={type}
                                     onClick={() => setWmType(type)}
-                                    className={`py-2.5 px-3 text-left text-xs rounded-xl border font-semibold ${
+                                    className={`py-2 px-3 text-left text-xs rounded-xl border font-semibold cursor-pointer ${
                                       wmType === type ? 'bg-slate-900 border-slate-900 text-white' : 'bg-slate-50 border-slate-100 hover:bg-slate-100 text-slate-700'
                                     }`}
                                   >
@@ -2984,16 +2991,16 @@ export default function App() {
                         {selectedCategory === 'InverterBattery' && (
                           <>
                             <div>
-                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
+                              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
                                 Battery Capacity (Ah)
                               </label>
-                              <div className="grid grid-cols-3 gap-2">
+                              <div className="grid grid-cols-3 gap-1.5">
                                 {['100 Ah', '150 Ah', '200 Ah'].map((cap) => (
                                   <button
                                     type="button"
                                     key={cap}
                                     onClick={() => setBatteryCapacity(cap)}
-                                    className={`py-2 px-3 text-center text-xs rounded-xl border font-semibold ${
+                                    className={`py-1.5 px-2.5 text-center text-xs rounded-xl border font-semibold cursor-pointer ${
                                       batteryCapacity === cap ? 'bg-slate-900 border-slate-900 text-white' : 'bg-slate-50 border-slate-100 hover:bg-slate-100 text-slate-700'
                                     }`}
                                   >
@@ -3004,16 +3011,16 @@ export default function App() {
                             </div>
 
                             <div>
-                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
+                              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
                                 Battery Technology Type
                               </label>
-                              <div className="grid grid-cols-3 gap-2">
+                              <div className="grid grid-cols-3 gap-1.5">
                                 {['Tall Tubular', 'Short Tubular', 'Flat Plate'].map((type) => (
                                   <button
                                     type="button"
                                     key={type}
                                     onClick={() => setBatteryType(type)}
-                                    className={`py-2 px-3 text-center text-xs rounded-xl border font-semibold ${
+                                    className={`py-1.5 px-2 text-center text-xs rounded-xl border font-semibold cursor-pointer ${
                                       batteryType === type ? 'bg-slate-900 border-slate-900 text-white' : 'bg-slate-50 border-slate-100 hover:bg-slate-100 text-slate-700'
                                     }`}
                                   >
@@ -3028,16 +3035,16 @@ export default function App() {
                       </div>
 
                       {/* Right Block: Functional Issues checklists */}
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                         <div>
-                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                          <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                             Functional Flaws / Deficiencies
                           </label>
-                          <p className="text-[11px] text-slate-400 mb-4 leading-relaxed">
-                            Check any defects that apply to your device. Leave unselected if fully functional.
+                          <p className="text-[10px] text-slate-400 mb-2 leading-relaxed">
+                            Check any defects that apply to your device.
                           </p>
                           
-                          <div className="space-y-2.5">
+                          <div className="space-y-1.5">
                             {(selectedCategory === 'AC' ? acIssues : 
                               selectedCategory === 'Refrigerator' ? fridgeIssues : 
                               selectedCategory === 'Mobile' ? mobileIssues : 
@@ -3054,17 +3061,17 @@ export default function App() {
                                         setSelectedIssues([...selectedIssues, issue]);
                                       }
                                     }}
-                                    className={`w-full text-left px-4 py-3 rounded-xl border flex items-center justify-between transition-colors ${
+                                    className={`w-full text-left px-3 py-2 rounded-xl border flex items-center justify-between transition-colors cursor-pointer ${
                                       isChecked 
                                         ? 'bg-rose-50/50 border-rose-300 text-rose-900 font-medium' 
                                         : 'bg-slate-50 border-slate-100 hover:bg-slate-100 text-slate-700'
                                     }`}
                                   >
                                     <span className="text-xs">{issue}</span>
-                                    <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-all ${
+                                    <div className={`w-4 h-4 rounded flex items-center justify-center border transition-all ${
                                       isChecked ? 'bg-rose-600 border-rose-600 text-white' : 'border-slate-300 bg-white'
                                     }`}>
-                                      {isChecked && <Check className="w-3.5 h-3.5" />}
+                                      {isChecked && <Check className="w-3 h-3" />}
                                     </div>
                                   </button>
                                 );
@@ -3073,12 +3080,12 @@ export default function App() {
                         </div>
 
                         {selectedIssues.length > 0 && (
-                          <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl">
-                            <span className="text-[10px] font-mono text-amber-700 font-bold block mb-1">
-                              ⚠️ ESTIMATION DEDUCTION NOTICE
+                          <div className="p-2.5 bg-amber-50 border border-amber-100 rounded-xl">
+                            <span className="text-[10px] font-mono text-amber-700 font-bold block">
+                              ⚠️ Flaw Deductions Applied
                             </span>
-                            <span className="text-[10px] text-amber-800 leading-normal block">
-                              Deductions apply for selected functional flaws. Technician will verify during doorstep pickup.
+                            <span className="text-[10px] text-amber-800 leading-tight block mt-0.5">
+                              Deductions apply for selected flaws. Technician will verify during doorstep pickup.
                             </span>
                           </div>
                         )}
@@ -3086,10 +3093,10 @@ export default function App() {
 
                     </div>
 
-                    {/* Live Real-time Dynamic Price Calculation Banner */}
-                    <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-950 border border-emerald-800/80 rounded-2xl p-4 sm:p-5 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg shadow-emerald-950/20">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
+                    {/* Compact Live Real-time Dynamic Price Calculation Banner */}
+                    <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-950 border border-emerald-800/80 rounded-xl p-3 sm:p-3.5 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md shadow-emerald-950/20">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                           <span className="text-[10px] font-mono tracking-widest text-emerald-400 font-bold uppercase">
                             Live Dynamic Valuation
@@ -3097,24 +3104,24 @@ export default function App() {
                         </div>
                         <p className="text-xs text-slate-300">
                           {selectedCategory === 'AC' 
-                            ? `${capacity || '1.5 Ton'} • ${coilType} Coil • ${condition.toUpperCase()} Condition` 
+                            ? `${capacity || '1.5 Ton'} • ${coilType} Coil • ${condition.toUpperCase()}` 
                             : `${condition.toUpperCase()} Condition`}
                           {selectedIssues.length > 0 && ` (${selectedIssues.length} flaw${selectedIssues.length > 1 ? 's' : ''} deducted)`}
                         </p>
                       </div>
 
-                      <div className="flex items-baseline sm:items-end justify-between sm:justify-start gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-emerald-800/60">
+                      <div className="flex items-baseline sm:items-end justify-between sm:justify-start gap-2 pt-1 sm:pt-0 border-t sm:border-t-0 border-emerald-800/60">
                         <span className="text-xs text-emerald-300 font-medium sm:hidden">Current Quote:</span>
                         <div className="text-right">
-                          <div className="text-3xl sm:text-4xl font-black font-display text-emerald-400 tracking-tight">
+                          <div className="text-2xl sm:text-3xl font-black font-display text-emerald-400 tracking-tight">
                             ₹{calculatePrice(journeyModel, selectedCategory).toLocaleString('en-IN')}
                           </div>
-                          <span className="text-[9px] text-slate-400 block font-mono">Updates instantly with inputs</span>
+                          <span className="text-[9px] text-slate-400 block font-mono">Live dynamic rate</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex justify-between items-center pt-8 border-t border-slate-100">
+                    <div className="flex justify-between items-center pt-4 border-t border-slate-100">
                       <button
                         type="button"
                         onClick={() => setJourneyStep(3)}
@@ -3126,10 +3133,10 @@ export default function App() {
                       <button
                         type="button"
                         onClick={handleSubmitAppraisal}
-                        className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold px-8 py-3.5 rounded-xl transition-all shadow-md shadow-emerald-100 flex items-center gap-2 cursor-pointer"
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl transition-all shadow-md shadow-emerald-600/20 flex items-center gap-1.5 cursor-pointer active:scale-[0.98]"
                       >
                         <span>Extract Price</span>
-                        <ArrowRight className="w-4 h-4" />
+                        <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </motion.div>
@@ -3142,30 +3149,30 @@ export default function App() {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="max-w-md mx-auto space-y-6"
+                    className="max-w-lg mx-auto space-y-4"
                   >
-                    <div className="text-center space-y-1">
-                      <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-2 animate-bounce">
-                        <Zap className="w-6 h-6" />
+                    <div className="text-center space-y-0.5">
+                      <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-1">
+                        <Zap className="w-5 h-5" />
                       </div>
-                      <h3 className="text-2xl font-extrabold text-slate-900 font-display">Final Valuation Quote</h3>
+                      <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 font-display">Final Valuation Quote</h3>
                       <p className="text-xs text-slate-400">Provide phone and address details to schedule doorstep pickup.</p>
                     </div>
 
-                    {/* Final Price Card */}
-                    <div className="bg-gradient-to-br from-emerald-950 to-slate-900 text-white rounded-3xl p-6 text-center relative overflow-hidden shadow-xl border border-emerald-800">
-                      <span className="text-[10px] font-mono tracking-widest bg-emerald-800 text-emerald-300 font-bold px-3 py-1 rounded-full uppercase">
+                    {/* Compact Final Price Card */}
+                    <div className="bg-gradient-to-br from-emerald-950 to-slate-900 text-white rounded-2xl p-4 sm:p-5 text-center relative overflow-hidden shadow-lg border border-emerald-800">
+                      <span className="text-[9px] font-mono tracking-widest bg-emerald-800 text-emerald-300 font-bold px-2.5 py-0.5 rounded-full uppercase">
                         Guaranteed Cash Handover
                       </span>
 
-                      <div className="my-4">
-                        <span className="block text-xs text-emerald-300 font-medium">Final Evaluated Price</span>
-                        <div className="text-4xl sm:text-5xl font-black font-display text-white mt-1">
+                      <div className="my-2">
+                        <span className="block text-[11px] text-emerald-300 font-medium">Final Evaluated Price</span>
+                        <div className="text-3xl sm:text-4xl font-black font-display text-white mt-0.5">
                           ₹{estimatedPrice.toLocaleString('en-IN')}
                         </div>
                       </div>
 
-                      <div className="border-t border-emerald-800/80 pt-3 grid grid-cols-2 gap-2 text-left text-xs">
+                      <div className="border-t border-emerald-800/80 pt-2.5 grid grid-cols-2 gap-2 text-left text-xs">
                         <div>
                           <span className="text-[10px] text-emerald-300 block">Appliance</span>
                           <strong className="text-white truncate block">{journeyBrand?.name || 'Device'} • {selectedCategory === 'AC' ? acType : selectedCategory}</strong>
@@ -3178,27 +3185,27 @@ export default function App() {
                     </div>
 
                     {/* Doorstep Pickup Form */}
-                    <div className="bg-white border border-slate-100 rounded-2xl p-5 space-y-4 shadow-sm">
-                      <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
-                        <MapPin className="w-4 h-4 text-emerald-600" /> Doorstep Pickup Details
+                    <div className="bg-white border border-slate-100 rounded-xl p-3.5 sm:p-4 space-y-3 shadow-xs">
+                      <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-emerald-600" /> Doorstep Pickup Details
                       </h4>
 
                       {/* Name Input */}
                       <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Full Name <span className="text-rose-500">*</span></label>
+                        <label className="block text-[11px] font-bold text-slate-700 mb-0.5 uppercase tracking-wider">Full Name <span className="text-rose-500">*</span></label>
                         <input 
                           type="text" 
                           value={pickupName}
                           onChange={(e) => setPickupName(e.target.value)}
                           placeholder="e.g. Rahul Sharma"
-                          className="w-full text-xs sm:text-sm px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-950 font-medium"
+                          className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-950 font-medium"
                         />
                       </div>
 
                       {/* Phone Input */}
                       <div>
-                        <div className="flex justify-between items-center mb-1">
-                          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">10-Digit Primary Mobile Number <span className="text-rose-500">*</span></label>
+                        <div className="flex justify-between items-center mb-0.5">
+                          <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">10-Digit Mobile Number <span className="text-rose-500">*</span></label>
                           <span className="text-[10px] font-medium text-slate-400">{pickupPhone.length}/10</span>
                         </div>
                         <input 
@@ -3207,14 +3214,14 @@ export default function App() {
                           onChange={(e) => setPickupPhone(e.target.value.replace(/[^\d]/g, '').slice(0, 10))}
                           placeholder="e.g. 9876543210"
                           maxLength={10}
-                          className="w-full text-xs sm:text-sm px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-950 font-medium font-mono"
+                          className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-950 font-medium font-mono"
                         />
                         {pickupPhone.length > 0 && (
-                          <div className="mt-1">
+                          <div className="mt-0.5">
                             {pickupPhone.length === 10 ? (
                               validateActiveMobileNumber(pickupPhone, '+91').valid ? (
                                 <p className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
-                                  <CheckCircle className="w-3 h-3" /> Valid mobile line verified
+                                  <CheckCircle className="w-3 h-3" /> Valid mobile line
                                 </p>
                               ) : (
                                 <p className="text-[10px] text-rose-500 font-medium flex items-center gap-1">
@@ -3232,8 +3239,8 @@ export default function App() {
 
                       {/* Secondary Mobile Input (Optional) */}
                       <div>
-                        <div className="flex justify-between items-center mb-1">
-                          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1">
+                        <div className="flex justify-between items-center mb-0.5">
+                          <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1">
                             <span>Secondary Mobile Number</span>
                             <span className="text-[10px] text-slate-400 font-normal lowercase">(optional)</span>
                           </label>
@@ -3245,21 +3252,16 @@ export default function App() {
                           type="tel" 
                           value={pickupSecondaryPhone}
                           onChange={(e) => setPickupSecondaryPhone(e.target.value.replace(/[^\d]/g, '').slice(0, 10))}
-                          placeholder="e.g. 9812345678 (Alternate contact line)"
+                          placeholder="e.g. 9812345678 (Alternate line)"
                           maxLength={10}
-                          className="w-full text-xs sm:text-sm px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-950 font-medium font-mono"
+                          className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-950 font-medium font-mono"
                         />
-                        {pickupSecondaryPhone.length > 0 && pickupSecondaryPhone.length === 10 && (
-                          <p className="mt-1 text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
-                            <CheckCircle className="w-3 h-3" /> Valid secondary contact line
-                          </p>
-                        )}
                       </div>
 
                       {/* Address Input */}
                       <div>
-                        <div className="flex justify-between items-center mb-1">
-                          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Doorstep Address <span className="text-rose-500">*</span></label>
+                        <div className="flex justify-between items-center mb-0.5">
+                          <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">Doorstep Address <span className="text-rose-500">*</span></label>
                           <button
                             type="button"
                             onClick={handleGetCurrentLocation}
@@ -3274,7 +3276,7 @@ export default function App() {
                             ) : (
                               <>
                                 <MapPin className="w-3 h-3 text-emerald-500" />
-                                <span>Use GPS Location</span>
+                                <span>GPS Location</span>
                               </>
                             )}
                           </button>
@@ -3284,28 +3286,28 @@ export default function App() {
                           value={pickupAddress}
                           onChange={(e) => setPickupAddress(e.target.value)}
                           placeholder="House/Flat No., Building name, Street, Landmark..."
-                          className="w-full text-xs sm:text-sm px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-950 font-medium leading-relaxed"
+                          className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-950 font-medium leading-relaxed"
                         />
                       </div>
 
                       {/* Schedule Pickup Date & Time Selector */}
-                      <div className="pt-3 border-t border-slate-100 space-y-3">
+                      <div className="pt-2 border-t border-slate-100 space-y-2">
                         <h5 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                          <Calendar className="w-4 h-4 text-emerald-600" /> Preferred Pickup Schedule
+                          <Calendar className="w-3.5 h-3.5 text-emerald-600" /> Preferred Pickup Schedule
                         </h5>
 
                         {/* Date Selection */}
                         <div>
-                          <label className="block text-[11px] font-semibold text-slate-600 mb-1">Pickup Date <span className="text-rose-500">*</span></label>
-                          <div className="flex flex-col sm:flex-row gap-2">
+                          <label className="block text-[10px] font-semibold text-slate-600 mb-1">Pickup Date <span className="text-rose-500">*</span></label>
+                          <div className="flex flex-col sm:flex-row gap-1.5">
                             <input 
                               type="date"
                               min={new Date().toISOString().split('T')[0]}
                               value={pickupDate}
                               onChange={(e) => setPickupDate(e.target.value)}
-                              className="flex-1 text-xs sm:text-sm px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-950 font-medium"
+                              className="flex-1 text-xs px-3 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-950 font-medium"
                             />
-                            <div className="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                            <div className="flex gap-1 overflow-x-auto pb-0.5 sm:pb-0">
                               {(() => {
                                 const today = new Date().toISOString().split('T')[0];
                                 const tom = new Date(); tom.setDate(tom.getDate() + 1);
@@ -3322,9 +3324,9 @@ export default function App() {
                                     key={btn.label}
                                     type="button"
                                     onClick={() => setPickupDate(btn.value)}
-                                    className={`px-3 py-2 text-[11px] font-bold rounded-xl transition-all whitespace-nowrap border ${
+                                    className={`px-2.5 py-1.5 text-[10px] font-bold rounded-lg transition-all whitespace-nowrap border cursor-pointer ${
                                       pickupDate === btn.value
-                                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
                                         : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
                                     }`}
                                   >
@@ -3338,8 +3340,8 @@ export default function App() {
 
                         {/* Time Slot Selection */}
                         <div>
-                          <label className="block text-[11px] font-semibold text-slate-600 mb-1">Preferred Time Slot <span className="text-rose-500">*</span></label>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          <label className="block text-[10px] font-semibold text-slate-600 mb-1">Preferred Time Slot <span className="text-rose-500">*</span></label>
+                          <div className="grid grid-cols-3 gap-1.5">
                             {[
                               '09:00 AM - 12:00 PM',
                               '12:00 PM - 03:00 PM',
@@ -3349,73 +3351,51 @@ export default function App() {
                                 key={slot}
                                 type="button"
                                 onClick={() => setPickupTime(slot)}
-                                className={`px-2.5 py-2 text-[11px] font-bold rounded-xl transition-all border flex items-center justify-center gap-1 ${
+                                className={`px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all border flex items-center justify-center gap-1 cursor-pointer ${
                                   pickupTime === slot
-                                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
                                     : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
                                 }`}
                               >
-                                <Clock className="w-3 h-3 shrink-0" />
-                                <span>{slot}</span>
+                                <Clock className="w-2.5 h-2.5 shrink-0" />
+                                <span className="truncate">{slot}</span>
                               </button>
                             ))}
-                          </div>
-
-                          <div className="mt-2.5 flex items-center gap-2">
-                            <span className="text-[10px] text-slate-400 font-medium">Custom time picker:</span>
-                            <input 
-                              type="time" 
-                              onChange={(e) => {
-                                if (e.target.value) {
-                                  const [h, m] = e.target.value.split(':');
-                                  const hour = parseInt(h, 10);
-                                  const ampm = hour >= 12 ? 'PM' : 'AM';
-                                  const formattedHour = hour % 12 || 12;
-                                  setPickupTime(`${formattedHour}:${m} ${ampm}`);
-                                }
-                              }}
-                              className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800"
-                            />
-                            {pickupTime && (
-                              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
-                                {pickupTime}
-                              </span>
-                            )}
                           </div>
                         </div>
                       </div>
 
                       {/* Pickup ETA Banner */}
-                      <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 flex items-start gap-2 text-[11px] text-amber-800">
-                        <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5 animate-pulse" />
+                      <div className="bg-amber-50 border border-amber-100 rounded-lg p-2.5 flex items-start gap-2 text-[10px] text-amber-800">
+                        <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5 animate-pulse" />
                         <div>
-                          <strong>Confirmed Schedule:</strong> Pickup scheduled for <strong>{pickupDate} ({pickupTime})</strong>. Instant cash payout on spot!
+                          <strong>Confirmed Schedule:</strong> Pickup scheduled for <strong>{pickupDate} ({pickupTime})</strong>. Cash payout on spot!
                         </div>
                       </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       <button
                         type="button"
                         disabled={!pickupName.trim() || !pickupPhone.trim() || !pickupAddress.trim() || pickupPhone.length !== 10 || !pickupDate}
                         onClick={() => handleCompleteBooking(pickupName, pickupPhone, pickupAddress, pickupSecondaryPhone, pickupDate, pickupTime)}
-                        className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-600/20 flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-[0.98]"
+                        className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs sm:text-sm font-bold py-2.5 sm:py-3 rounded-xl transition-all shadow-md shadow-emerald-600/20 flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-[0.98]"
                       >
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="w-5 h-5" />
-                          <span>Confirm & Schedule Doorstep Pickup</span>
+                        <div className="flex items-center gap-1.5">
+                          <CheckCircle className="w-4 h-4" />
+                          <span>Confirm & Schedule Pickup</span>
                         </div>
-                        <span className="text-[10px] font-normal text-emerald-100/90 flex items-center gap-1">
-                          <MessageSquare className="w-3 h-3 text-[#25D366]" />
-                          <span>Auto-sends scheduled summary &amp; address to WhatsApp coordinator (+91 7303319913)</span>
+                        <span className="text-[9px] font-normal text-emerald-100/90 flex items-center gap-1">
+                          <MessageSquare className="w-2.5 h-2.5 text-[#25D366]" />
+                          <span>Summary auto-sent to WhatsApp (+91 7303319913)</span>
                         </span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => setJourneyStep(4)}
-                        className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold py-2.5 rounded-xl transition-all"
+                        className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold py-2 rounded-xl transition-all"
                       >
                         Adjust Device Evaluation Checklist
                       </button>
@@ -3429,18 +3409,18 @@ export default function App() {
                     key="step-6"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="space-y-8"
+                    className="space-y-4"
                   >
-                    <div className="text-center space-y-2">
-                      <div className="w-16 h-16 bg-emerald-50 border border-emerald-200 rounded-full flex items-center justify-center mx-auto text-emerald-600">
-                        <Check className="w-8 h-8 stroke-[3]" />
+                    <div className="text-center space-y-1">
+                      <div className="w-12 h-12 bg-emerald-50 border border-emerald-200 rounded-full flex items-center justify-center mx-auto text-emerald-600">
+                        <Check className="w-6 h-6 stroke-[3]" />
                       </div>
-                      <h3 className="text-2xl font-extrabold text-slate-900 font-display">Doorstep Pickup Scheduled!</h3>
+                      <h3 className="text-xl font-extrabold text-slate-900 font-display">Doorstep Pickup Scheduled!</h3>
                       <p className="text-xs text-slate-500">Your order has been logged successfully and assigned to our field dispatch team.</p>
                     </div>
 
                     {/* Order Summary Table */}
-                    <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 space-y-4">
+                    <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 space-y-3">
                       <h4 className="font-bold text-slate-800 uppercase tracking-wider text-xs border-b border-slate-200 pb-2 flex items-center justify-between">
                         <span>📋 Pickup Order Summary</span>
                         <span className="font-mono text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded">{evaluationId}</span>
@@ -3570,20 +3550,20 @@ export default function App() {
             </div>
 
             {/* Right Column: Dynamic Selling Journey Widget */}
-            <div className="lg:col-span-1 space-y-6">
+            <div className="lg:col-span-1 space-y-4">
               
               {/* Dynamic Valuation Summary */}
-              <div className="bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl" />
-                <div className="relative z-10 space-y-4">
-                  <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                    <span className="text-xs font-mono text-emerald-400 font-bold uppercase tracking-wider">Evaluation Summary</span>
-                    <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/20 font-bold uppercase tracking-wider animate-pulse">
+              <div className="bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-white rounded-2xl p-4 shadow-lg relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-28 h-28 bg-emerald-500/10 rounded-full blur-2xl" />
+                <div className="relative z-10 space-y-3">
+                  <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                    <span className="text-[11px] font-mono text-emerald-400 font-bold uppercase tracking-wider">Evaluation Summary</span>
+                    <span className="text-[9px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/20 font-bold uppercase tracking-wider">
                       Step {journeyStep} of 5
                     </span>
                   </div>
 
-                  <div className="space-y-3.5">
+                  <div className="space-y-2.5">
                     {/* Category */}
                     <div className="flex justify-between text-xs">
                       <span className="text-slate-400">Appliance Type</span>
@@ -3593,7 +3573,7 @@ export default function App() {
                     {/* Brand & Model */}
                     <div className="flex justify-between text-xs">
                       <span className="text-slate-400">Brand & Model</span>
-                      <span className="font-bold text-slate-100 text-right truncate max-w-[160px]">
+                      <span className="font-bold text-slate-100 text-right truncate max-w-[150px]">
                         {journeyBrand ? journeyBrand.name : 'Not selected'} {journeyModel ? ` - ${journeyModel.name}` : ''}
                       </span>
                     </div>
@@ -3601,24 +3581,24 @@ export default function App() {
                     {/* Verified phone */}
                     <div className="flex justify-between text-xs">
                       <span className="text-slate-400">Customer Identity</span>
-                      <span className="font-bold text-slate-100 font-mono">
+                      <span className="font-bold text-slate-100 font-mono text-[11px]">
                         {currentUser ? `+91 ${currentUser.phone}` : 'Verification pending'}
                       </span>
                     </div>
 
                     {/* Evaluation details */}
                     {journeyStep >= 3 && (
-                      <div className="border-t border-slate-800/80 pt-3 space-y-2.5">
+                      <div className="border-t border-slate-800/80 pt-2.5 space-y-2">
                         <div className="flex justify-between text-xs">
                           <span className="text-slate-400">Assessed Condition</span>
                           <span className="font-bold text-emerald-400 capitalize">{condition}</span>
                         </div>
                         {selectedIssues.length > 0 && (
                           <div className="text-xs">
-                            <span className="text-slate-400 block mb-1">Functional Flaws Selected:</span>
+                            <span className="text-slate-400 block mb-1 text-[11px]">Flaws Selected:</span>
                             <div className="flex flex-wrap gap-1">
                               {selectedIssues.map((issue) => (
-                                <span key={issue} className="bg-slate-800 text-slate-300 px-2 py-0.5 rounded text-[10px] border border-slate-700/60 font-medium">
+                                <span key={issue} className="bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded text-[9px] border border-slate-700/60 font-medium">
                                   {issue}
                                 </span>
                               ))}
@@ -3630,14 +3610,14 @@ export default function App() {
 
                     {/* Current Estimated Price (real-time) */}
                     {(journeyModel || selectedCategory) && journeyStep >= 3 && (
-                      <div className="border-t border-slate-800/80 pt-4 mt-2">
+                      <div className="border-t border-slate-800/80 pt-2.5 mt-1">
                         <div className="flex justify-between items-baseline">
                           <span className="text-xs text-slate-400">Estimated Value</span>
                           <div className="text-right">
-                            <span className="text-2xl font-black text-emerald-400 font-mono">
+                            <span className="text-xl sm:text-2xl font-black text-emerald-400 font-mono">
                               ₹{calculatePrice(journeyModel, selectedCategory).toLocaleString('en-IN')}
                             </span>
-                            <span className="block text-[9px] text-slate-500">Live scrap market rate</span>
+                            <span className="block text-[8px] text-slate-500 font-mono">Live dynamic valuation</span>
                           </div>
                         </div>
                       </div>
@@ -3647,39 +3627,39 @@ export default function App() {
               </div>
 
               {/* Secure Trust Badges Widget */}
-              <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-md space-y-4">
-                <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider border-b border-slate-50 pb-2.5">
+              <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs space-y-3">
+                <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider border-b border-slate-50 pb-2">
                   Our Recycling Guarantees
                 </h4>
                 
-                <div className="space-y-3">
-                  <div className="flex gap-3">
-                    <div className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="w-3 h-3" />
+                <div className="space-y-2.5">
+                  <div className="flex gap-2.5">
+                    <div className="w-4 h-4 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check className="w-2.5 h-2.5" />
                     </div>
                     <div>
                       <h5 className="text-xs font-bold text-slate-800">ISO 14001 E-Waste Facility</h5>
-                      <p className="text-[10px] text-slate-400 leading-normal">Processed safely through government authorized JSW & Tata smelter networks.</p>
+                      <p className="text-[10px] text-slate-400 leading-snug">Authorized JSW &amp; Tata smelter network processing.</p>
                     </div>
                   </div>
 
-                  <div className="flex gap-3">
-                    <div className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="w-3 h-3" />
+                  <div className="flex gap-2.5">
+                    <div className="w-4 h-4 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check className="w-2.5 h-2.5" />
                     </div>
                     <div>
                       <h5 className="text-xs font-bold text-slate-800">Zero Payout Price Cut</h5>
-                      <p className="text-[10px] text-slate-400 leading-normal">The price calculated matches the physical condition exactly, guaranteed.</p>
+                      <p className="text-[10px] text-slate-400 leading-snug">Calculated price matches physical condition on spot.</p>
                     </div>
                   </div>
 
-                  <div className="flex gap-3">
-                    <div className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="w-3 h-3" />
+                  <div className="flex gap-2.5">
+                    <div className="w-4 h-4 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check className="w-2.5 h-2.5" />
                     </div>
                     <div>
                       <h5 className="text-xs font-bold text-slate-800">Military-Grade Data Wipe</h5>
-                      <p className="text-[10px] text-slate-400 leading-normal">On cell phone scrap, we execute zero-retrieval data shredding before smelting.</p>
+                      <p className="text-[10px] text-slate-400 leading-snug">Zero-retrieval data shredding before smelting.</p>
                     </div>
                   </div>
                 </div>
